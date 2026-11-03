@@ -1,0 +1,7 @@
+numpy>=1.26,<3
+pandas>=2.2,<4
+pyarrow>=14,<27
+scipy>=1.11,<2
+statsmodels>=0.14,<0.16
+scikit-learn>=1.4,<2
+lightgbm>=4.0,<5

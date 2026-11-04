@@ -36,6 +36,11 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
+try:
+    from model_logic.jt_partnership_features import add_lagged_jockey_trainer_features
+except ModuleNotFoundError:
+    from jt_partnership_features import add_lagged_jockey_trainer_features
+
 BASE_FEATURES = [
     "jt_jockey_win365_rel",
     "hf_avg3_fin_pct_rel",
@@ -54,6 +59,8 @@ CANDIDATE_FEATURES = [
     "hf_class_change",
     "w3_horse_past_win_rate",
     "w3_horse_past_top3_rate",
+    "jtp_pair_effect365_rel",
+    "jtp_pair_effect_last_50_rel",
 ]
 ALL_FEATURES = BASE_FEATURES + CANDIDATE_FEATURES
 SPEARMAN_LIMIT = 0.9
@@ -159,6 +166,7 @@ def build_features(raw: pd.DataFrame) -> pd.DataFrame:
     d["jt_trainer_win365"] = rolling_rate(d, "trainer_key", "is_winner", prior)
     d["jt_jockey_win365_rel"] = rel("jt_jockey_win365")
     d["jt_trainer_win365_rel"] = rel("jt_trainer_win365")
+    d = add_lagged_jockey_trainer_features(d)
 
     # Market: overround removed per race over actual starters; races with any missing /
     # non-positive price fall back to uniform and are flagged (excluded from comparisons).

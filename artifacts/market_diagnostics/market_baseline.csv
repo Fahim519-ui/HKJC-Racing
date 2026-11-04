@@ -1,0 +1,2 @@
+races,rows,missing_market_probabilities,nonpositive_market_probabilities,mean_race_probability_sum,min_race_probability_sum,max_race_probability_sum,max_absolute_sum_error
+3179,38942,0,0,1.0,0.9999999999999998,1.0000000000000002,2.220446049250313e-16

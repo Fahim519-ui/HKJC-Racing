@@ -1,0 +1,14 @@
+## Work 1 Completed: Source-Separated Track/Distance Form
+
+
+- Data Integration: Loaded the Week 3 enhanced dataset (runners_merged_with_features.parquet) to preserve previous form and jockey/trainer indicators.
+
+- Feature Engineering: Calculated historical win, top-3, and finishing-percentile rates independently across three dimensions: Track (Sha Tin/Happy Valley), Distance Band (Sprint/Mile/Middle/Stay), and Track-Distance Combination.
+
+- Leakage Prevention: Utilized shift(1) and expanding windows to ensure strictly pre-race data was used.
+
+- Shrinkage: Applied a Bayesian shrinkage parameter (k=5) to regress sparse historical records toward the source-specific global average, preventing overfitting on horses with limited track experience.
+
+- Relative Measures: Converted all absolute rates into within-race relative measures (subtracting the race average) to provide a comparative advantage signal for the LightGBM model.
+
+- Output: Exported the fully updated dataset as runners_merged_work1.parquet.

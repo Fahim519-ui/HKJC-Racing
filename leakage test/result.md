@@ -20,7 +20,7 @@
 
 ## 2. Stability audit: mostly stable, one real problem
 
-27 features checked: **17 keep, 8 watch, 2 review.** Script and details: `analysis/feature_stability_audit.py`, `analysis/README_FEATURE_STABILITY.md`. Report: `reports/feature_stability/` in the project folder.
+27 features checked: **17 keep, 8 watch, 2 review.** Script and details: `analysis/feature_stability_audit.py`, `analysis/README_FEATURE_STABILITY.md`. Report: `analysis/feature_stability_results/stability_report.md`.
 
 | What | Result |
 |---|---|

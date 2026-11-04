@@ -1,0 +1,61 @@
+{
+  "generated": "2026-11-04 21:07",
+  "data": "runners_merged.parquet",
+  "data_sha256": "d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0",
+  "repo_commit": "33ca1b0",
+  "n_features": 27,
+  "features": [
+    "rc_draw_pct",
+    "rc_draw_x_hv",
+    "rc_draw_x_sprint",
+    "rc_weight_rel",
+    "rc_weight_x_dist",
+    "hf_avg3_fin_pct",
+    "hf_avg3_fin_pct_rel",
+    "hf_avg3_fin_pct_rk",
+    "hf_class_change",
+    "hf_class_change_rk",
+    "hf_days_since",
+    "hf_first_start",
+    "hf_last_fin_pct",
+    "hf_last_fin_pct_rel",
+    "hf_win5_s",
+    "hf_win5_s_rk",
+    "jt_jockey_win365",
+    "jt_jockey_win365_rel",
+    "jt_jockey_win365_rk",
+    "jt_trainer_win365",
+    "jt_trainer_win365_rel",
+    "jt_trainer_win365_rk",
+    "w3_horse_past_top3_rate",
+    "w3_horse_past_win_rate",
+    "jtp_pair_effect365_rel",
+    "jtp_pair_effect_last_50_rel",
+    "n_runners"
+  ],
+  "windows": {
+    "k_train": 15836,
+    "k_tune": 9299,
+    "k_early": 4711,
+    "h_s2": 5287,
+    "h_test": 4978
+  },
+  "thresholds": {
+    "smd": [
+      0.1,
+      0.25
+    ],
+    "psi": [
+      0.1,
+      0.25
+    ],
+    "missing_pp": 5.0,
+    "effect_z": 2.0
+  },
+  "effect_windows": [
+    "k_train",
+    "k_early",
+    "k_tune",
+    "h_s2"
+  ]
+}

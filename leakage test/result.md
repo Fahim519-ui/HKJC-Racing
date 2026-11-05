@@ -10,13 +10,15 @@
 
 ## 1. Leakage tests: pass
 
-**22 of 22 pass** (`leakage test/test_leakage.py`, about 20 seconds). Details: `leakage test/README_LEAKAGE_TESTS.md`.
+**33 of 33 pass** (`leakage test/test_leakage.py`, about 25 seconds; expanded from 22 on 5 Nov). Details: `leakage test/README_LEAKAGE_TESTS.md`.
 
 - No feature uses same-day results.
 - No feature mixes Kaggle and HKJC history.
 - No feature uses post-race or odds columns.
-- The two new jockey-trainer pair features (`jtp_pair_effect365_rel`, `jtp_pair_effect_last_50_rel`) are covered and pass. The "last 50 rides" version has no time window, so the source-separation test is the one that matters for it, and it passes.
-- Every check also catches a deliberately leaky feature, so a pass means something.
+- **New cut-off check:** no feature leans on a whole-period average that includes the test races. This is the check that will catch Nayeon's track/distance (`td_*`) shrinkage once her features reach a live builder.
+- Every structural check now runs against **both** builders a model could use (`cl_v2` = the one the models run today, `fb` = Fahim's new `feature_builder.py`).
+- The two jockey-trainer pair features (`jtp_pair_effect365_rel`, `jtp_pair_effect_last_50_rel`) are covered and pass. The "last 50 rides" version has no time window, so the source-separation test is the one that matters for it, and it passes.
+- Every check also catches a deliberately leaky feature (8 controls), so a pass means something. The cut-off control reproduces Nayeon's `td_*` leak and is caught.
 
 ## 2. Stability audit: mostly stable, one real problem
 

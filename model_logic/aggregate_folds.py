@@ -56,9 +56,9 @@ def primary_evidence_status(
         raise ValueError(f"Missing inner-tune race counts for folds: {missing}")
 
     primary["watch_only"] = primary["inner_tune_races"].lt(MIN_INNER_TUNE_RACES)
-    eligible = primary.loc[~primary["watch_only"]]
     primary["positive_gain"] = primary["gain_vs_calibrated"].gt(0)
     primary["interval_excludes_zero"] = primary["ci_vs_calibrated_low"].gt(0)
+    eligible = primary.loc[~primary["watch_only"]]
     required_positive_folds = len(eligible)
     positive_folds = int(eligible["positive_gain"].sum())
     intervals_pass = bool(eligible["interval_excludes_zero"].all()) if required_positive_folds else False

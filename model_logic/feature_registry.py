@@ -335,7 +335,6 @@ REGISTRY = (
           models=("cl_candidate", "lgbm"), added_in="v3.1", note=_LAGGED_NOTE),
 )
 
-
 _BY_NAME = {spec.name: spec for spec in REGISTRY}
 FEATURE_SETS = {
     "v2_baseline": tuple(spec.name for spec in REGISTRY[:17]),

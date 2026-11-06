@@ -1,8 +1,8 @@
 """Shared, leakage-safe evaluation for every model (Week 5 "scoreboard").
 
 Design rules (from WEEK5_PLAN.md and DATA_RULES.md):
-  * The race is the unit. Every metric is a mean over races, and the bootstrap resamples
-    races, keeping both models' predictions paired.
+  * The race is the unit. Every metric is a mean over races. The bootstrap resamples whole
+    race DAYS (races on one day are correlated), keeping both models' predictions paired.
   * h_test (HKJC Apr-Oct 2026) is scored ONCE, in Week 5. Every function that touches
     predictions refuses h_test rows unless final_run=True is passed explicitly, so a
     stray call cannot peek at the test window.
@@ -37,12 +37,26 @@ SEED = 17
 
 
 # --------------------------------------------------------------------- loading / guard
+H_TEST_START = pd.Timestamp("2026-04-01")   # HKJC test window (Kaggle data ends in 2020)
+
+
+def is_test_row(df: pd.DataFrame) -> pd.Series:
+    """True for rows in the HKJC test window, found by split label OR by race date, so a file
+    without a split column (e.g. fold predictions) is still caught."""
+    test = pd.Series(False, index=df.index)
+    if "split" in df.columns:
+        test |= df["split"].eq("h_test")
+    if "race_date" in df.columns:
+        test |= pd.to_datetime(df["race_date"]) >= H_TEST_START
+    return test
+
+
 def check_not_test(df: pd.DataFrame, final_run: bool = False) -> None:
     """Refuse h_test rows unless this is the sanctioned one-shot final run."""
-    if "split" in df.columns and df["split"].eq("h_test").any() and not final_run:
+    if is_test_row(df).any() and not final_run:
         raise RuntimeError(
-            "h_test rows present. The test window is scored once, in Week 5. "
-            "Pass final_run=True only for that sanctioned run."
+            "h_test rows present (split == 'h_test' or race_date >= 2026-04-01). The test "
+            "window is scored once, in Week 5. Pass final_run=True only for that sanctioned run."
         )
 
 
@@ -63,11 +77,16 @@ def _winner_mask(df: pd.DataFrame) -> pd.Series:
 
 
 def race_losses(p: pd.Series, df: pd.DataFrame) -> pd.Series:
-    """One cross-entropy loss per race: -log p(winner). Dead heats average over winners.
+    """One cross-entropy loss per race: -log p(winner).
+
+    Dead heat (two or more winners): -log of the MEAN winner probability. This matches the
+    project convention in week34_starter.py and Fahim's model_logic/run_folds.py (checked 6 Nov:
+    identical on every fold). Before 6 Nov this used the mean of the -log values, which differs
+    only in dead-heat races (1 race in fold k1, 2 in h1).
     Returns a Series indexed by race_id, so two models' losses align for pairing."""
     p = pd.Series(np.asarray(p, dtype=float), index=df.index).clip(lower=EPSILON)
     win = _winner_mask(df)
-    return -np.log(p[win]).groupby(df.loc[win, "race_id"]).mean()
+    return -np.log(p[win].groupby(df.loc[win, "race_id"]).mean())
 
 
 def per_race_log_loss(p: pd.Series, df: pd.DataFrame) -> float:
@@ -108,16 +127,39 @@ def calibration_table(p: pd.Series, df: pd.DataFrame) -> pd.DataFrame:
                    win_rate=("is_winner", lambda s: s.astype(float).mean())))
 
 
+def race_days(df: pd.DataFrame) -> pd.Series | None:
+    """race_id -> race day (date), used to resample whole race days. None if no race_date."""
+    if "race_date" not in df.columns:
+        return None
+    return pd.to_datetime(df.groupby("race_id")["race_date"].first()).dt.normalize()
+
+
 def paired_bootstrap(loss_a: pd.Series, loss_b: pd.Series, n: int = 2000,
-                     seed: int = SEED) -> tuple[float, float, float]:
-    """Mean of (a - b) per race and its 95% CI, resampling races. Positive means b is
-    better (lower loss). loss_a and loss_b are race-indexed; only shared races are used."""
+                     seed: int = SEED, days: pd.Series | None = None) -> tuple[float, float, float]:
+    """Mean of (a - b) per race and its 95% CI. Positive means b is better (lower loss).
+    loss_a and loss_b are race-indexed; only shared races are used.
+
+    days (race_id -> race day): resample whole race DAYS, the default in scoreboard() and
+    rolling_validation since 6 Nov. Races on one day share conditions (going, track bias), so
+    their results move together; resampling single races treats them as independent and gives
+    intervals that are too narrow. This is the same method as Fahim's
+    model_logic/validation/evaluation.paired_bootstrap_gain (race-weighted mean per resample).
+    days=None: resample single races (the method used before 6 Nov)."""
     joined = pd.concat([loss_a.rename("a"), loss_b.rename("b")], axis=1, join="inner").dropna()
-    d = (joined["a"] - joined["b"]).to_numpy()
+    d = joined["a"] - joined["b"]
     if len(d) == 0:
         return float("nan"), float("nan"), float("nan")
     rng = np.random.default_rng(seed)
-    means = d[rng.integers(0, len(d), size=(n, len(d)))].mean(axis=1)
+    if days is None:
+        values = d.to_numpy()
+        means = values[rng.integers(0, len(values), size=(n, len(values)))].mean(axis=1)
+    else:
+        day = days.reindex(d.index)
+        if day.isna().any():
+            raise ValueError("days is missing some races")
+        by_day = d.groupby(day.to_numpy()).agg(["sum", "count"])
+        pick = rng.integers(0, len(by_day), size=(n, len(by_day)))
+        means = by_day["sum"].to_numpy()[pick].sum(axis=1) / by_day["count"].to_numpy()[pick].sum(axis=1)
     lo, hi = np.percentile(means, [2.5, 97.5])
     return float(d.mean()), float(lo), float(hi)
 
@@ -213,14 +255,19 @@ def _complete_race_mask(df: pd.DataFrame, cols: list[str]) -> pd.Series:
 
 
 def scoreboard(df: pd.DataFrame, model_cols: list[str], baseline: str = "p_market_refit",
-               raw_market: str = "p_market", final_run: bool = False) -> pd.DataFrame:
+               raw_market: str = "p_market", final_run: bool = False,
+               by_day: bool = True) -> pd.DataFrame:
     """One row per model: log loss, pseudo-R2, Brier, top-1, and the paired-bootstrap
-    difference against the raw market and the refit baseline. All on the same races."""
+    difference against the raw market and the refit baseline. All on the same races.
+    by_day=True (default) resamples whole race days when race_date is present; the method
+    used is recorded in table.attrs["bootstrap"]."""
     check_not_test(df, final_run=final_run)
     cols = [c for c in dict.fromkeys(model_cols + [baseline, raw_market]) if c in df.columns]
     scored = df.loc[_complete_race_mask(df, cols)].reset_index(drop=True)
     n_races = scored["race_id"].nunique()
     losses = {c: race_losses(scored[c], scored) for c in cols}
+    days = race_days(scored) if by_day else None
+    method = "race-day clusters" if days is not None else "single races"
 
     rows = []
     for col in model_cols:
@@ -236,7 +283,7 @@ def scoreboard(df: pd.DataFrame, model_cols: list[str], baseline: str = "p_marke
         }
         for name, base in [("vs_market", raw_market), ("vs_refit", baseline)]:
             if base in losses and base != col:
-                mean, lo, hi = paired_bootstrap(losses[base], losses[col])
+                mean, lo, hi = paired_bootstrap(losses[base], losses[col], days=days)
                 row[f"{name}_gain"] = mean          # >0: this model beats the baseline
                 row[f"{name}_lo"] = lo
                 row[f"{name}_hi"] = hi
@@ -245,6 +292,8 @@ def scoreboard(df: pd.DataFrame, model_cols: list[str], baseline: str = "p_marke
     table = pd.DataFrame(rows)
     table.attrs["n_races"] = n_races
     table.attrs["scored_columns"] = cols
+    table.attrs["bootstrap"] = method
+    table.attrs["n_days"] = int(days.nunique()) if days is not None else None
     return table
 
 

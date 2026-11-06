@@ -86,6 +86,31 @@ def fit_lgbm(train: pd.DataFrame, feats: list[str]) -> lgb.LGBMClassifier:
         train[feats].astype(float), train["is_winner"].astype(int)), n
 
 
+def prune_cl_features(train: pd.DataFrame, feats: list[str], limit: float = 0.9) -> tuple[list[str], list[str]]:
+    """Make the logit design usable, on the TRAINING window only (project rule: for feature
+    pairs with |Spearman| > 0.9 keep one). Walk the list in registry order (base features
+    first), skip a feature that is > limit correlated with one already kept, then drop any
+    feature that is an exact linear combination of the kept ones (e.g. a difference of two
+    kept features), which makes the unpenalised logit singular. Returns (kept, dropped)."""
+    X = train[feats].astype(float)
+    corr = X.corr(method="spearman").abs()
+    kept: list[str] = []
+    dropped: list[str] = []
+    for f in feats:
+        if X[f].std() == 0 or (kept and corr.loc[f, kept].max() > limit):
+            dropped.append(f)
+        else:
+            kept.append(f)
+    Z = ((X[kept] - X[kept].mean()) / X[kept].std()).fillna(0.0).to_numpy()
+    full: list[str] = []
+    for i, f in enumerate(kept):       # keep f only if it adds a new direction
+        if np.linalg.matrix_rank(Z[:, [kept.index(g) for g in full] + [i]]) > len(full):
+            full.append(f)
+        else:
+            dropped.append(f)
+    return full, dropped
+
+
 def fit_cl(train: pd.DataFrame, feats: list[str]):
     mu = train[feats].astype(float).mean()
     sd = train[feats].astype(float).std().replace(0, 1)
@@ -118,6 +143,8 @@ def blend_prob(df: pd.DataFrame, columns: list[str], theta: np.ndarray) -> pd.Se
 def run(data: pd.DataFrame, feats_cl: list[str], feats_lgb: list[str], label: str) -> dict:
     """One rolling-validation pass. Returns per-fold rows and pooled per-race losses."""
     fold_rows = []
+    day_maps = []
+    dropped_log = []
     pooled = {k: [] for k in ["market", "refit", "cl", "lgbm", "mkt_cl", "mkt_lgbm", "mkt_both"]}
     for start, end in FOLDS:
         train = data[data["race_date"] < start]
@@ -132,8 +159,9 @@ def run(data: pd.DataFrame, feats_cl: list[str], feats_lgb: list[str], label: st
         beta = ev.fit_market_refit_beta(tr["p_market"], tr)
         v["p_refit"] = ev.market_refit_prob(v["p_market"], v, beta)
 
-        cl_model = fit_cl(train, feats_cl)
-        v["p_cl"] = predict_cl(cl_model, v, feats_cl)
+        fold_cl, cl_dropped = prune_cl_features(train, feats_cl)
+        cl_model = fit_cl(train, fold_cl)
+        v["p_cl"] = predict_cl(cl_model, v, fold_cl)
         lgb_model, n_trees = fit_lgbm(train, feats_lgb)
         v["p_lgbm"] = normalise(lgb_model.predict_proba(v[feats_lgb].astype(float))[:, 1], v["race_id"])
 
@@ -142,11 +170,11 @@ def run(data: pd.DataFrame, feats_cl: list[str], feats_lgb: list[str], label: st
         # and does worse out of sample. So fit Stage-1 on the inner-train part only, predict
         # the held-out inner part, and fit the blend there.
         inner_tr, inner_va = inner_split(train)
-        cl_inner = fit_cl(inner_tr, feats_cl)
+        cl_inner = fit_cl(inner_tr, fold_cl)
         lgb_inner, _ = fit_lgbm(inner_tr, feats_lgb)
         oof = inner_va.copy()
         oof["p_market"] = normalise(oof["mkt_p"], oof["race_id"])
-        oof["p_cl"] = predict_cl(cl_inner, oof, feats_cl)
+        oof["p_cl"] = predict_cl(cl_inner, oof, fold_cl)
         oof["p_lgbm"] = normalise(lgb_inner.predict_proba(oof[feats_lgb].astype(float))[:, 1], oof["race_id"])
         th_cl = fit_blend(oof, ["p_market", "p_cl"])
         th_lgb = fit_blend(oof, ["p_market", "p_lgbm"])
@@ -160,18 +188,27 @@ def run(data: pd.DataFrame, feats_cl: list[str], feats_lgb: list[str], label: st
         ll = {k: ev.per_race_log_loss(v[c], v) for k, c in names.items()}
         for k, c in names.items():
             pooled[k].append(ev.race_losses(v[c], v))
+        day_maps.append(ev.race_days(v))
         fold_rows.append({"fold": f"{start}..{end}", "races": v["race_id"].nunique(),
-                          "trees": n_trees, "beta": round(beta, 3), **{k: round(x, 4) for k, x in ll.items()}})
+                          "trees": n_trees, "beta": round(beta, 3), "cl_feats": len(fold_cl),
+                          **{k: round(x, 4) for k, x in ll.items()}})
+        dropped_log.append({"fold": f"{start}..{end}", "dropped": ", ".join(cl_dropped)})
     return {"label": label, "folds": pd.DataFrame(fold_rows),
-            "pooled": {k: pd.concat(v) for k, v in pooled.items() if v}}
+            "pooled": {k: pd.concat(v) for k, v in pooled.items() if v},
+            "days": pd.concat(day_maps) if day_maps else None,
+            "cl_dropped": pd.DataFrame(dropped_log)}
 
 
 def pooled_summary(result: dict) -> pd.DataFrame:
+    """Pooled gain vs the refit, bootstrapped over whole race days (see ev.paired_bootstrap)."""
     pooled = result["pooled"]
     base = pooled["refit"]
+    days = result.get("days")
+    if not base.index.is_unique:
+        raise ValueError("race_id repeats across folds; pooled pairing would be wrong")
     rows = []
     for k, loss in pooled.items():
-        mean, lo, hi = ev.paired_bootstrap(base, loss)   # >0: k beats the refit
+        mean, lo, hi = ev.paired_bootstrap(base, loss, days=days)   # >0: k beats the refit
         rows.append({"model": k, "pooled_log_loss": round(loss.mean(), 4),
                      "gain_vs_refit": round(mean, 4), "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
                      "beats_refit": bool(lo > 0)})
@@ -209,11 +246,19 @@ def main() -> int:
         "Each fold trains on races strictly before its window; the LightGBM tree count is chosen "
         "by an inner split inside training only; the blend weights are fitted on training and "
         "scored once on the next period. Gain is against the market-only refit (favourite-longshot "
-        "corrected), with a paired race-level bootstrap over pooled fold races. Kaggle only; HKJC "
+        "corrected), with a paired bootstrap that resamples whole race days over the pooled fold "
+        "races (dead heats scored as -log of the mean winner probability). Kaggle only; HKJC "
         "is never touched here.", "",
         "## Per-fold log loss", "", "```", full_folds.to_string(index=False), "```", "",
         "## Pooled, all features", "", "```", full_sum.to_string(index=False), "```", "",
         "## Pooled, trainer features removed", "", "```", abl_sum.to_string(index=False), "```", "",
+        f"## Logit features", "",
+        f"Candidates: the registry's conditional-logit list ({len(feats_cl)} features, v3.1). "
+        "LightGBM gets all of them plus context columns. For the unpenalised logit, each fold "
+        "drops (on its training window only) a feature with |Spearman| > 0.9 against an earlier "
+        "kept one, or one that is an exact linear combination of kept ones; `cl_feats` in the "
+        "fold table is the number kept. Dropped per fold (all features run):", "", "```",
+        full["cl_dropped"].to_string(index=False), "```", "",
         "Read: a model 'beats' the refit only if its whole 95% CI is above 0. In-era gains here "
         "do not prove an HKJC edge; the one-shot HKJC test is scored separately in Week 5.",
     ]

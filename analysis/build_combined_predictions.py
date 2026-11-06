@@ -9,7 +9,9 @@ Not yet present, so not in the file: Track B columns (p_b_base / p_b_rating / p_
 p_b_all). They do not exist in any artifact yet; add them here once Track B is built.
 
 The market-only refit beta is fitted on h_s2 only (the Stage-2 fitting window) and applied
-to both windows, so no test-window outcome is used.
+to both windows, so no test-window outcome is used. It minimises eval_utils.per_race_log_loss,
+so it follows the same dead-heat rule as the scoring (since 6 Nov: -log mean winner p).
+race_date is carried so the scoreboard can bootstrap over whole race days.
 
     python analysis/build_combined_predictions.py
 """
@@ -43,7 +45,10 @@ def main() -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     preds = pd.read_parquet(args.predictions)
-    odds = pd.read_parquet(args.clean)[["race_id", "horse_id", "win_odds"]]
+    # win_odds for the odds baselines; race_date so scoring can resample whole race days
+    odds = pd.read_parquet(args.clean)[["race_id", "horse_id", "race_date", "win_odds"]]
+    if "race_date" in preds.columns:
+        odds = odds.drop(columns="race_date")
     df = preds.merge(odds, on=["race_id", "horse_id"], how="left", validate="one_to_one")
 
     # odds baselines over every window (these use only the current race's odds, no outcome);
@@ -59,7 +64,7 @@ def main() -> int:
                            *MODEL_COLS] if c in df.columns]
     missing_track_b = [c for c in TRACK_B if c not in df.columns]
 
-    keep = [k for k in KEYS if k in df.columns] + ["win_odds", "market_complete"] + \
+    keep = [k for k in KEYS if k in df.columns] + ["race_date", "win_odds", "market_complete"] + \
            [c for c in present if c not in KEYS]
     keep = list(dict.fromkeys(keep))
     out = df[keep].copy()

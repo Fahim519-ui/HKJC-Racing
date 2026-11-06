@@ -2,7 +2,7 @@
 
 Source predictions: `artifacts\lightgbm_independent_probability_v2\joint_predictions.parquet`.
 Rows: 10265 ({'h_s2': 5287, 'h_test': 4978}).
-Market-only refit beta (fitted on h_s2): 1.0454.
+Market-only refit beta (fitted on h_s2): 1.0537.
 
 ## Columns
 

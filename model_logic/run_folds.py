@@ -350,7 +350,7 @@ def run_fold(
     output_frame = pd.concat(
         [s2.assign(role="s2"), valid.assign(role="valid")], ignore_index=True
     )
-    keep = ["race_id", "horse_id", "role", "is_winner", "p_market", "p_cl", "p_lgbm"]
+    keep = ["race_id", "horse_id", "race_date", "role", "is_winner", "p_market", "p_cl", "p_lgbm"]
     keep += [column for column in output_frame if column.startswith("p_") and column not in keep]
     output_frame.loc[:, keep].to_parquet(output / "predictions.parquet", index=False)
     (output / "cl_selected_features.json").write_text(json.dumps(cl["selected"], indent=2) + "\n")

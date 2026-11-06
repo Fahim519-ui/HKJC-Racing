@@ -12,3 +12,6 @@
 - Relative Measures: Converted all absolute rates into within-race relative measures (subtracting the race average) to provide a comparative advantage signal for the LightGBM model.
 
 - Output: Exported the fully updated dataset as runners_merged_work1.parquet.
+
+
+> **Update (6 Nov):** the notebook prototype above has been reimplemented in the shared builder as `model_logic/track_distance_features.py` (strictly prior-day, hierarchical combo -> track -> career -> source prior shrinkage, nine race-relative rates including distance band). See `docs/features_v3_track_distance.md`.

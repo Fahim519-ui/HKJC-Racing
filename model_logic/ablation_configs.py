@@ -6,6 +6,15 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 
+try:
+    from model_logic.feature_registry import TRAINER_RATE_FEATURES
+except ModuleNotFoundError:
+    from feature_registry import TRAINER_RATE_FEATURES
+
+# Trainer-rate ablations drop every feature built from trainer win rates, including the
+# v3.1 jockey/trainer strength x field size interaction.
+_TRAINER = tuple(sorted(TRAINER_RATE_FEATURES))
+
 
 @dataclass(frozen=True)
 class AblationConfig:
@@ -22,14 +31,14 @@ class AblationConfig:
 CONFIGS = {
     "primary": AblationConfig("primary", primary=True),
     "no_trainer_rate": AblationConfig(
-        "no_trainer_rate", exclude_names=("jt_trainer_win365_rel", "jt_trainer_win365_rk")
+        "no_trainer_rate", exclude_names=_TRAINER
     ),
     "no_track_distance": AblationConfig(
         "no_track_distance", exclude_groups=("track_distance",)
     ),
     "no_trainer_no_track_distance": AblationConfig(
         "no_trainer_no_track_distance",
-        exclude_names=("jt_trainer_win365_rel", "jt_trainer_win365_rk"),
+        exclude_names=_TRAINER,
         exclude_groups=("track_distance",),
     ),
 }

@@ -1,0 +1,1786 @@
+{
+  "active_version": "v3",
+  "feature_sets": {
+    "v2_baseline": [
+      "jt_jockey_win365_rel",
+      "hf_avg3_fin_pct_rel",
+      "rc_draw_pct",
+      "rc_draw_x_hv",
+      "rc_weight_rel",
+      "hf_days_since",
+      "hf_last_fin_pct_rel",
+      "jt_trainer_win365_rel",
+      "hf_win5_s",
+      "hf_first_start",
+      "rc_draw_x_sprint",
+      "rc_weight_x_dist",
+      "hf_class_change",
+      "w3_horse_past_win_rate",
+      "w3_horse_past_top3_rate",
+      "jtp_pair_effect365_rel",
+      "jtp_pair_effect_last_50_rel"
+    ],
+    "v2_lgbm": [
+      "jt_jockey_win365_rel",
+      "hf_avg3_fin_pct_rel",
+      "rc_draw_pct",
+      "rc_draw_x_hv",
+      "rc_weight_rel",
+      "hf_days_since",
+      "hf_last_fin_pct_rel",
+      "jt_trainer_win365_rel",
+      "hf_win5_s",
+      "hf_first_start",
+      "rc_draw_x_sprint",
+      "rc_weight_x_dist",
+      "hf_class_change",
+      "w3_horse_past_win_rate",
+      "w3_horse_past_top3_rate",
+      "jtp_pair_effect365_rel",
+      "jtp_pair_effect_last_50_rel",
+      "jt_jockey_win365_rk",
+      "jt_trainer_win365_rk",
+      "hf_avg3_fin_pct_rk",
+      "hf_win5_s_rk",
+      "hf_class_change_rk",
+      "n_runners"
+    ],
+    "v3_all": [
+      "jt_jockey_win365_rel",
+      "hf_avg3_fin_pct_rel",
+      "rc_draw_pct",
+      "rc_draw_x_hv",
+      "rc_weight_rel",
+      "hf_days_since",
+      "hf_last_fin_pct_rel",
+      "jt_trainer_win365_rel",
+      "hf_win5_s",
+      "hf_first_start",
+      "rc_draw_x_sprint",
+      "rc_weight_x_dist",
+      "hf_class_change",
+      "w3_horse_past_win_rate",
+      "w3_horse_past_top3_rate",
+      "jtp_pair_effect365_rel",
+      "jtp_pair_effect_last_50_rel",
+      "jt_jockey_win365_rk",
+      "jt_trainer_win365_rk",
+      "hf_avg3_fin_pct_rk",
+      "hf_win5_s_rk",
+      "hf_class_change_rk",
+      "n_runners",
+      "hf_last_fin_pct",
+      "hf_avg3_fin_pct",
+      "jt_jockey_win365",
+      "jt_trainer_win365",
+      "jtp_pair_rides365",
+      "jtp_pair_baseline365",
+      "jtp_pair_win365",
+      "jtp_pair_effect365",
+      "jtp_pair_rides_last_50",
+      "jtp_pair_baseline_last_50",
+      "jtp_pair_win_last_50",
+      "jtp_pair_effect_last_50",
+      "jtp_pair_win365_rel",
+      "jtp_pair_win_last_50_rel",
+      "td_track_win_rel",
+      "td_track_top3_rel",
+      "td_track_fin_pct_rel",
+      "td_distance_band_win_rel",
+      "td_distance_band_top3_rel",
+      "td_distance_band_fin_pct_rel",
+      "td_track_distance_win_rel",
+      "td_track_distance_top3_rel",
+      "td_track_distance_fin_pct_rel",
+      "td_distance_band",
+      "td_track_starts",
+      "td_distance_band_starts",
+      "td_track_distance_starts",
+      "tr_last_minus_avg3_fin_pct_rel",
+      "tr_fin_pct_slope3_rel",
+      "tr_days_since_bucket",
+      "tr_class_change_direction",
+      "int_recent_form_x_class_change",
+      "int_jt_strength_x_field_size"
+    ],
+    "v3_cl": [
+      "jt_jockey_win365_rel",
+      "hf_avg3_fin_pct_rel",
+      "rc_draw_pct",
+      "rc_draw_x_hv",
+      "rc_weight_rel",
+      "hf_days_since",
+      "hf_last_fin_pct_rel",
+      "jt_trainer_win365_rel",
+      "hf_win5_s",
+      "hf_first_start",
+      "rc_draw_x_sprint",
+      "rc_weight_x_dist",
+      "hf_class_change",
+      "w3_horse_past_win_rate",
+      "w3_horse_past_top3_rate",
+      "jtp_pair_effect365_rel",
+      "jtp_pair_effect_last_50_rel",
+      "td_track_win_rel",
+      "td_track_top3_rel",
+      "td_track_fin_pct_rel",
+      "td_distance_band_win_rel",
+      "td_distance_band_top3_rel",
+      "td_distance_band_fin_pct_rel",
+      "td_track_distance_win_rel",
+      "td_track_distance_top3_rel",
+      "td_track_distance_fin_pct_rel",
+      "tr_last_minus_avg3_fin_pct_rel",
+      "tr_fin_pct_slope3_rel",
+      "tr_days_since_bucket",
+      "tr_class_change_direction",
+      "int_recent_form_x_class_change",
+      "int_jt_strength_x_field_size"
+    ],
+    "v3_lgbm": [
+      "jt_jockey_win365_rel",
+      "hf_avg3_fin_pct_rel",
+      "rc_draw_pct",
+      "rc_draw_x_hv",
+      "rc_weight_rel",
+      "hf_days_since",
+      "hf_last_fin_pct_rel",
+      "jt_trainer_win365_rel",
+      "hf_win5_s",
+      "hf_first_start",
+      "rc_draw_x_sprint",
+      "rc_weight_x_dist",
+      "hf_class_change",
+      "w3_horse_past_win_rate",
+      "w3_horse_past_top3_rate",
+      "jtp_pair_effect365_rel",
+      "jtp_pair_effect_last_50_rel",
+      "jt_jockey_win365_rk",
+      "jt_trainer_win365_rk",
+      "hf_avg3_fin_pct_rk",
+      "hf_win5_s_rk",
+      "hf_class_change_rk",
+      "n_runners",
+      "td_track_win_rel",
+      "td_track_top3_rel",
+      "td_track_fin_pct_rel",
+      "td_distance_band_win_rel",
+      "td_distance_band_top3_rel",
+      "td_distance_band_fin_pct_rel",
+      "td_track_distance_win_rel",
+      "td_track_distance_top3_rel",
+      "td_track_distance_fin_pct_rel",
+      "tr_last_minus_avg3_fin_pct_rel",
+      "tr_fin_pct_slope3_rel",
+      "tr_days_since_bucket",
+      "tr_class_change_direction",
+      "int_recent_form_x_class_change",
+      "int_jt_strength_x_field_size"
+    ]
+  },
+  "features": [
+    {
+      "added_in": "v2.0",
+      "description": "Jockey win rate relative to the race mean.",
+      "group": "jockey_trainer",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_base",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "jt_jockey_win365_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to constant 1/12, weight 30",
+      "status": "watch",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Three-start average finish percentile relative to the race mean.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_base",
+        "lgbm"
+      ],
+      "monotone_sign": -1,
+      "name": "hf_avg3_fin_pct_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Draw position scaled within the actual starter field.",
+      "group": "draw_weight",
+      "implemented": true,
+      "inputs": [
+        "draw",
+        "race_id",
+        "started"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [
+        "cl_base",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "rc_draw_pct",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Within-race draw percentage interacted with Happy Valley.",
+      "group": "interaction",
+      "implemented": true,
+      "inputs": [
+        "draw",
+        "track_code",
+        "race_id",
+        "started"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [
+        "cl_base",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "rc_draw_x_hv",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Carried weight relative to the race mean.",
+      "group": "draw_weight",
+      "implemented": true,
+      "inputs": [
+        "carried_weight_lb",
+        "race_id"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [
+        "cl_base",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "rc_weight_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Log days since the horse's previous start.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_base",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "hf_days_since",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "watch",
+      "window": "previous_start"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Previous finish percentile relative to the race mean.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": -1,
+      "name": "hf_last_fin_pct_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": "last_1"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Trainer win rate relative to the race mean.",
+      "group": "jockey_trainer",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "jt_trainer_win365_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to constant 1/12, weight 30",
+      "status": "watch",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Smoothed win rate across the previous five starts.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "hf_win5_s",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": "to constant 1/12, weight 5",
+      "status": "watch",
+      "window": "last_5"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Indicator that the horse has no previous source-local start.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "hf_first_start",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Within-race draw percentage interacted with sprint distance.",
+      "group": "interaction",
+      "implemented": true,
+      "inputs": [
+        "draw",
+        "distance_m",
+        "race_id",
+        "started"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "rc_draw_x_sprint",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Relative carried weight interacted with distance.",
+      "group": "interaction",
+      "implemented": true,
+      "inputs": [
+        "carried_weight_lb",
+        "distance_m",
+        "race_id"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "rc_weight_x_dist",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Log prize-money ratio to the horse's previous start.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "prize_hkd"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "hf_class_change",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "watch",
+      "window": "previous_start"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Unsmoothed win rate across the previous three starts.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "w3_horse_past_win_rate",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "keep",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Top-three rate across the previous three starts.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "is_top3"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "w3_horse_past_top3_rate",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "keep",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Jockey-trainer 365-day residual win effect relative to the race mean.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "jtp_pair_effect365_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to jockey and trainer rates, weight 50",
+      "status": "keep",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Jockey-trainer last-50 residual win effect relative to the race mean.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "jtp_pair_effect_last_50_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to jockey and trainer rates, weight 50",
+      "status": "keep",
+      "window": "last_50"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Within-race percentile rank of jockey win rate.",
+      "group": "jockey_trainer",
+      "implemented": true,
+      "inputs": [
+        "jt_jockey_win365",
+        "race_id"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "jt_jockey_win365_rk",
+      "optional": true,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "watch",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Within-race percentile rank of trainer win rate.",
+      "group": "jockey_trainer",
+      "implemented": true,
+      "inputs": [
+        "jt_trainer_win365",
+        "race_id"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "jt_trainer_win365_rk",
+      "optional": true,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "watch",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Within-race percentile rank of three-start finish percentile.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "hf_avg3_fin_pct",
+        "race_id"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "lgbm"
+      ],
+      "monotone_sign": -1,
+      "name": "hf_avg3_fin_pct_rk",
+      "optional": true,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Within-race percentile rank of smoothed five-start win rate.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "hf_win5_s",
+        "race_id"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "hf_win5_s_rk",
+      "optional": true,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Within-race percentile rank of class change.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "hf_class_change",
+        "race_id"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "hf_class_change_rk",
+      "optional": true,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Number of actual starters in the race.",
+      "group": "race_context",
+      "implemented": true,
+      "inputs": [
+        "race_id",
+        "started"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "n_runners",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "watch",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Previous finish percentile before race-relative centring.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": -1,
+      "name": "hf_last_fin_pct",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "keep",
+      "window": "last_1"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Three-start average finish percentile before race-relative centring.",
+      "group": "horse_form",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": -1,
+      "name": "hf_avg3_fin_pct",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "keep",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Smoothed 365-day jockey win rate.",
+      "group": "jockey_trainer",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "jt_jockey_win365",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": "to constant 1/12, weight 30",
+      "status": "watch",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Smoothed 365-day trainer win rate.",
+      "group": "jockey_trainer",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "jt_trainer_win365",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": "to constant 1/12, weight 30",
+      "status": "watch",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Earlier 365-day jockey-trainer ride count.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_rides365",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Count-weighted individual jockey and trainer 365-day baseline.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_baseline365",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Shrunken jockey-trainer 365-day win rate.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_win365",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": "to jockey and trainer rates, weight 50",
+      "status": "unaudited",
+      "window": "365D"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Jockey-trainer 365-day effect above its individual baseline.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jtp_pair_win365",
+        "jtp_pair_baseline365"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_effect365",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Earlier jockey-trainer ride count limited to 50 rides.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_rides_last_50",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "last_50"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Count-weighted individual jockey and trainer last-50 baseline.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_baseline_last_50",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "last_50"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Shrunken jockey-trainer last-50 win rate.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_win_last_50",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": "to jockey and trainer rates, weight 50",
+      "status": "unaudited",
+      "window": "last_50"
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Jockey-trainer last-50 effect above its individual baseline.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jtp_pair_win_last_50",
+        "jtp_pair_baseline_last_50"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_effect_last_50",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Jockey-trainer 365-day win rate relative to the race mean.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jtp_pair_win365",
+        "race_id"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_win365_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v2.0",
+      "description": "Jockey-trainer last-50 win rate relative to the race mean.",
+      "group": "partnership",
+      "implemented": true,
+      "inputs": [
+        "jtp_pair_win_last_50",
+        "race_id"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "jtp_pair_win_last_50_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "keep",
+      "window": null
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Log count of prior starts.",
+      "group": "horse_form",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "hf_starts_log",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Smoothed career win rate.",
+      "group": "horse_form",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "hf_career_win_s",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Five-start average finish percentile relative to the race mean.",
+      "group": "horse_form",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": -1,
+      "name": "hf_avg5_fin_pct_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "last_5"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Change in horse weight since the previous start.",
+      "group": "horse_form",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "horse_weight"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "hf_weight_chg",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "previous_start"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Change in distance since the previous start.",
+      "group": "horse_form",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "distance_m"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "hf_dist_chg",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "previous_start"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Distance-specific win rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "distance_m",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "hf_dist_win_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Track-specific win rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "hf_track_win_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Jockey-trainer combination 365-day win rate relative to the race mean.",
+      "group": "jockey_trainer",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "trainer_key",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "jt_combo_win365_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "365D"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Jockey-horse historical win rate relative to the race mean.",
+      "group": "jockey_trainer",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "horse_id",
+        "race_date",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "jt_jockey_horse_win_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Jockey 365-day top-three rate relative to the race mean.",
+      "group": "jockey_trainer",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "jockey_key",
+        "race_date",
+        "is_top3"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 1,
+      "name": "jt_jockey_top3_365_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "365D"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Squared within-race draw percentage.",
+      "group": "draw_weight",
+      "implemented": false,
+      "inputs": [
+        "draw",
+        "race_id"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "rc_draw_sq",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": null
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Squared draw percentage interacted with Happy Valley.",
+      "group": "interaction",
+      "implemented": false,
+      "inputs": [
+        "draw",
+        "track_code",
+        "race_id"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "rc_draw_sq_x_hv",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": null
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Squared log days since the previous start.",
+      "group": "trajectory",
+      "implemented": false,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "hf_days_since_sq",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "previous_start"
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Template for a race-relative optional raw-column feature.",
+      "group": "interaction",
+      "implemented": false,
+      "inputs": [
+        "<col>",
+        "race_id"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "x_<col>_rel",
+      "optional": true,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": null
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Template for an optional prior-start change feature.",
+      "group": "trajectory",
+      "implemented": false,
+      "inputs": [
+        "<col>",
+        "source",
+        "horse_id",
+        "race_date"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "x_<col>_chg",
+      "optional": true,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": null
+    },
+    {
+      "added_in": "v3.0",
+      "description": "Template for an optional three-start race-relative average.",
+      "group": "horse_form",
+      "implemented": false,
+      "inputs": [
+        "<col>",
+        "source",
+        "horse_id",
+        "race_date"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "hf_avg3_<col>_rel",
+      "optional": true,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Track-specific smoothed win rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "td_track_win_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Track-specific smoothed top-three rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "is_top3"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "td_track_top3_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Track-specific smoothed finish percentile relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": -1,
+      "name": "td_track_fin_pct_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Distance-band smoothed win rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "distance_m",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "td_distance_band_win_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Distance-band smoothed top-three rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "distance_m",
+        "is_top3"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "td_distance_band_top3_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Distance-band smoothed finish percentile relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "distance_m",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": -1,
+      "name": "td_distance_band_fin_pct_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Track x distance-band smoothed win rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "distance_m",
+        "is_winner"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "td_track_distance_win_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's track rate, weight 5 (then career, then prior-day source rate)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Track x distance-band smoothed top-three rate relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "distance_m",
+        "is_top3"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 1,
+      "name": "td_track_distance_top3_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's track rate, weight 5 (then career, then prior-day source rate)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Track x distance-band smoothed finish percentile relative to the race mean.",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "distance_m",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": -1,
+      "name": "td_track_distance_fin_pct_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": "to the horse's track rate, weight 5 (then career, then prior-day source rate)",
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Distance band: sprint <=1200, mile <=1650, middle <=2000, staying.",
+      "group": "race_context",
+      "implemented": true,
+      "inputs": [
+        "distance_m"
+      ],
+      "leakage_note": "Uses only pre-race declarations for the current race.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "td_distance_band",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": null
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Earlier-date starts by the horse at today's track (history depth).",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "td_track_starts",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Earlier-date starts by the horse at today's distance band (history depth).",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "distance_m"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "td_distance_band_starts",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Earlier-date starts by the horse at today's track x distance band (history depth).",
+      "group": "track_distance",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "track_code",
+        "distance_m"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [],
+      "monotone_sign": 0,
+      "name": "td_track_distance_starts",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "career, earlier dates"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Last finish percentile minus three-start average, relative to the race.",
+      "group": "trajectory",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "tr_last_minus_avg3_fin_pct_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Least-squares slope of the last three finish percentiles, relative to the race.",
+      "group": "trajectory",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "finish_pos"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "tr_fin_pct_slope3_rel",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Days since previous start in fixed buckets: <=14, 15-28, 29-60, 61-180, >180.",
+      "group": "trajectory",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "tr_days_since_bucket",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "previous_start"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Class move from the previous start: +1 up, -1 down, 0 within 10% prize.",
+      "group": "trajectory",
+      "implemented": true,
+      "inputs": [
+        "source",
+        "horse_id",
+        "race_date",
+        "prize_hkd"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "tr_class_change_direction",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "previous_start"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Three-start relative form times class-change direction.",
+      "group": "interaction",
+      "implemented": true,
+      "inputs": [
+        "hf_avg3_fin_pct_rel",
+        "tr_class_change_direction"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "int_recent_form_x_class_change",
+      "optional": false,
+      "relative_to_race": false,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "last_3"
+    },
+    {
+      "added_in": "v3.1",
+      "description": "Mean relative jockey and trainer win rate times (field size - 12) / 12.",
+      "group": "interaction",
+      "implemented": true,
+      "inputs": [
+        "jt_jockey_win365_rel",
+        "jt_trainer_win365_rel",
+        "n_runners"
+      ],
+      "leakage_note": "Uses only strictly earlier race dates; current-race outcome inputs are lagged.",
+      "models": [
+        "cl_candidate",
+        "lgbm"
+      ],
+      "monotone_sign": 0,
+      "name": "int_jt_strength_x_field_size",
+      "optional": false,
+      "relative_to_race": true,
+      "shrinkage": null,
+      "status": "unaudited",
+      "window": "365D"
+    }
+  ],
+  "registry_hash": "58b0e1c59516540df4110440e117db55f36aad5b872abd96976985292c29fd88",
+  "registry_version": "v3.1"
+}

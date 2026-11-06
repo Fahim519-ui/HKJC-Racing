@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from model_logic.ablation_configs import get_config
+from model_logic.ablation_configs import CONFIGS, get_config
 from model_logic.conditional_logit_tuning_v2 import (
     RaceSet,
     fit_beta,
@@ -29,6 +29,7 @@ from model_logic.conditional_logit_tuning_v2 import (
 from model_logic.feature_builder import build_features
 from model_logic.feature_registry import (
     FORBIDDEN_INPUTS,
+    REGISTRY,
     REGISTRY_VERSION,
     get_features,
     get_spec,
@@ -301,6 +302,10 @@ def run_fold(
 ) -> dict:
     started = time.monotonic()
     config = get_config(config_name)
+    unavailable_groups = [
+        group for group in config.exclude_groups
+        if not any(spec.implemented and spec.group == group and spec.models for spec in REGISTRY)
+    ]
     lgbm_features = get_features(
         "lgbm", exclude_groups=config.exclude_groups, exclude_names=config.exclude_names,
         available_columns=data.columns,
@@ -360,13 +365,16 @@ def run_fold(
     (output / "blend.json").write_text(json.dumps(blend, indent=2) + "\n")
     meta = {
         **provenance, "fold": fold.to_dict(), "config": asdict(config), "config_hash": config.fingerprint(),
+        "unavailable_exclusions": unavailable_groups,
         "race_counts": {"s1": int(s1.race_id.nunique()), "s2": int(s2.race_id.nunique()),
                         "valid": int(valid.race_id.nunique()), "s2_market_dropped": s2_dropped,
                         "valid_market_dropped": valid_dropped, "inner_tune": inner_tune_races},
         "runtime_seconds": time.monotonic() - started,
     }
     (output / "meta.json").write_text(json.dumps(meta, indent=2, default=str) + "\n")
-    return {"fold_id": fold.fold_id, **meta["race_counts"], "selected_features": len(cl["selected"]),
+    return {"config": config_name, "fold_id": fold.fold_id, **meta["race_counts"],
+            "unavailable_exclusions": ",".join(unavailable_groups) or "-",
+            "selected_features": len(cl["selected"]),
             "best_iter": lgbm["best_iter"], "blend_lambda": blend["lambda"],
             "fallback": blend["fallback"], "runtime_seconds": meta["runtime_seconds"]}
 
@@ -381,6 +389,7 @@ def main() -> int:
     parser.add_argument("--inner-tune-months", type=int, default=4)
     parser.add_argument("--min-gain", type=float, default=0.001)
     parser.add_argument("--fold-ids", nargs="*")
+    parser.add_argument("--all-configs", action="store_true")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
     if args.seeds < 1:
@@ -388,7 +397,7 @@ def main() -> int:
     folds = load_folds(args.folds)
     if args.fold_ids:
         folds = folds.loc[folds.fold_id.isin(args.fold_ids)]
-    else:
+    elif not args.all_configs:
         folds = folds.iloc[:2]
     data_hash = sha256_file(args.data)
     cache = args.out / ".cache" / f"{registry_hash()}-{data_hash}.parquet"
@@ -402,22 +411,31 @@ def main() -> int:
                             text=True, check=True).stdout.strip()
     provenance = {
         "git_commit": commit, "registry_version": REGISTRY_VERSION, "registry_hash": registry_hash(),
-        "config_name": args.config, "data_hash": data_hash,
+        "data_hash": data_hash,
         "packages": {"python": sys.version.split()[0], "pandas": pd.__version__, "numpy": np.__version__},
-        "primary": get_config(args.config).primary,
     }
     seeds = [17 + 101 * item for item in range(args.seeds)]
     reports = []
-    for _, fold in folds.iterrows():
-        target = args.out / args.config / fold.fold_id
-        if args.resume and (target / "meta.json").exists():
-            prior = json.loads((target / "meta.json").read_text())
-            if all(prior.get(key) == provenance[key] for key in ("config_name", "registry_hash", "data_hash")):
-                print(f"Skipping {fold.fold_id}: matching completed output")
-                continue
-        reports.append(run_fold(
-            fold, data, args.config, seeds, args.inner_tune_months, args.min_gain, target, provenance
-        ))
+    config_names = list(CONFIGS) if args.all_configs else [args.config]
+    for config_name in config_names:
+        config = get_config(config_name)
+        run_provenance = {
+            **provenance, "config_name": config_name, "primary": config.primary,
+        }
+        for _, fold in folds.iterrows():
+            target = args.out / config_name / fold.fold_id
+            if args.resume and (target / "meta.json").exists():
+                prior = json.loads((target / "meta.json").read_text())
+                if all(
+                    prior.get(key) == run_provenance[key]
+                    for key in ("config_name", "registry_hash", "data_hash")
+                ):
+                    print(f"Skipping {config_name}/{fold.fold_id}: matching completed output")
+                    continue
+            reports.append(run_fold(
+                fold, data, config_name, seeds, args.inner_tune_months, args.min_gain,
+                target, run_provenance,
+            ))
     if reports:
         print(pd.DataFrame(reports).to_string(index=False))
     return 0

@@ -8,10 +8,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from model_logic.ablation_configs import CONFIGS
 from model_logic.validation.evaluation import paired_bootstrap_gain, race_losses
 
 
-def metric_rows(frame: pd.DataFrame, fold_id: str) -> list[dict]:
+def metric_rows(frame: pd.DataFrame, fold_id: str, config: str) -> list[dict]:
     valid = frame.loc[frame["role"].eq("valid")].copy()
     valid["race_day"] = pd.to_datetime(valid["race_date"], errors="raise").dt.normalize()
     market = race_losses(valid, "p_market")
@@ -21,7 +22,8 @@ def metric_rows(frame: pd.DataFrame, fold_id: str) -> list[dict]:
         loss = race_losses(valid, column)
         lo, hi = paired_bootstrap_gain(market, loss, valid.groupby("race_id")["race_day"].first())
         rows.append({
-            "fold_id": fold_id, "variant": column.removeprefix("p_"), "n_races": len(loss),
+            "config": config, "fold_id": fold_id, "variant": column.removeprefix("p_"),
+            "n_races": len(loss),
             "loss": loss.mean(), "market_loss": market.mean(), "market_calibrated_loss": calibrated.mean(),
             "gain_vs_market": market.mean() - loss.mean(),
             "gain_vs_calibrated": calibrated.mean() - loss.mean(), "ci_low": lo, "ci_high": hi,
@@ -29,25 +31,65 @@ def metric_rows(frame: pd.DataFrame, fold_id: str) -> list[dict]:
     return rows
 
 
+def aggregate_config(root: Path, config: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    config_root = root / config
+    frames, selected, rows, metadata = [], [], [], []
+    for directory in sorted(path for path in config_root.iterdir() if path.is_dir()):
+        prediction = pd.read_parquet(directory / "predictions.parquet")
+        meta = json.loads((directory / "meta.json").read_text())
+        rows.extend(metric_rows(prediction, directory.name, config))
+        frames.append(prediction.assign(fold_id=directory.name))
+        selected.extend(json.loads((directory / "cl_selected_features.json").read_text()))
+        metadata.append({
+            "config": config,
+            "fold_id": directory.name,
+            "comparison": "primary" if meta["primary"] else "exploratory",
+            "unavailable_exclusions": ",".join(meta["unavailable_exclusions"]) or None,
+        })
+
+    metrics = pd.DataFrame(rows)
+    pooled = pd.DataFrame(metric_rows(pd.concat(frames, ignore_index=True), "pooled", config))
+    metrics = pd.concat([metrics, pooled], ignore_index=True)
+    labels = pd.DataFrame(metadata)
+    metrics = metrics.merge(labels, on=["config", "fold_id"], how="left")
+    metrics.loc[metrics["fold_id"].eq("pooled"), "comparison"] = (
+        "primary" if CONFIGS[config].primary else "exploratory"
+    )
+    metrics.loc[metrics["fold_id"].eq("pooled"), "unavailable_exclusions"] = (
+        ",".join(
+            sorted({
+                item
+                for values in labels["unavailable_exclusions"].dropna()
+                for item in values.split(",")
+            })
+        )
+        or None
+    )
+    selection = pd.Series(selected).value_counts().rename_axis("feature").reset_index(name="fold_count")
+    selection.insert(0, "config", config)
+    return metrics, selection
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("artifacts/folds"))
     parser.add_argument("--config", default="primary")
+    parser.add_argument("--all-configs", action="store_true")
     args = parser.parse_args()
-    root = args.root / args.config
-    frames, selected, rows = [], [], []
-    for directory in sorted(path for path in root.iterdir() if path.is_dir()):
-        prediction = pd.read_parquet(directory / "predictions.parquet")
-        rows.extend(metric_rows(prediction, directory.name))
-        frames.append(prediction.assign(fold_id=directory.name))
-        selected.extend(json.loads((directory / "cl_selected_features.json").read_text()))
-    metrics = pd.DataFrame(rows)
-    pooled = metric_rows(pd.concat(frames, ignore_index=True), "pooled")
-    metrics = pd.concat([metrics, pd.DataFrame(pooled)], ignore_index=True)
-    metrics.to_csv(root / "fold_metrics.csv", index=False)
-    pd.Series(selected).value_counts().rename_axis("feature").reset_index(name="fold_count").to_csv(
-        root / "feature_selection_frequency.csv", index=False
-    )
+    configs = sorted(CONFIGS) if args.all_configs else [args.config]
+    metrics_by_config, selections_by_config = [], []
+    for config in configs:
+        metrics, selection = aggregate_config(args.root, config)
+        metrics.to_csv(args.root / config / "fold_metrics.csv", index=False)
+        selection.to_csv(args.root / config / "feature_selection_frequency.csv", index=False)
+        metrics_by_config.append(metrics)
+        selections_by_config.append(selection)
+
+    metrics = pd.concat(metrics_by_config, ignore_index=True)
+    selections = pd.concat(selections_by_config, ignore_index=True)
+    if args.all_configs:
+        metrics.to_csv(args.root / "ablation_metrics.csv", index=False)
+        selections.to_csv(args.root / "ablation_feature_selection_frequency.csv", index=False)
     print(metrics.to_string(index=False))
     return 0
 

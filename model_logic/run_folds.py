@@ -379,6 +379,65 @@ def run_fold(
             "fallback": blend["fallback"], "runtime_seconds": meta["runtime_seconds"]}
 
 
+def run_folds(
+    folds_path: Path,
+    config_name: str = "primary",
+    data_path: Path = Path("data/clean data/runners_merged.parquet"),
+    seed_count: int = 2,
+    output: Path = Path("artifacts/folds"),
+    inner_tune_months: int = 4,
+    minimum_gain: float = 0.001,
+    fold_ids: list[str] | None = None,
+    all_configs: bool = False,
+    resume: bool = False,
+) -> list[dict]:
+    if seed_count < 1:
+        raise ValueError("seed_count must be positive")
+    folds = load_folds(folds_path)
+    if fold_ids:
+        folds = folds.loc[folds.fold_id.isin(fold_ids)]
+    elif not all_configs:
+        folds = folds.iloc[:2]
+    data_hash = sha256_file(data_path)
+    cache = output / ".cache" / f"{registry_hash()}-{data_hash}.parquet"
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    if cache.exists():
+        data = pd.read_parquet(cache)
+    else:
+        data = build_features(pd.read_parquet(data_path))
+        data.to_parquet(cache, index=False)
+    commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
+                            text=True, check=True).stdout.strip()
+    provenance = {
+        "git_commit": commit, "registry_version": REGISTRY_VERSION, "registry_hash": registry_hash(),
+        "data_hash": data_hash,
+        "packages": {"python": sys.version.split()[0], "pandas": pd.__version__, "numpy": np.__version__},
+    }
+    seeds = [17 + 101 * item for item in range(seed_count)]
+    reports = []
+    config_names = list(CONFIGS) if all_configs else [config_name]
+    for selected_config in config_names:
+        config = get_config(selected_config)
+        run_provenance = {
+            **provenance, "config_name": selected_config, "primary": config.primary,
+        }
+        for _, fold in folds.iterrows():
+            target = output / selected_config / fold.fold_id
+            if resume and (target / "meta.json").exists():
+                prior = json.loads((target / "meta.json").read_text())
+                if all(
+                    prior.get(key) == run_provenance[key]
+                    for key in ("config_name", "registry_hash", "data_hash")
+                ):
+                    print(f"Skipping {selected_config}/{fold.fold_id}: matching completed output")
+                    continue
+            reports.append(run_fold(
+                fold, data, selected_config, seeds, inner_tune_months, minimum_gain,
+                target, run_provenance,
+            ))
+    return reports
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--folds", type=Path, required=True)
@@ -392,50 +451,18 @@ def main() -> int:
     parser.add_argument("--all-configs", action="store_true")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
-    if args.seeds < 1:
-        raise ValueError("--seeds must be positive")
-    folds = load_folds(args.folds)
-    if args.fold_ids:
-        folds = folds.loc[folds.fold_id.isin(args.fold_ids)]
-    elif not args.all_configs:
-        folds = folds.iloc[:2]
-    data_hash = sha256_file(args.data)
-    cache = args.out / ".cache" / f"{registry_hash()}-{data_hash}.parquet"
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    if cache.exists():
-        data = pd.read_parquet(cache)
-    else:
-        data = build_features(pd.read_parquet(args.data))
-        data.to_parquet(cache, index=False)
-    commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
-                            text=True, check=True).stdout.strip()
-    provenance = {
-        "git_commit": commit, "registry_version": REGISTRY_VERSION, "registry_hash": registry_hash(),
-        "data_hash": data_hash,
-        "packages": {"python": sys.version.split()[0], "pandas": pd.__version__, "numpy": np.__version__},
-    }
-    seeds = [17 + 101 * item for item in range(args.seeds)]
-    reports = []
-    config_names = list(CONFIGS) if args.all_configs else [args.config]
-    for config_name in config_names:
-        config = get_config(config_name)
-        run_provenance = {
-            **provenance, "config_name": config_name, "primary": config.primary,
-        }
-        for _, fold in folds.iterrows():
-            target = args.out / config_name / fold.fold_id
-            if args.resume and (target / "meta.json").exists():
-                prior = json.loads((target / "meta.json").read_text())
-                if all(
-                    prior.get(key) == run_provenance[key]
-                    for key in ("config_name", "registry_hash", "data_hash")
-                ):
-                    print(f"Skipping {config_name}/{fold.fold_id}: matching completed output")
-                    continue
-            reports.append(run_fold(
-                fold, data, config_name, seeds, args.inner_tune_months, args.min_gain,
-                target, run_provenance,
-            ))
+    reports = run_folds(
+        folds_path=args.folds,
+        config_name=args.config,
+        data_path=args.data,
+        seed_count=args.seeds,
+        output=args.out,
+        inner_tune_months=args.inner_tune_months,
+        minimum_gain=args.min_gain,
+        fold_ids=args.fold_ids,
+        all_configs=args.all_configs,
+        resume=args.resume,
+    )
     if reports:
         print(pd.DataFrame(reports).to_string(index=False))
     return 0

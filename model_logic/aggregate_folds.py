@@ -70,26 +70,33 @@ def aggregate_config(root: Path, config: str) -> tuple[pd.DataFrame, pd.DataFram
     return metrics, selection
 
 
+def aggregate_folds(
+    root: Path = Path("artifacts/folds"), config: str = "primary", all_configs: bool = False
+) -> pd.DataFrame:
+    configs = sorted(CONFIGS) if all_configs else [config]
+    metrics_by_config, selections_by_config = [], []
+    for selected_config in configs:
+        metrics, selection = aggregate_config(root, selected_config)
+        metrics.to_csv(root / selected_config / "fold_metrics.csv", index=False)
+        selection.to_csv(root / selected_config / "feature_selection_frequency.csv", index=False)
+        metrics_by_config.append(metrics)
+        selections_by_config.append(selection)
+
+    metrics = pd.concat(metrics_by_config, ignore_index=True)
+    selections = pd.concat(selections_by_config, ignore_index=True)
+    if all_configs:
+        metrics.to_csv(root / "ablation_metrics.csv", index=False)
+        selections.to_csv(root / "ablation_feature_selection_frequency.csv", index=False)
+    return metrics
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("artifacts/folds"))
     parser.add_argument("--config", default="primary")
     parser.add_argument("--all-configs", action="store_true")
     args = parser.parse_args()
-    configs = sorted(CONFIGS) if args.all_configs else [args.config]
-    metrics_by_config, selections_by_config = [], []
-    for config in configs:
-        metrics, selection = aggregate_config(args.root, config)
-        metrics.to_csv(args.root / config / "fold_metrics.csv", index=False)
-        selection.to_csv(args.root / config / "feature_selection_frequency.csv", index=False)
-        metrics_by_config.append(metrics)
-        selections_by_config.append(selection)
-
-    metrics = pd.concat(metrics_by_config, ignore_index=True)
-    selections = pd.concat(selections_by_config, ignore_index=True)
-    if args.all_configs:
-        metrics.to_csv(args.root / "ablation_metrics.csv", index=False)
-        selections.to_csv(args.root / "ablation_feature_selection_frequency.csv", index=False)
+    metrics = aggregate_folds(args.root, args.config, args.all_configs)
     print(metrics.to_string(index=False))
     return 0
 

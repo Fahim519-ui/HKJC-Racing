@@ -12,11 +12,13 @@ import pandas as pd
 from scipy.optimize import minimize
 
 try:
-    from model_logic.feature_builder import ALL_FEATURES, build_features
-    from model_logic.feature_registry import without_trainer_rates
+    from model_logic.feature_builder import build_features
+    from model_logic.feature_registry import get_features, without_trainer_rates
 except ModuleNotFoundError:
-    from feature_builder import ALL_FEATURES, build_features
-    from feature_registry import without_trainer_rates
+    from feature_builder import build_features
+    from feature_registry import get_features, without_trainer_rates
+
+ALL_FEATURES = tuple(get_features("conditional_logit"))
 
 EPSILON = 1e-12
 

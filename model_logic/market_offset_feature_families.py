@@ -9,11 +9,15 @@ import numpy as np
 import pandas as pd
 
 try:
-    from model_logic.feature_builder import ALL_FEATURES, build_features
+    from model_logic.feature_builder import build_features
+    from model_logic.feature_registry import get_features
 except ModuleNotFoundError:
-    from feature_builder import ALL_FEATURES, build_features
+    from feature_builder import build_features
+    from feature_registry import get_features
 from market_diagnostics import FEATURE_GROUPS
 from market_offset_lightgbm import FOLDS, train_fold
+
+ALL_FEATURES = tuple(get_features("conditional_logit"))
 
 
 def walk_forward(

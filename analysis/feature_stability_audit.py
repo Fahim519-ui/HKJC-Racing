@@ -40,7 +40,13 @@ PROJECT = REPO.parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from model_logic.feature_builder import ALL_FEATURES, build_features
+from model_logic.feature_builder import build_features
+from model_logic.feature_registry import (
+    REGISTRY,
+    REGISTRY_VERSION,
+    get_features,
+    registry_hash,
+)
 from model_logic.lightgbm_independent_probability import FEATURES as V1_FEATURES
 from model_logic.lightgbm_independent_probability_v2 import add_context_features
 
@@ -56,21 +62,6 @@ HISTORY_GROUPS = ("hf", "jt", "jtp", "td", "w3")
 RAW_VERSIONS = ["jt_jockey_win365", "jt_trainer_win365", "hf_last_fin_pct", "hf_avg3_fin_pct"]
 
 
-<<<<<<< Updated upstream
-# --------------------------------------------------------------------------- loading
-def load(name: str):
-    # Fahim's modules import each other (e.g. jt_partnership_features), so put both the
-    # repo root and model_logic/ on the import path, whatever folder we are run from.
-    for path in (str(REPO), str(REPO / "model_logic")):
-        if path not in sys.path:
-            sys.path.insert(0, path)
-    spec = importlib.util.spec_from_file_location(name, REPO / "model_logic" / f"{name}.py")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
 def build(data_path: Path, all_registry: bool = False) -> tuple[pd.DataFrame, list[str], dict]:
     """Build the features the models use and decide which ones to audit.
 
@@ -83,30 +74,20 @@ def build(data_path: Path, all_registry: bool = False) -> tuple[pd.DataFrame, li
 
     Returns the built data, the audited feature names, and a coverage dict.
     """
-    cl = load("conditional_logit_tuning_v2")
-    lgb2 = load("lightgbm_independent_probability_v2")
-    v1 = load("lightgbm_independent_probability")
-    fr = load("feature_registry")
-    data = cl.build_features(pd.read_parquet(data_path))
-    v2 = lgb2.add_context_features(data, list(cl.ALL_FEATURES))
-    scripts = set(cl.ALL_FEATURES) | set(v2) | set(v1.FEATURES) | set(RAW_VERSIONS)
-    registry_models = set(fr.get_features("lgbm")) | set(fr.get_features("conditional_logit"))
-    registry_all = set(fr.get_features("all"))
+    data = build_features(pd.read_parquet(data_path))
+    conditional_logit_features = get_features("conditional_logit")
+    lgbm_features = add_context_features(data, conditional_logit_features)
+    scripts = set(conditional_logit_features) | set(lgbm_features) | set(V1_FEATURES) | set(RAW_VERSIONS)
+    registry_models = set(get_features("lgbm")) | set(conditional_logit_features)
+    registry_all = set(get_features("all"))
     wanted = scripts | registry_models | (registry_all if all_registry else set())
     # a feature the builder does not produce cannot be audited; report it instead of crashing
     feats = {f for f in wanted if f in data.columns}
     order = {"rc": 0, "hf": 1, "jt": 2, "jtp": 3, "td": 4, "w3": 5}
-=======
-def build(data_path: Path) -> tuple[pd.DataFrame, list[str]]:
-    data = build_features(pd.read_parquet(data_path))
-    v2 = add_context_features(data, list(ALL_FEATURES))
-    feats = set(ALL_FEATURES) | set(v2) | set(V1_FEATURES) | set(RAW_VERSIONS)
-    order = {"rc": 0, "hf": 1, "jt": 2, "w3": 3}
->>>>>>> Stashed changes
     feats = sorted(feats, key=lambda f: (order.get(f.split("_")[0], 9), f))
     coverage = {
-        "registry_version": fr.REGISTRY_VERSION,
-        "registry_hash": fr.registry_hash(),
+        "registry_version": REGISTRY_VERSION,
+        "registry_hash": registry_hash(),
         "registry_implemented": len(registry_all),
         "registry_implemented_not_audited": sorted(registry_all - set(feats)),
         "wanted_but_not_built": sorted(wanted - set(feats)),
@@ -117,8 +98,7 @@ def build(data_path: Path) -> tuple[pd.DataFrame, list[str]]:
 
 def add_registry_status(summary: pd.DataFrame) -> pd.DataFrame:
     """Attach the status Fahim's registry gives each feature, and flag disagreements."""
-    fr = load("feature_registry")
-    registry = {spec.name: spec.status for spec in fr.REGISTRY}
+    registry = {spec.name: spec.status for spec in REGISTRY}
     out = summary.copy()
     out["registry_status"] = out["feature"].map(registry)
     out["status_agrees"] = out["status"].eq(out["registry_status"])

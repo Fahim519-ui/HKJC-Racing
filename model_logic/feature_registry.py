@@ -24,9 +24,6 @@ GROUPS = frozenset(
     }
 )
 STATUSES = frozenset({"keep", "watch", "review", "unaudited"})
-TRAINER_RATE_FEATURES = frozenset(
-    {"jt_trainer_win365_rel", "jt_trainer_win365_rk"}
-)
 FORBIDDEN_INPUTS = frozenset(
     {
         "market_prob",
@@ -262,50 +259,30 @@ REGISTRY = (
           ("<col>", "source", "horse_id", "race_date"), window="last_3", relative=True,
           optional=True, implemented=False, note=_LAGGED_NOTE),
 
-    # Planned v3 candidates: documented but excluded from every model set.
-    _spec("td_track_win_rel", "track_distance", "Track-specific smoothed win rate relative to the race mean.",
-          ("source", "horse_id", "race_date", "track_code", "is_winner"), window="career",
-          relative=True, implemented=False, monotone=1, note=_LAGGED_NOTE),
-    _spec("td_track_top3_rel", "track_distance", "Track-specific smoothed top-three rate relative to the race mean.",
-          ("source", "horse_id", "race_date", "track_code", "is_top3"), window="career",
-          relative=True, implemented=False, monotone=1, note=_LAGGED_NOTE),
-    _spec("td_track_fin_pct_rel", "track_distance", "Track-specific smoothed finish percentile relative to the race mean.",
-          ("source", "horse_id", "race_date", "track_code", "finish_pos"), window="career",
-          relative=True, implemented=False, monotone=-1, note=_LAGGED_NOTE),
-    _spec("td_distance_band_win_rel", "track_distance", "Distance-band smoothed win rate relative to the race mean.",
-          ("source", "horse_id", "race_date", "distance_m", "is_winner"), window="career",
-          relative=True, implemented=False, monotone=1, note=_LAGGED_NOTE),
-    _spec("td_distance_band_top3_rel", "track_distance", "Distance-band smoothed top-three rate relative to the race mean.",
-          ("source", "horse_id", "race_date", "distance_m", "is_top3"), window="career",
-          relative=True, implemented=False, monotone=1, note=_LAGGED_NOTE),
-    _spec("td_distance_band_fin_pct_rel", "track_distance", "Distance-band smoothed finish percentile relative to the race mean.",
-          ("source", "horse_id", "race_date", "distance_m", "finish_pos"), window="career",
-          relative=True, implemented=False, monotone=-1, note=_LAGGED_NOTE),
-    _spec("td_track_distance_win_rel", "track_distance", "Track-distance smoothed win rate relative to the race mean.",
-          ("source", "horse_id", "race_date", "track_code", "distance_m", "is_winner"), window="career",
-          relative=True, implemented=False, monotone=1, note=_LAGGED_NOTE),
-    _spec("td_track_distance_top3_rel", "track_distance", "Track-distance smoothed top-three rate relative to the race mean.",
-          ("source", "horse_id", "race_date", "track_code", "distance_m", "is_top3"), window="career",
-          relative=True, implemented=False, monotone=1, note=_LAGGED_NOTE),
-    _spec("td_track_distance_fin_pct_rel", "track_distance", "Track-distance smoothed finish percentile relative to the race mean.",
-          ("source", "horse_id", "race_date", "track_code", "distance_m", "finish_pos"), window="career",
-          relative=True, implemented=False, monotone=-1, note=_LAGGED_NOTE),
-    _spec("tr_last_minus_avg3_fin_pct_rel", "trajectory", "Last finish percentile minus three-start average, relative to the race.",
-          ("source", "horse_id", "race_date", "finish_pos"), window="last_3", relative=True,
-          implemented=False, note=_LAGGED_NOTE),
-    _spec("tr_fin_pct_slope3_rel", "trajectory", "Three-start finish-percentile slope relative to the race.",
-          ("source", "horse_id", "race_date", "finish_pos"), window="last_3", relative=True,
-          implemented=False, note=_LAGGED_NOTE),
+        # Active v3: Track/Distance Form (Work 1)
+    _spec("td_final_win_rel", "track_distance", "Hierarchical track/distance win rate relative to race.",
+          ("source", "horse_id", "track_code", "distance_m", "is_winner"), window="career",
+          relative=True, implemented=True, models=("lgbm", "cl_candidate"), monotone=1, status="keep", note=_LAGGED_NOTE),
+    _spec("td_final_top3_rel", "track_distance", "Hierarchical track/distance top-3 rate relative to race.",
+          ("source", "horse_id", "track_code", "distance_m", "is_top3"), window="career",
+          relative=True, implemented=True, models=("lgbm", "cl_candidate"), monotone=1, status="keep", note=_LAGGED_NOTE),
+    _spec("td_final_pct_rel", "track_distance", "Hierarchical track/distance finish percentile relative to race.",
+          ("source", "horse_id", "track_code", "distance_m", "finish_pos"), window="career",
+          relative=True, implemented=True, models=("lgbm", "cl_candidate"), monotone=-1, status="keep", note=_LAGGED_NOTE),
+
+    # Active v3: Trajectory & Interactions (Missing features)
+    _spec("tr_last_minus_avg3_fin_pct_rel", "trajectory", "Last finish vs 3-race avg relative to race.",
+          ("hf_last_fin_pct_rel", "hf_avg3_fin_pct_rel"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
+    _spec("tr_fin_pct_slope3_rel", "trajectory", "3-race finish-percentile slope.",
+          ("source", "horse_id", "finish_percentile"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
     _spec("tr_days_since_bucket", "trajectory", "Bucketed days since previous start.",
-          ("source", "horse_id", "race_date"), window="previous_start", implemented=False, note=_LAGGED_NOTE),
-    _spec("tr_class_change_direction", "trajectory", "Signed class-change direction from the previous start.",
-          ("source", "horse_id", "race_date", "prize_hkd"), window="previous_start",
-          implemented=False, note=_LAGGED_NOTE),
-    _spec("int_recent_form_x_class_change", "interaction", "Recent form interacted with class-change direction.",
-          ("hf_avg3_fin_pct_rel", "tr_class_change_direction"), implemented=False),
-    _spec("int_jt_strength_x_field_size", "interaction", "Jockey-trainer strength interacted with field size.",
-          ("jt_jockey_win365_rel", "jt_trainer_win365_rel", "n_runners"), implemented=False),
-)
+          ("hf_days_since",), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
+    _spec("tr_class_change_direction", "trajectory", "Signed class-change direction.",
+          ("hf_class_change",), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
+    _spec("int_recent_form_x_class_change", "interaction", "Recent form interacted with class-change.",
+          ("hf_avg3_fin_pct_rel", "tr_class_change_direction"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
+    _spec("int_jt_strength_x_field_size", "interaction", "Jockey strength interacted with field size.",
+          ("jt_jockey_win365_rel", "n_runners"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
 
 
 _BY_NAME = {spec.name: spec for spec in REGISTRY}
@@ -360,11 +337,6 @@ def get_features(
         and spec.group not in groups
         and (not spec.optional or columns is None or set(spec.inputs).issubset(columns))
     ]
-
-
-def without_trainer_rates(features: Iterable[str]) -> list[str]:
-    """Return a feature list without trainer-rate inputs or their rank transform."""
-    return [feature for feature in features if feature not in TRAINER_RATE_FEATURES]
 
 
 def monotone_vector(features: list[str]) -> list[int]:

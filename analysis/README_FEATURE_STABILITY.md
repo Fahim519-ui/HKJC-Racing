@@ -3,7 +3,7 @@
 **Script:** `analysis/feature_stability_audit.py` (about 35 seconds).
 **Results:** [`analysis/feature_stability_results/`](feature_stability_results/) ([`stability_report.md`](feature_stability_results/stability_report.md), [`smd_by_feature.png`](feature_stability_results/smd_by_feature.png), two CSVs, `audit_meta.json`).
 **Owner:** Ek-Anankul Wirith (Inns). Roadmap of 4 Nov, priority 5 ("Job A").
-**Run on:** 4 Nov 2026, 20:01, repo commit `b4a355e`, 27 features (the first run at `c22b3f3` had 25; the 2 new jockey-trainer pair features were added since). Not committed.
+**Run on:** 6 Nov 2026, repo commit `5933fa2`, 27 features, feature registry `v3.0`. First run was 4 Nov at `c22b3f3` with 25 features; the 2 jockey-trainer pair features were added after that. The 6 Nov re-run reproduced every number from the 4 Nov run exactly (maximum difference 0.0, same statuses). The run date and commit are always in `audit_meta.json`.
 
 ---
 
@@ -56,7 +56,7 @@ The KS statistic is also in the CSV. With thousands of runners, its p-value flag
 2. **watch** if anything else is flagged: a moderate shift, a shift explained by history length, drift inside Kaggle (train to tune), a blank-rate difference, or a different effect size.
 3. **keep** if nothing is flagged.
 
-"Explained by history length" is only applied to features built from past starts (`hf_`, `jt_`, `w3_`). Field size, for example, cannot be explained that way.
+"Explained by history length" is only applied to features built from past starts (`hf_`, `jt_`, `jtp_`, `td_`, `w3_`). Field size, for example, cannot be explained that way.
 
 ## 6. Results, feature by feature
 
@@ -94,7 +94,7 @@ Draw (`rc_draw_pct`, `rc_draw_x_hv`, `rc_draw_x_sprint`), weight (`rc_weight_rel
 | `jtp_pair_effect365_rel` | 0.047 | 0.009 | +0.334 ± 0.022 | +0.415 ± 0.056 | +0.274 ± 0.060 |
 | `jtp_pair_effect_last_50_rel` | 0.044 | 0.014 | +0.350 ± 0.022 | +0.393 ± 0.045 | +0.285 ± 0.056 |
 
-Both keep their shape in HKJC, and their effect is slightly smaller but within error. Unlike the trainer rate on its own, the pair signal carries over. Both also pass the leakage tests (22 of 22), including the source-separation test that matters for the "last 50 rides" version, which has no time window.
+Both keep their shape in HKJC, and their effect is slightly smaller but within error. Unlike the trainer rate on its own, the pair signal carries over. Both also pass the leakage tests (33 of 33), including the source-separation test that matters for the "last 50 rides" version, which has no time window.
 
 ### h_test (information only)
 
@@ -117,21 +117,32 @@ cd github\HKJC-Racing
 python analysis\feature_stability_audit.py
 ```
 
-Expected end of output:
+Expected end of output (about 1 minute):
 
 ```
 status
 keep      17
 watch      8
 review     2
-27 features in 47.4s -> ...\analysis\feature_stability_results
+registry disagreements: 2
+              feature status registry_status
+    jt_trainer_win365 review           watch
+jt_trainer_win365_rel review           watch
+27 features in 57.7s -> ...\analysis\feature_stability_results
 ```
 
 The numbers change whenever Fahim or Nayeon add features. That is expected; check that the new features appear in the report.
 
-Options: `--data <parquet>` for another input, `--output-dir <folder>` for another output folder.
+Options:
+- `--data <parquet>`: another input file.
+- `--output-dir <folder>`: another output folder.
+- `--all-registry`: also audit the intermediate helper columns in the registry (ride counts, baselines, raw pair rates) that no model reads directly. Takes about 80 seconds. Use a different `--output-dir` if you do not want to overwrite the default results.
 
-New features are picked up automatically if they are added to `ALL_FEATURES` in `conditional_logit_tuning_v2.py` or to the LightGBM feature lists (the same lists the leakage tests use). Run the leakage tests first (`leakage test/README_LEAKAGE_TESTS.md`), then this audit.
+**Where the feature list comes from (changed 6 Nov).** The audit reads Fahim's registry (`model_logic/feature_registry.py`) and joins it with the model scripts' own lists. So a feature added to the registry is audited automatically, as long as the feature builder actually produces it. A feature the registry or a model lists but the builder does not produce is reported in the "not built" line instead of crashing. Run the leakage tests first (`leakage test/README_LEAKAGE_TESTS.md`), then this audit.
+
+**Agreement with the registry.** Each feature in the registry carries its own status (`keep`, `watch`, `review`, `unaudited`). The report has a section listing every feature where the registry and this audit disagree. Today that is the two trainer features (registry `watch`, audit `review`). The audit never edits the registry; the registry owner changes the label, or explains why not.
+
+**What the `--all-registry` run showed (6 Nov, 37 features: 20 keep, 15 watch, 2 review).** The 10 extra helper columns are all `jtp_pair_*`. None is `review`. Seven are `watch`, mostly because HKJC horses and pairs have shorter histories, and two more (`jtp_pair_win365_rel`, `jtp_pair_win_last_50_rel`) are marked `keep` in the registry but `watch` here (PSI 0.19 and 0.15). They are not model inputs; the models read the `*_effect_*_rel` versions, which are `keep` in both.
 
 **Reading the outputs:**
 
@@ -149,6 +160,7 @@ New features are picked up automatically if they are added to `ALL_FEATURES` in 
 - **A bug found and fixed:** the first version put 0 and 1 in the same bin, so yes/no features (like `hf_first_start`) always showed PSI 0. Fixed before the results above.
 - **Trainer flag checked by hand:** the share of trainer rates sitting exactly at the prior is similar in all windows (0.8-1.2%), so the shift is a real narrowing of the spread, not a pile-up at the prior.
 - **No test-window results used:** effects are fitted only on `k_train`, `k_early`, `k_tune` and `h_s2` (the code asserts this).
+- **Registry change checked (6 Nov):** after switching the feature list to the registry, the default run was compared with the previous one. Same 27 features, maximum numeric difference 0.0, all statuses identical. The only new things are two columns in `stability_summary.csv` (`registry_status`, `status_agrees`) and the registry section in the report.
 - **Import fix (4 Nov evening):** after Fahim's builder started importing `jt_partnership_features`, the audit crashed when run from the repo root. The loader now adds both the repo root and `model_logic/` to Python's import path. The same fix was made in `leakage test/test_leakage.py`.
 
 ## 10. Limits

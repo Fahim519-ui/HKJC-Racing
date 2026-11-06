@@ -1,8 +1,8 @@
 {
-  "generated": "2026-11-04 21:07",
+  "generated": "2026-11-06 19:23",
   "data": "runners_merged.parquet",
   "data_sha256": "d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0",
-  "repo_commit": "33ca1b0",
+  "repo_commit": "5933fa2",
   "n_features": 27,
   "features": [
     "rc_draw_pct",
@@ -27,10 +27,10 @@
     "jt_trainer_win365",
     "jt_trainer_win365_rel",
     "jt_trainer_win365_rk",
-    "w3_horse_past_top3_rate",
-    "w3_horse_past_win_rate",
     "jtp_pair_effect365_rel",
     "jtp_pair_effect_last_50_rel",
+    "w3_horse_past_top3_rate",
+    "w3_horse_past_win_rate",
     "n_runners"
   ],
   "windows": {
@@ -57,5 +57,24 @@
     "k_early",
     "k_tune",
     "h_s2"
-  ]
+  ],
+  "coverage": {
+    "registry_version": "v3.0",
+    "registry_hash": "36fdc70d579df8b7a4c090e1e98bc7c10bbe7954095e85a6f81410bfddaf88b0",
+    "registry_implemented": 37,
+    "registry_implemented_not_audited": [
+      "jtp_pair_baseline365",
+      "jtp_pair_baseline_last_50",
+      "jtp_pair_effect365",
+      "jtp_pair_effect_last_50",
+      "jtp_pair_rides365",
+      "jtp_pair_rides_last_50",
+      "jtp_pair_win365",
+      "jtp_pair_win365_rel",
+      "jtp_pair_win_last_50",
+      "jtp_pair_win_last_50_rel"
+    ],
+    "wanted_but_not_built": [],
+    "all_registry": false
+  }
 }

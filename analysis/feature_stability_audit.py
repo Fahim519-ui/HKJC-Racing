@@ -46,7 +46,8 @@ MISSING_PP = 5.0           # blank-rate difference, percentage points
 EFFECT_Z = 2.0             # coefficient difference, in combined standard errors
 REFERENCE = "k_train"
 EFFECT_WINDOWS = ["k_train", "k_early", "k_tune", "h_s2"]   # never h_test
-HISTORY_GROUPS = ("hf", "jt", "w3")      # features built from a horse's or person's past starts
+# features built from a horse's, person's or pair's past starts (shorter HKJC history shifts them)
+HISTORY_GROUPS = ("hf", "jt", "jtp", "td", "w3")
 RAW_VERSIONS = ["jt_jockey_win365", "jt_trainer_win365", "hf_last_fin_pct", "hf_avg3_fin_pct"]
 
 
@@ -64,16 +65,51 @@ def load(name: str):
     return module
 
 
-def build(data_path: Path) -> tuple[pd.DataFrame, list[str]]:
+def build(data_path: Path, all_registry: bool = False) -> tuple[pd.DataFrame, list[str], dict]:
+    """Build the features the models use and decide which ones to audit.
+
+    The feature list comes from Fahim's registry (model_logic/feature_registry.py), joined with
+    the model scripts' own lists, so a feature added to the registry is audited automatically.
+    Default = every feature a model can use (registry "lgbm" set, which includes the
+    conditional-logit set, plus the scripts' lists and the raw versions). With all_registry=True
+    every IMPLEMENTED registry feature is audited, including intermediate helper columns
+    (ride counts, baselines) that no model reads directly.
+
+    Returns the built data, the audited feature names, and a coverage dict.
+    """
     cl = load("conditional_logit_tuning_v2")
     lgb2 = load("lightgbm_independent_probability_v2")
     v1 = load("lightgbm_independent_probability")
+    fr = load("feature_registry")
     data = cl.build_features(pd.read_parquet(data_path))
     v2 = lgb2.add_context_features(data, list(cl.ALL_FEATURES))
-    feats = set(cl.ALL_FEATURES) | set(v2) | set(v1.FEATURES) | set(RAW_VERSIONS)
-    order = {"rc": 0, "hf": 1, "jt": 2, "w3": 3}
+    scripts = set(cl.ALL_FEATURES) | set(v2) | set(v1.FEATURES) | set(RAW_VERSIONS)
+    registry_models = set(fr.get_features("lgbm")) | set(fr.get_features("conditional_logit"))
+    registry_all = set(fr.get_features("all"))
+    wanted = scripts | registry_models | (registry_all if all_registry else set())
+    # a feature the builder does not produce cannot be audited; report it instead of crashing
+    feats = {f for f in wanted if f in data.columns}
+    order = {"rc": 0, "hf": 1, "jt": 2, "jtp": 3, "td": 4, "w3": 5}
     feats = sorted(feats, key=lambda f: (order.get(f.split("_")[0], 9), f))
-    return data, feats
+    coverage = {
+        "registry_version": fr.REGISTRY_VERSION,
+        "registry_hash": fr.registry_hash(),
+        "registry_implemented": len(registry_all),
+        "registry_implemented_not_audited": sorted(registry_all - set(feats)),
+        "wanted_but_not_built": sorted(wanted - set(feats)),
+        "all_registry": all_registry,
+    }
+    return data, feats, coverage
+
+
+def add_registry_status(summary: pd.DataFrame) -> pd.DataFrame:
+    """Attach the status Fahim's registry gives each feature, and flag disagreements."""
+    fr = load("feature_registry")
+    registry = {spec.name: spec.status for spec in fr.REGISTRY}
+    out = summary.copy()
+    out["registry_status"] = out["feature"].map(registry)
+    out["status_agrees"] = out["status"].eq(out["registry_status"])
+    return out
 
 
 def windows(d: pd.DataFrame) -> dict[str, pd.Series]:
@@ -286,6 +322,28 @@ def report(summary: pd.DataFrame, meta: dict, path: Path) -> None:
             f"{fmt(r['smd_h_s2_vs_k_early'])} | {r['psi_h_s2']:.3f} | {r['psi_h_s2_vs_k_early']:.3f} | "
             f"{r['psi_k_tune']:.3f} | {fmt(r['missing_pp_h_s2'], 1)} | {coef(r, 'k_train')} | "
             f"{coef(r, 'k_early')} | {coef(r, 'h_s2')} | {r['reasons']} |")
+    # where this audit and Fahim's feature registry give a feature different statuses
+    cov = meta.get("coverage", {})
+    lines += ["", "## Agreement with the feature registry", "",
+              f"Registry `{cov.get('registry_version', '?')}` (hash `{str(cov.get('registry_hash', ''))[:12]}...`). "
+              f"{cov.get('registry_implemented', '?')} implemented features; "
+              f"{len(cov.get('registry_implemented_not_audited', []))} not audited in this run "
+              f"({'all registry features' if cov.get('all_registry') else 'default: model inputs only; use --all-registry for helper columns'}).", ""]
+    if "status_agrees" in summary.columns:
+        bad = summary.loc[~summary["status_agrees"]]
+        if bad.empty:
+            lines.append("Every audited feature has the same status in the registry and in this audit.")
+        else:
+            lines += ["These features have a different status in the registry than in this audit. "
+                      "Ask the registry owner to update the label, or explain why not.", "",
+                      "| Feature | This audit | Registry | Why this audit says so |", "|---|---|---|---|"]
+            for _, r in bad.iterrows():
+                lines.append(f"| `{r['feature']}` | **{r['status']}** | {r['registry_status']} | {r['reasons']} |")
+    not_built = cov.get("wanted_but_not_built", [])
+    if not_built:
+        lines += ["", f"Listed by a model or the registry but not built by the feature builder, so not audited: "
+                      f"{', '.join(f'`{n}`' for n in not_built)}."]
+
     lines += ["", "## h_test (information only, do not use for feature choice)", "",
               "| Feature | SMD h_test vs h_s2 | PSI h_test vs h_s2 | Blank pp |", "|---|---|---|---|"]
     for _, r in s.iterrows():
@@ -300,12 +358,15 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=Path, default=REPO / "data/clean data/runners_merged.parquet")
     parser.add_argument("--output-dir", type=Path, default=default_out)
+    parser.add_argument("--all-registry", action="store_true",
+                        help="also audit intermediate registry helper columns (ride counts, baselines)")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
 
-    data, feats = build(args.data)
+    data, feats, coverage = build(args.data, all_registry=args.all_registry)
     stats, summary = audit(data, feats)
+    summary = add_registry_status(summary)
     try:
         commit = subprocess.run(["git", "-C", str(REPO), "rev-parse", "--short", "HEAD"],
                                 capture_output=True, text=True, check=True).stdout.strip()
@@ -320,6 +381,7 @@ def main() -> int:
         "thresholds": {"smd": [SMD_SMALL, SMD_LARGE], "psi": [PSI_SMALL, PSI_LARGE],
                        "missing_pp": MISSING_PP, "effect_z": EFFECT_Z},
         "effect_windows": EFFECT_WINDOWS,
+        "coverage": coverage,
     }
     stats.to_csv(args.output_dir / "window_stats.csv", index=False)
     summary.to_csv(args.output_dir / "stability_summary.csv", index=False)
@@ -327,6 +389,10 @@ def main() -> int:
     figure(summary, args.output_dir / "smd_by_feature.png")
     report(summary, meta, args.output_dir / "stability_report.md")
     print(summary["status"].value_counts().to_string())
+    disagree = summary.loc[~summary["status_agrees"], ["feature", "status", "registry_status"]]
+    print(f"registry disagreements: {len(disagree)}")
+    if len(disagree):
+        print(disagree.to_string(index=False))
     print(f"{len(feats)} features in {time.time() - t0:.1f}s -> {args.output_dir}")
     return 0
 

@@ -1,6 +1,6 @@
 # Feature stability audit (generated)
 
-Generated 2026-11-04 21:07 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `33ca1b0`. 27 features.
+Generated 2026-11-06 19:23 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `5933fa2`. 27 features.
 
 **Result:** 2 review, 8 watch, 17 keep.
 
@@ -41,6 +41,17 @@ Columns: shift of HKJC Stage 2 (h_s2) against Kaggle train, and against Kaggle e
 | `rc_weight_x_dist` | **keep** | -0.00 | -0.00 | 0.031 | 0.045 | 0.005 | +0.0 | +0.012 ± 0.027 | -0.042 ± 0.048 | -0.060 ± 0.056 | - |
 | `w3_horse_past_top3_rate` | **keep** | -0.00 | +0.00 | 0.040 | 0.002 | 0.014 | +1.5 | +0.509 ± 0.027 | +0.496 ± 0.048 | +0.517 ± 0.045 | - |
 | `w3_horse_past_win_rate` | **keep** | +0.00 | +0.00 | 0.010 | 0.000 | 0.006 | +1.5 | +0.354 ± 0.023 | +0.349 ± 0.039 | +0.310 ± 0.040 | - |
+
+## Agreement with the feature registry
+
+Registry `v3.0` (hash `36fdc70d579d...`). 37 implemented features; 10 not audited in this run (default: model inputs only; use --all-registry for helper columns).
+
+These features have a different status in the registry than in this audit. Ask the registry owner to update the label, or explain why not.
+
+| Feature | This audit | Registry | Why this audit says so |
+|---|---|---|---|
+| `jt_trainer_win365` | **review** | watch | large Kaggle->HKJC shift, also against the history-matched window; large drift inside Kaggle (train->tune); effect weaker in HKJC, also against the history-matched window |
+| `jt_trainer_win365_rel` | **review** | watch | large Kaggle->HKJC shift, also against the history-matched window; moderate drift inside Kaggle (train->tune); effect weaker in HKJC, also against the history-matched window |
 
 ## h_test (information only, do not use for feature choice)
 

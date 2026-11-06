@@ -97,10 +97,13 @@ and is dropped by the `no_trainer_rate` ablations.
 | `get_features("conditional_logit")` | 17 | 32 = 17 + 15 |
 | `get_features("lgbm")` | 23 | 38 = 23 + 15 |
 
-Pass `version="v2"` for the old sets. The legacy aliases `feature_builder.ALL_FEATURES`,
-`BASE_FEATURES` and `CANDIDATE_FEATURES` stay pinned to v2, so the standalone v2 scripts
-reproduce their published numbers. Every v2 column produced by `build_features()` is
-bit-for-bit unchanged (`tests/test_feature_context_parity.py`).
+Pass `version="v2"` for the old sets. The scripts that read the registry directly
+(`conditional_logit_tuning_v2.py`, `lightgbm_independent_probability_v2.py`, the
+market-offset scripts and the stability audit) now use the v3 sets by default. To reproduce
+their published v2 numbers, set `ACTIVE_VERSION = "v2"` or pass `version="v2"`. The deprecated
+aliases `feature_builder.ALL_FEATURES`, `BASE_FEATURES` and `CANDIDATE_FEATURES` stay pinned
+to v2. Every v2 column produced by `build_features()` is bit-for-bit unchanged
+(`tests/test_feature_context_parity.py`).
 
 Status is `unaudited` for every v3.1 feature until the stability audit assigns keep/watch/review.
 

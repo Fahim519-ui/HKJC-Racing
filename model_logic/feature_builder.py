@@ -101,6 +101,84 @@ def build_features(raw: pd.DataFrame) -> pd.DataFrame:
 
     finish_position = data["finish_pos"].astype(float).where(lambda value: value > 0)
     data["finish_percentile"] = (finish_position - 1) / (n_runners - 1)
+
+        # =========================================================
+    # Work 1: Source-separated Track/Distance Form & Trajectory
+    # =========================================================
+    # 1. Define Distance Bands
+    def get_distance_band(d):
+        if d <= 1200: return 'sprint'
+        elif d <= 1650: return 'mile'
+        elif d <= 1800: return 'middle'
+        else: return 'stay'
+
+    data['distance_band'] = data['distance_m'].apply(get_distance_band)
+    data['track_dist_combo'] = data['track_code'] + '_' + data['distance_band']
+
+    # 2. Hierarchical Shrinkage (Prevents future leakage)
+    # Global average is calculated expanding to strictly exclude future
+    data['source_win_exp'] = data.groupby('source')['is_winner'].transform(lambda x: x.expanding().mean().shift(1)).fillna(0.083)
+    data['source_top3_exp'] = data.groupby('source')['is_top3'].transform(lambda x: x.expanding().mean().shift(1)).fillna(0.25)
+    data['source_pct_exp'] = data.groupby('source')['finish_percentile'].transform(lambda x: x.expanding().mean().shift(1)).fillna(0.5)
+
+    k = 5 # Shrinkage weight
+
+    def calc_hierarchical(data, group_cols, level_name):
+        # Shifted targets (strictly prior races)
+        w_s = data.groupby(group_cols)['is_winner'].shift(1)
+        t_s = data.groupby(group_cols)['is_top3'].shift(1)
+        p_s = data.groupby(group_cols)['finish_percentile'].shift(1)
+        
+        data['_tw'] = w_s; data['_tt'] = t_s; data['_tp'] = p_s
+        
+        runs = data.groupby(group_cols)['_tw'].transform(lambda x: x.expanding().count()).fillna(0)
+        wins = data.groupby(group_cols)['_tw'].transform(lambda x: x.expanding().sum()).fillna(0)
+        top3 = data.groupby(group_cols)['_tt'].transform(lambda x: x.expanding().sum()).fillna(0)
+        pcts = data.groupby(group_cols)['_tp'].transform(lambda x: x.expanding().sum()).fillna(0)
+        
+        data[f'{level_name}_runs'] = runs
+        data[f'{level_name}_win'] = (wins + k * data['source_win_exp']) / (runs + k)
+        data[f'{level_name}_top3'] = (top3 + k * data['source_top3_exp']) / (runs + k)
+        data[f'{level_name}_pct'] = (pcts + k * data['source_pct_exp']) / (runs + k)
+        return data
+
+    # Calculate levels
+    data = calc_hierarchical(data, ['source', 'horse_id'], 'td_career')
+    data = calc_hierarchical(data, ['source', 'horse_id', 'track_code'], 'td_track')
+    data = calc_hierarchical(data, ['source', 'horse_id', 'track_dist_combo'], 'td_combo')
+
+    # 3. Apply Fallback Logic: Combo -> Track -> Career
+    def fallback(combo_col, track_col, career_col):
+        return np.where(data['td_combo_runs'] >= k, data[combo_col],
+               np.where(data['td_track_runs'] >= k, data[track_col], data[career_col]))
+
+    data['td_final_win'] = fallback('td_combo_win', 'td_track_win', 'td_career_win')
+    data['td_final_top3'] = fallback('td_combo_top3', 'td_track_top3', 'td_career_top3')
+    data['td_final_pct'] = fallback('td_combo_pct', 'td_track_pct', 'td_career_pct')
+
+    # 4. Relative Measures
+    data['td_final_win_rel'] = data['td_final_win'] - data.groupby('race_id')['td_final_win'].transform('mean')
+    data['td_final_top3_rel'] = data['td_final_top3'] - data.groupby('race_id')['td_final_top3'].transform('mean')
+    data['td_final_pct_rel'] = data['td_final_pct'] - data.groupby('race_id')['td_final_pct'].transform('mean')
+
+    # 5. Trajectory & Interaction Features (The 6 missing ones)
+    data["tr_last_minus_avg3_fin_pct_rel"] = data["hf_last_fin_pct_rel"] - data["hf_avg3_fin_pct_rel"]
+    # Slope calculation (simplified as difference between recent and older)
+    data["tr_fin_pct_slope3_rel"] = data.groupby(['source', 'horse_id'])['finish_percentile'].transform(
+        lambda x: (x.shift(1) - x.shift(3)).fillna(0)
+    )
+    data["tr_days_since_bucket"] = pd.qcut(data["hf_days_since"], q=5, labels=False, duplicates='drop').fillna(0)
+    data["tr_class_change_direction"] = np.sign(data["hf_class_change"]).fillna(0)
+    data["int_recent_form_x_class_change"] = data["hf_avg3_fin_pct_rel"] * data["tr_class_change_direction"]
+    data["int_jt_strength_x_field_size"] = data["jt_jockey_win365_rel"] * data["n_runners"]
+
+    # Clean up temporary columns
+    data.drop(columns=['_tw', '_tt', '_tp', 'source_win_exp', 'source_top3_exp', 'source_pct_exp'], inplace=True)
+    # =========================================================
+    
+
+
+    
     horse = data.groupby(["source", "horse_id"], sort=False)
 
     def lags(column: str, count: int) -> np.ndarray:

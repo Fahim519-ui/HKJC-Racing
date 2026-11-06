@@ -1,8 +1,8 @@
 # Feature stability audit (generated)
 
-Generated 2026-11-06 19:23 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `5933fa2`. 27 features.
+Generated 2026-11-06 21:50 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `fcafb9e`. 42 features.
 
-**Result:** 2 review, 8 watch, 17 keep.
+**Result:** 2 review, 10 watch, 30 keep.
 
 Thresholds: SMD 0.10 / 0.25, PSI 0.10 / 0.25, blank rate 5 pp, effect difference 2 SE. Effects use k_train, k_early, k_tune and h_s2 only, never h_test. The h_test columns are information only.
 
@@ -24,6 +24,8 @@ Columns: shift of HKJC Stage 2 (h_s2) against Kaggle train, and against Kaggle e
 | `jt_jockey_win365_rk` | **watch** | -0.00 | -0.00 | 0.002 | 0.001 | 0.001 | +0.0 | +0.551 ± 0.030 | +0.401 ± 0.054 | +0.306 ± 0.050 | effect weaker in HKJC, but not against the history-matched window |
 | `jt_trainer_win365_rk` | **watch** | -0.00 | -0.00 | 0.002 | 0.002 | 0.001 | +0.0 | +0.298 ± 0.028 | +0.374 ± 0.053 | +0.084 ± 0.049 | effect weaker in HKJC, also against the history-matched window |
 | `n_runners` | **watch** | +0.24 | +0.10 | 0.057 | 0.016 | 0.016 | +0.0 | race-level | race-level | race-level | moderate Kaggle->HKJC shift; moderate drift inside Kaggle (train->tune) |
+| `tr_days_since_bucket` | **watch** | -0.14 | +0.03 | 0.074 | 0.004 | 0.018 | +1.5 | +0.004 ± 0.032 | +0.117 ± 0.068 | +0.066 ± 0.067 | moderate Kaggle->HKJC shift |
+| `tr_fin_pct_slope3_rel` | **watch** | +0.00 | +0.00 | 0.027 | 0.002 | 0.017 | +5.6 | -0.173 ± 0.030 | -0.092 ± 0.053 | -0.143 ± 0.050 | blank rate differs by +5.6 pp |
 | `hf_avg3_fin_pct` | **keep** | -0.03 | -0.01 | 0.009 | 0.003 | 0.006 | +1.5 | -0.696 ± 0.034 | -0.659 ± 0.061 | -0.642 ± 0.057 | - |
 | `hf_avg3_fin_pct_rel` | **keep** | +0.00 | +0.00 | 0.007 | 0.003 | 0.005 | +1.5 | -0.652 ± 0.032 | -0.612 ± 0.058 | -0.603 ± 0.054 | - |
 | `hf_avg3_fin_pct_rk` | **keep** | -0.00 | -0.00 | 0.003 | 0.000 | 0.004 | +1.5 | -0.598 ± 0.031 | -0.587 ± 0.058 | -0.602 ± 0.055 | - |
@@ -32,6 +34,8 @@ Columns: shift of HKJC Stage 2 (h_s2) against Kaggle train, and against Kaggle e
 | `hf_last_fin_pct` | **keep** | -0.02 | -0.00 | 0.007 | 0.002 | 0.005 | +1.6 | -0.623 ± 0.033 | -0.570 ± 0.061 | -0.604 ± 0.058 | - |
 | `hf_last_fin_pct_rel` | **keep** | +0.00 | +0.00 | 0.006 | 0.003 | 0.005 | +1.6 | -0.589 ± 0.032 | -0.533 ± 0.058 | -0.573 ± 0.055 | - |
 | `hf_win5_s_rk` | **keep** | -0.00 | -0.00 | 0.060 | 0.008 | 0.019 | +0.0 | +0.231 ± 0.027 | +0.197 ± 0.049 | +0.255 ± 0.047 | - |
+| `int_jt_strength_x_field_size` | **keep** | +0.00 | +0.00 | 0.088 | 0.054 | 0.006 | +0.0 | +0.064 ± 0.026 | +0.142 ± 0.055 | +0.142 ± 0.068 | - |
+| `int_recent_form_x_class_change` | **keep** | +0.02 | +0.02 | 0.003 | 0.005 | 0.001 | +0.0 | -0.097 ± 0.026 | -0.081 ± 0.047 | -0.132 ± 0.048 | - |
 | `jtp_pair_effect365_rel` | **keep** | +0.00 | +0.00 | 0.047 | 0.009 | 0.010 | +0.0 | +0.334 ± 0.022 | +0.415 ± 0.056 | +0.274 ± 0.060 | - |
 | `jtp_pair_effect_last_50_rel` | **keep** | +0.00 | +0.00 | 0.044 | 0.014 | 0.039 | +0.0 | +0.350 ± 0.022 | +0.393 ± 0.045 | +0.285 ± 0.056 | - |
 | `rc_draw_pct` | **keep** | +0.00 | +0.00 | 0.002 | 0.001 | 0.001 | +0.0 | -0.175 ± 0.028 | -0.157 ± 0.052 | -0.196 ± 0.049 | - |
@@ -39,12 +43,23 @@ Columns: shift of HKJC Stage 2 (h_s2) against Kaggle train, and against Kaggle e
 | `rc_draw_x_sprint` | **keep** | +0.04 | +0.08 | 0.003 | 0.010 | 0.002 | +0.0 | -0.181 ± 0.043 | -0.167 ± 0.082 | -0.152 ± 0.072 | - |
 | `rc_weight_rel` | **keep** | -0.00 | -0.00 | 0.039 | 0.062 | 0.006 | +0.0 | +0.178 ± 0.028 | +0.207 ± 0.052 | +0.102 ± 0.053 | - |
 | `rc_weight_x_dist` | **keep** | -0.00 | -0.00 | 0.031 | 0.045 | 0.005 | +0.0 | +0.012 ± 0.027 | -0.042 ± 0.048 | -0.060 ± 0.056 | - |
+| `td_distance_band_fin_pct_rel` | **keep** | +0.00 | +0.00 | 0.006 | 0.006 | 0.005 | +0.0 | -0.562 ± 0.030 | -0.568 ± 0.057 | -0.580 ± 0.053 | - |
+| `td_distance_band_top3_rel` | **keep** | +0.00 | +0.00 | 0.014 | 0.006 | 0.006 | +0.0 | +0.435 ± 0.026 | +0.430 ± 0.045 | +0.466 ± 0.042 | - |
+| `td_distance_band_win_rel` | **keep** | +0.00 | -0.00 | 0.045 | 0.017 | 0.035 | +0.0 | +0.326 ± 0.022 | +0.311 ± 0.039 | +0.303 ± 0.039 | - |
+| `td_track_distance_fin_pct_rel` | **keep** | +0.00 | -0.00 | 0.004 | 0.002 | 0.003 | +0.0 | -0.600 ± 0.031 | -0.585 ± 0.057 | -0.608 ± 0.054 | - |
+| `td_track_distance_top3_rel` | **keep** | +0.00 | +0.00 | 0.016 | 0.009 | 0.007 | +0.0 | +0.449 ± 0.025 | +0.426 ± 0.045 | +0.485 ± 0.042 | - |
+| `td_track_distance_win_rel` | **keep** | -0.00 | +0.00 | 0.031 | 0.016 | 0.027 | +0.0 | +0.331 ± 0.022 | +0.302 ± 0.038 | +0.301 ± 0.037 | - |
+| `td_track_fin_pct_rel` | **keep** | -0.00 | -0.00 | 0.006 | 0.003 | 0.001 | +0.0 | -0.590 ± 0.031 | -0.607 ± 0.058 | -0.628 ± 0.055 | - |
+| `td_track_top3_rel` | **keep** | -0.00 | +0.00 | 0.015 | 0.014 | 0.005 | +0.0 | +0.449 ± 0.026 | +0.440 ± 0.045 | +0.489 ± 0.042 | - |
+| `td_track_win_rel` | **keep** | +0.00 | +0.00 | 0.049 | 0.020 | 0.029 | +0.0 | +0.328 ± 0.022 | +0.306 ± 0.038 | +0.313 ± 0.039 | - |
+| `tr_class_change_direction` | **keep** | -0.00 | -0.00 | 0.002 | 0.003 | 0.000 | +0.0 | +0.121 ± 0.032 | +0.071 ± 0.058 | +0.134 ± 0.060 | - |
+| `tr_last_minus_avg3_fin_pct_rel` | **keep** | -0.00 | -0.00 | 0.010 | 0.002 | 0.005 | +1.6 | -0.152 ± 0.029 | -0.078 ± 0.056 | -0.148 ± 0.054 | - |
 | `w3_horse_past_top3_rate` | **keep** | -0.00 | +0.00 | 0.040 | 0.002 | 0.014 | +1.5 | +0.509 ± 0.027 | +0.496 ± 0.048 | +0.517 ± 0.045 | - |
 | `w3_horse_past_win_rate` | **keep** | +0.00 | +0.00 | 0.010 | 0.000 | 0.006 | +1.5 | +0.354 ± 0.023 | +0.349 ± 0.039 | +0.310 ± 0.040 | - |
 
 ## Agreement with the feature registry
 
-Registry `v3.0` (hash `36fdc70d579d...`). 37 implemented features; 10 not audited in this run (default: model inputs only; use --all-registry for helper columns).
+Registry `v3.1` (hash `58b0e1c59516...`). 56 implemented features; 14 not audited in this run (default: model inputs only; use --all-registry for helper columns).
 
 These features have a different status in the registry than in this audit. Ask the registry owner to update the label, or explain why not.
 
@@ -52,6 +67,21 @@ These features have a different status in the registry than in this audit. Ask t
 |---|---|---|---|
 | `jt_trainer_win365` | **review** | watch | large Kaggle->HKJC shift, also against the history-matched window; large drift inside Kaggle (train->tune); effect weaker in HKJC, also against the history-matched window |
 | `jt_trainer_win365_rel` | **review** | watch | large Kaggle->HKJC shift, also against the history-matched window; moderate drift inside Kaggle (train->tune); effect weaker in HKJC, also against the history-matched window |
+| `td_distance_band_fin_pct_rel` | **keep** | unaudited | - |
+| `td_distance_band_top3_rel` | **keep** | unaudited | - |
+| `td_distance_band_win_rel` | **keep** | unaudited | - |
+| `td_track_distance_fin_pct_rel` | **keep** | unaudited | - |
+| `td_track_distance_top3_rel` | **keep** | unaudited | - |
+| `td_track_distance_win_rel` | **keep** | unaudited | - |
+| `td_track_fin_pct_rel` | **keep** | unaudited | - |
+| `td_track_top3_rel` | **keep** | unaudited | - |
+| `td_track_win_rel` | **keep** | unaudited | - |
+| `int_jt_strength_x_field_size` | **keep** | unaudited | - |
+| `int_recent_form_x_class_change` | **keep** | unaudited | - |
+| `tr_class_change_direction` | **keep** | unaudited | - |
+| `tr_days_since_bucket` | **watch** | unaudited | moderate Kaggle->HKJC shift |
+| `tr_fin_pct_slope3_rel` | **watch** | unaudited | blank rate differs by +5.6 pp |
+| `tr_last_minus_avg3_fin_pct_rel` | **keep** | unaudited | - |
 
 ## h_test (information only, do not use for feature choice)
 
@@ -67,6 +97,8 @@ These features have a different status in the registry than in this audit. Ask t
 | `jt_jockey_win365_rk` | +0.00 | 0.000 | +0.0 |
 | `jt_trainer_win365_rk` | +0.00 | 0.001 | +0.0 |
 | `n_runners` | -0.03 | 0.005 | +0.0 |
+| `tr_days_since_bucket` | +0.39 | 0.331 | -3.7 |
+| `tr_fin_pct_slope3_rel` | +0.00 | 0.098 | -10.1 |
 | `hf_avg3_fin_pct` | +0.01 | 0.037 | -3.7 |
 | `hf_avg3_fin_pct_rel` | -0.00 | 0.031 | -3.7 |
 | `hf_avg3_fin_pct_rk` | -0.01 | 0.025 | -3.7 |
@@ -75,6 +107,8 @@ These features have a different status in the registry than in this audit. Ask t
 | `hf_last_fin_pct` | +0.02 | 0.025 | -3.7 |
 | `hf_last_fin_pct_rel` | -0.00 | 0.027 | -3.7 |
 | `hf_win5_s_rk` | +0.00 | 0.134 | +0.0 |
+| `int_jt_strength_x_field_size` | -0.00 | 0.012 | +0.0 |
+| `int_recent_form_x_class_change` | -0.00 | 0.000 | +0.0 |
 | `jtp_pair_effect365_rel` | -0.00 | 0.054 | +0.0 |
 | `jtp_pair_effect_last_50_rel` | -0.00 | 0.034 | +0.0 |
 | `rc_draw_pct` | +0.00 | 0.000 | +0.0 |
@@ -82,6 +116,17 @@ These features have a different status in the registry than in this audit. Ask t
 | `rc_draw_x_sprint` | +0.03 | 0.001 | +0.0 |
 | `rc_weight_rel` | +0.00 | 0.013 | +0.0 |
 | `rc_weight_x_dist` | +0.00 | 0.007 | +0.0 |
+| `td_distance_band_fin_pct_rel` | -0.00 | 0.030 | +0.0 |
+| `td_distance_band_top3_rel` | -0.00 | 0.023 | +0.0 |
+| `td_distance_band_win_rel` | -0.00 | 0.065 | +0.0 |
+| `td_track_distance_fin_pct_rel` | -0.00 | 0.018 | +0.0 |
+| `td_track_distance_top3_rel` | -0.00 | 0.016 | +0.0 |
+| `td_track_distance_win_rel` | +0.00 | 0.052 | +0.0 |
+| `td_track_fin_pct_rel` | +0.00 | 0.028 | +0.0 |
+| `td_track_top3_rel` | +0.00 | 0.017 | +0.0 |
+| `td_track_win_rel` | -0.00 | 0.050 | +0.0 |
+| `tr_class_change_direction` | -0.03 | 0.002 | +0.0 |
+| `tr_last_minus_avg3_fin_pct_rel` | +0.00 | 0.040 | -3.7 |
 | `w3_horse_past_top3_rate` | -0.01 | 0.113 | -3.7 |
 | `w3_horse_past_win_rate` | -0.03 | 0.045 | -3.7 |
 

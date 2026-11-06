@@ -1,16 +1,12 @@
 # Leakage tests: what they check and how to use them
 
-**File:** `leakage test/test_leakage.py` (33 tests, about 25 seconds).
+**File:** `leakage test/test_leakage.py` (26 tests, about 15 seconds).
 **Owner:** Ek-Anankul Wirith (Inns). Roadmap of 4 Nov, execution step 2.
-**Status (5 Nov 2026):** all 33 pass on the current `model_logic/` code. Not committed.
+**Status (6 Nov 2026 evening):** all 26 pass at `fcafb9e`. They check 55 features, including the 18 v3.1 track/distance, trajectory and interaction features.
 
-Every structural check runs against **both** feature builders a live model could use:
-- `cl_v2` = `conditional_logit_tuning_v2.build_features` - what both models run today
-- `fb` = `model_logic/feature_builder.build_features` - Fahim's newer builder (the parity
-  test proves it is numerically identical; the models will switch to it)
+**One builder.** Since 6 Nov both models (`conditional_logit_tuning_v2.py`, `lightgbm_independent_probability_v2.py`) build features with `model_logic/feature_builder.py`. Every structural check runs against that builder (`BUILDERS` in the test file). `test_models_use_the_tested_builder` fails if a model ever builds features another way; if that happens, add the new builder to `BUILDERS` so every check covers both. (From 5 to 6 Nov the suite ran every check against two builders, 33 tests; the old builder is now the same function, so those duplicates were removed.)
 
-So whichever builder the models use, it is covered. When the models move fully to
-`feature_builder.py`, drop the `cl_v2` entry from `BUILDER_NAMES` in the test file.
+**Feature list.** Taken from the registry (every implemented feature and the LightGBM set) joined with `conditional_logit_tuning_v2.ALL_FEATURES` and the LightGBM lists. Do not use `feature_builder.ALL_FEATURES`: it is a deprecated alias that still lists only the 17 v2 features and would skip the new ones. Text columns (`td_distance_band`, a label like "sprint") are skipped; the numeric features built from them are checked.
 
 ---
 
@@ -75,10 +71,10 @@ python -m pytest "leakage test\test_leakage.py" -v
 Good output ends with:
 
 ```
-============================= 33 passed in 23.36s =============================
+============================= 26 passed in 15.18s =============================
 ```
 
-Each structural test runs twice, once per builder, shown as `[...-cl_v2]` and `[...-fb]` in the test name. To run one test only, add `-k` and part of its name, e.g. `-k cutoff` or `-k same_day`.
+Structural tests show the builder in their name, e.g. `[...-feature_builder]`. To run one test only, add `-k` and part of its name, e.g. `-k cutoff` or `-k same_day`. Also run the team's tests in `tests/` (`python -m pytest tests -v`, 27 tests, including Nayeon's `test_v3_features_leakage.py`).
 
 ## 5. What each test checks
 
@@ -130,7 +126,7 @@ A test that can never fail proves nothing. So each check is also run on a **deli
 
 All 8 controls are caught. So when the real features pass, it means something.
 
-**Checked against Nayeon's integrated builder.** Her `integrated_feature_builder.py` (not yet used by any model) builds the `td_*` track/distance features with whole-source-mean shrinkage. Running the cut-off test against it flags all 18 `td_*` columns (about 12,400 pre-cutoff rows move). That is the proof the cut-off test will catch her leak once her features are merged into a live builder.
+**Checked against Nayeon's track/distance features (history).** Her first integrated version (5 Nov, `integrated_feature_builder.py`) shrank toward a whole-source mean: the cut-off test flagged all 18 `td_*` columns. Her 6 Nov `nov_6_feature_builder.py` used an expanding mean over earlier rows, which still let runners see earlier rows of the same day: the same-day test flagged 15 `td_*` features. Both files were removed. The v3.1 version now in `feature_builder.py` (6 Nov evening) passes every check.
 
 ## 6. What a failure looks like and what to do
 
@@ -166,9 +162,9 @@ Run the tests **after every change to a feature builder**, and before any result
 
 The roadmap features need special care, and the tests are already set up for them:
 - **Jockey-trainer pairs, "last-N" version:** last-N has no time window, so it would cross the five-year gap between Kaggle and HKJC. It must be grouped by `source`. The cross-source control proves the test would catch a miss. (Already merged and passing.)
-- **Track/distance form (Nayeon):** must use starts strictly before today, grouped by `source` and horse, and **must not shrink toward a whole-source mean**. Her current version does, so when it is merged into a live builder the cut-off test (Group 4) will fail on the `td_*` features until the shrinkage is changed to a fixed prior or an earlier-days-only mean.
+- **Track/distance form (Nayeon):** must use starts strictly before today, grouped by `source` and horse, and must not shrink toward a whole-source mean. The v3.1 version in `feature_builder.py` does this correctly: it passes the same-day, source-separation and cut-off tests.
 
-**A note on which builder.** Both models still call `conditional_logit_tuning_v2.build_features`. Fahim's `feature_builder.py` exists and is identical, but no model imports it yet, and Nayeon's `integrated_feature_builder.py` is a copy nothing imports. So her features are in **no** live builder right now, which is why every test passes. The moment someone adds her features to the builder the models actually run, re-run these tests.
+**A note on which builder.** Since 6 Nov both models import `build_features` from `model_logic/feature_builder.py`, and the v3.1 track/distance, trajectory and interaction features are built there. `test_models_use_the_tested_builder` fails if a model switches to another builder. Re-run these tests after every change to `feature_builder.py` or its helper modules (`track_distance_features.py`, `trajectory_features.py`, `jt_partnership_features.py`).
 
 ## 8. Limits (what these tests do not prove)
 

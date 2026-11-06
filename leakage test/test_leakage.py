@@ -11,10 +11,11 @@ What is tested (rules from DATA_RULES.md and WEEK3-4_PLAN.md section 5.2):
      every earlier-dated feature unchanged. This catches shrinkage toward a whole-period mean
      (e.g. a source average that includes h_test), which the shuffle tests in 1-3 cannot.
 
-Checks 1-4 run against BOTH builders a live model could use: the one the models run today
-(conditional_logit_tuning_v2.build_features, "cl_v2") and Fahim's feature_builder.py ("fb").
-The feature list is taken from feature_registry joined with the scripts' own lists, so new
-registered features are picked up automatically.
+Checks 1-4 run against the builder the live models use, model_logic/feature_builder.py
+(both models import its build_features since 6 Nov; test_models_use_the_tested_builder fails
+if that ever changes). The feature list is taken from feature_registry (every implemented
+feature) joined with the scripts' own lists, so new registered features are picked up
+automatically, including the v3.1 track/distance, trajectory and interaction features.
 
 Each check also runs on a deliberately leaky feature (a "negative control") to prove the
 check can fail. A check that cannot fail proves nothing.
@@ -29,17 +30,25 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from model_logic.feature_builder import ALL_FEATURES, build_features
-from model_logic.lightgbm_independent_probability import FEATURES as V1_FEATURES
-from model_logic.lightgbm_independent_probability_v2 import add_context_features
-
 REPO = Path(__file__).resolve().parents[1]
+for _path in (str(REPO), str(REPO / "model_logic")):     # works from any folder
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
+
+import model_logic.conditional_logit_tuning_v2 as cl  # noqa: E402
+import model_logic.feature_builder as fb  # noqa: E402
+import model_logic.feature_registry as fr  # noqa: E402
+import model_logic.lightgbm_independent_probability as v1  # noqa: E402
+import model_logic.lightgbm_independent_probability_v2 as lgb2  # noqa: E402
+
 ARTIFACTS = REPO / "artifacts"
 KEY = ["source", "race_id", "horse_id"]
 PRIOR_WIN = 1 / 12
@@ -72,77 +81,54 @@ def _data_path() -> Path:
     pytest.skip("runners_merged.parquet not found; set HKJC_DATA")
 
 
-<<<<<<< Updated upstream
-@lru_cache(maxsize=1)
-def modules():
-    return _load("conditional_logit_tuning_v2"), _load("lightgbm_independent_probability_v2")
-
-
-# The two builders that the live models can run. "cl_v2" is what both models use today
-# (conditional_logit_tuning_v2.build_features). "fb" is Fahim's newer feature_builder.py,
-# which the parity test proves is numerically identical and which the models will switch to.
-# Every check runs against both, so whichever the models use is always covered. When the
-# models move fully to feature_builder.py, drop the "cl_v2" entry from BUILDERS.
-BUILDER_NAMES = ("cl_v2", "fb")
+# Both live models build their features with model_logic/feature_builder.py
+# (conditional_logit_tuning_v2 and lightgbm_independent_probability_v2 import its build_features).
+# So there is one builder to test. test_models_use_the_tested_builder fails loudly if a model ever
+# stops using it; add the new builder to BUILDERS then, so every check covers both again.
+BUILDERS = {"feature_builder": fb.build_features}
+BUILDER_NAMES = tuple(BUILDERS)
 
 
 def _add_context(data: pd.DataFrame) -> pd.DataFrame:
     """Append the v2 LightGBM rank-context features in place, as the models do."""
-    _, lgb2 = modules()
-    cl, _ = modules()
     lgb2.add_context_features(data, list(cl.ALL_FEATURES))
     return data
 
 
 def make_builder(name: str):
     """Return a build function that produces every column a model could feed in."""
-    if name == "cl_v2":
-        cl, _ = modules()
-        return lambda raw: _add_context(cl.build_features(raw))
-    if name == "fb":
-        fb = _load("feature_builder")
-        return lambda raw: _add_context(fb.build_features(raw))
-    raise ValueError(f"unknown builder {name}")
+    build = BUILDERS[name]
+    return lambda raw: _add_context(build(raw))
 
 
 def fahim_builder(raw: pd.DataFrame) -> pd.DataFrame:
-    """Back-compat alias used by the negative controls: the builder the models run today."""
-    return make_builder("cl_v2")(raw)
+    """The builder the models run, plus LightGBM context. Used by the negative controls."""
+    return make_builder(BUILDER_NAMES[0])(raw)
 
 
 @lru_cache(maxsize=1)
 def model_features() -> tuple[str, ...]:
-    """Every feature any model can use: the registry's model sets joined with what the
-    scripts' own lists and context helper actually produce."""
-    cl, lgb2 = modules()
-    v1 = _load("lightgbm_independent_probability")
-    names: set[str] = set(cl.ALL_FEATURES) | set(v1.FEATURES)
-    try:
-        reg = _load("feature_registry")
-        names |= set(reg.get_features("all")) | set(reg.get_features("lgbm"))
-    except Exception:
-        pass
-    # add the rank-context columns the lgbm helper creates
-    raw = pd.read_parquet(_data_path())
-    built = _add_context(cl.build_features(raw))
+    """Every numeric feature a model can use: the registry's sets (every implemented feature and
+    the LightGBM set) joined with the scripts' own lists and the rank-context columns.
+
+    cl.ALL_FEATURES is used, not feature_builder.ALL_FEATURES: the latter is a deprecated alias
+    that still lists only the 17 v2 features and would skip the v3.1 td_/tr_/int_ features."""
+    names = (set(cl.ALL_FEATURES) | set(v1.FEATURES)
+             | set(fr.get_features("all")) | set(fr.get_features("lgbm")))
+    built = fahim_builder(pd.read_parquet(_data_path()))
     names |= {c for c in built.columns if c.endswith("_rk")}
-    # keep only columns at least one builder actually produces, so checks never compare NaN
-    return tuple(sorted(n for n in names if n in built.columns))
-=======
-def fahim_builder(raw: pd.DataFrame) -> pd.DataFrame:
-    """The real pipeline: build_features, then the v2 LightGBM context features."""
-    data = build_features(raw)
-    add_context_features(data, list(ALL_FEATURES))
-    return data
+    numeric = {c for c in built.columns
+               if pd.api.types.is_numeric_dtype(built[c]) or pd.api.types.is_bool_dtype(built[c])}
+    # Only columns the builder actually produces and that are numbers can be compared.
+    # Text columns (e.g. td_distance_band, a label like "sprint") are covered by the numeric
+    # features built from them.
+    return tuple(sorted(n for n in names if n in numeric))
 
 
-def model_features() -> list[str]:
-    """Every feature any of the three scripts can feed a model."""
-    raw = pd.read_parquet(_data_path())
-    data = build_features(raw)
-    v2 = add_context_features(data, list(ALL_FEATURES))
-    return sorted(set(ALL_FEATURES) | set(v2) | set(V1_FEATURES))
->>>>>>> Stashed changes
+def test_models_use_the_tested_builder():
+    """Every check below tests BUILDERS. Fail if a model builds features some other way."""
+    assert cl.build_features is fb.build_features, "conditional logit uses a different builder"
+    assert lgb2.build_features is fb.build_features, "LightGBM v2 uses a different builder"
 
 
 # ---------------------------------------------------------------------- perturbation

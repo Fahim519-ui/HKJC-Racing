@@ -3,7 +3,7 @@
 **Script:** `analysis/feature_stability_audit.py` (about 35 seconds).
 **Results:** [`analysis/feature_stability_results/`](feature_stability_results/) ([`stability_report.md`](feature_stability_results/stability_report.md), [`smd_by_feature.png`](feature_stability_results/smd_by_feature.png), two CSVs, `audit_meta.json`).
 **Owner:** Ek-Anankul Wirith (Inns). Roadmap of 4 Nov, priority 5 ("Job A").
-**Run on:** 6 Nov 2026, repo commit `5933fa2`, 27 features, feature registry `v3.0`. First run was 4 Nov at `c22b3f3` with 25 features; the 2 jockey-trainer pair features were added after that. The 6 Nov re-run reproduced every number from the 4 Nov run exactly (maximum difference 0.0, same statuses). The run date and commit are always in `audit_meta.json`.
+**Run on:** 6 Nov 2026 evening, repo commit `fcafb9e`, **42 features**, feature registry `v3.1`. History: 4 Nov at `c22b3f3` (25 features), 6 Nov at `5933fa2` (27, after the jockey-trainer pair features). The 42-feature run adds the 15 v3.1 track/distance, trajectory and interaction features; the original 27 kept every number exactly (maximum difference 0.0, same statuses), so the builder rewrite did not change them. The run date and commit are always in `audit_meta.json`.
 
 ---
 
@@ -94,7 +94,7 @@ Draw (`rc_draw_pct`, `rc_draw_x_hv`, `rc_draw_x_sprint`), weight (`rc_weight_rel
 | `jtp_pair_effect365_rel` | 0.047 | 0.009 | +0.334 ± 0.022 | +0.415 ± 0.056 | +0.274 ± 0.060 |
 | `jtp_pair_effect_last_50_rel` | 0.044 | 0.014 | +0.350 ± 0.022 | +0.393 ± 0.045 | +0.285 ± 0.056 |
 
-Both keep their shape in HKJC, and their effect is slightly smaller but within error. Unlike the trainer rate on its own, the pair signal carries over. Both also pass the leakage tests (33 of 33), including the source-separation test that matters for the "last 50 rides" version, which has no time window.
+Both keep their shape in HKJC, and their effect is slightly smaller but within error. Unlike the trainer rate on its own, the pair signal carries over. Both also pass the leakage tests (26 of 26), including the source-separation test that matters for the "last 50 rides" version, which has no time window.
 
 ### h_test (information only)
 
@@ -121,15 +121,19 @@ Expected end of output (about 1 minute):
 
 ```
 status
-keep      17
-watch      8
+keep      30
+watch     10
 review     2
-registry disagreements: 2
-              feature status registry_status
-    jt_trainer_win365 review           watch
-jt_trainer_win365_rel review           watch
-27 features in 57.7s -> ...\analysis\feature_stability_results
+registry disagreements: 17
+                       feature status registry_status
+             jt_trainer_win365 review           watch
+         jt_trainer_win365_rel review           watch
+  td_distance_band_fin_pct_rel   keep       unaudited
+  ... (13 more v3.1 features: registry "unaudited", audit keep/watch)
+42 features in 79.9s -> ...\analysis\feature_stability_results
 ```
+
+Of the 17 disagreements, only the 2 trainer features are real disagreements. The other 15 are the new v3.1 features, which the registry still marks `unaudited`; the audit is what audits them (13 `keep`, 2 `watch`: `tr_days_since_bucket` for a moderate Kaggle-to-HKJC shift, `tr_fin_pct_slope3_rel` for a blank rate 5.6 points higher in HKJC).
 
 The numbers change whenever Fahim or Nayeon add features. That is expected; check that the new features appear in the report.
 

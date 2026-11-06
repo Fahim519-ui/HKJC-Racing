@@ -10,19 +10,23 @@
 
 ## 1. Leakage tests: pass
 
-**33 of 33 pass** (`leakage test/test_leakage.py`, about 25 seconds; expanded from 22 on 5 Nov). Details: `leakage test/README_LEAKAGE_TESTS.md`.
+**26 of 26 pass** (`leakage test/test_leakage.py`, about 15 seconds). Details: `leakage test/README_LEAKAGE_TESTS.md`.
+
+> **Update 6 Nov evening (commit `fcafb9e` + my fix):** both models now build features with `model_logic/feature_builder.py` only, so the checks run against one builder instead of two (that is why the count fell from 33 to 26: 8 duplicate runs removed, 1 new check added that fails if a model stops using the tested builder). The suite now checks **55 features**, including the **18 new v3.1 track/distance, trajectory and interaction features**. **Nayeon's same-day leak is fixed** in the integrated version: the same-day and cut-off tests pass on every `td_`/`tr_`/`int_` feature. Fahim's and Nayeon's own tests in `tests/` also pass (27 of 27).
 
 - No feature uses same-day results.
 - No feature mixes Kaggle and HKJC history.
 - No feature uses post-race or odds columns.
-- **New cut-off check:** no feature leans on a whole-period average that includes the test races. This is the check that will catch Nayeon's track/distance (`td_*`) shrinkage once her features reach a live builder.
-- Every structural check now runs against **both** builders a model could use (`cl_v2` = the one the models run today, `fb` = Fahim's new `feature_builder.py`).
+- **Cut-off check:** no feature leans on a whole-period average that includes the test races. It now passes on Nayeon's integrated `td_*` features.
+- Every structural check runs against the builder the models use (`feature_builder.py`); a separate check fails if a model ever builds features another way.
 - The two jockey-trainer pair features (`jtp_pair_effect365_rel`, `jtp_pair_effect_last_50_rel`) are covered and pass. The "last 50 rides" version has no time window, so the source-separation test is the one that matters for it, and it passes.
 - Every check also catches a deliberately leaky feature (8 controls), so a pass means something. The cut-off control reproduces Nayeon's `td_*` leak and is caught.
 
 ## 2. Stability audit: mostly stable, one real problem
 
-27 features checked: **17 keep, 8 watch, 2 review.** Script and details: `analysis/feature_stability_audit.py`, `analysis/README_FEATURE_STABILITY.md`. Report: `analysis/feature_stability_results/stability_report.md`.
+42 features checked (registry v3.1): **30 keep, 10 watch, 2 review.** Script and details: `analysis/feature_stability_audit.py`, `analysis/README_FEATURE_STABILITY.md`. Report: `analysis/feature_stability_results/stability_report.md`.
+
+The original 27 features are unchanged by the builder rewrite (every number identical). Of the 15 new model features, 13 are `keep` and 2 are `watch` (`tr_days_since_bucket`: moderate Kaggle-to-HKJC shift; `tr_fin_pct_slope3_rel`: blank rate 5.6 points higher in HKJC). The registry marks all 15 as `unaudited`; the audit now gives them a status.
 
 | What | Result |
 |---|---|

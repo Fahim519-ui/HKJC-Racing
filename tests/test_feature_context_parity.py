@@ -9,10 +9,12 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 
 from model_logic.feature_builder import build_features
+from model_logic.feature_registry import REGISTRY
 from model_logic.lightgbm_independent_probability_v2 import add_context_features
 
 
 ROOT = Path(__file__).resolve().parents[1]
+V3_COLUMNS = {spec.name for spec in REGISTRY if spec.added_in == "v3.1"}
 
 
 def test_lightgbm_context_matches_v2_baseline() -> None:
@@ -23,4 +25,7 @@ def test_lightgbm_context_matches_v2_baseline() -> None:
     actual = build_features(raw)
     add_context_features(actual, feature_lists["conditional_logit"])
     expected = pd.read_parquet(ROOT / "tests" / "golden" / "lgbm_features_baseline.parquet")
-    assert_frame_equal(actual, expected, check_exact=True)
+    # v3.1 only appends columns: every v2 column must stay bit-for-bit identical.
+    added = set(actual.columns).difference(expected.columns)
+    assert added == V3_COLUMNS
+    assert_frame_equal(actual[expected.columns], expected, check_exact=True)

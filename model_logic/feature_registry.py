@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Iterable
 
 
-REGISTRY_VERSION = "v3.0"
+REGISTRY_VERSION = "v3.1"
+# Model sets used when get_features() is called without an explicit version.
+ACTIVE_VERSION = "v3"
 GROUPS = frozenset(
     {
         "horse_form",
@@ -24,6 +26,9 @@ GROUPS = frozenset(
     }
 )
 STATUSES = frozenset({"keep", "watch", "review", "unaudited"})
+TRAINER_RATE_FEATURES = frozenset(
+    {"jt_trainer_win365_rel", "jt_trainer_win365_rk", "int_jt_strength_x_field_size"}
+)
 FORBIDDEN_INPUTS = frozenset(
     {
         "market_prob",
@@ -78,6 +83,7 @@ def _spec(
     status: str = "unaudited",
     implemented: bool = True,
     note: str = _PRE_RACE_NOTE,
+    added_in: str | None = None,
 ) -> FeatureSpec:
     return FeatureSpec(
         name=name,
@@ -92,7 +98,7 @@ def _spec(
         monotone_sign=monotone,
         status=status,
         implemented=implemented,
-        added_in="v2.0" if implemented else "v3.0",
+        added_in=added_in or ("v2.0" if implemented else "v3.0"),
         leakage_note=note,
     )
 
@@ -259,30 +265,75 @@ REGISTRY = (
           ("<col>", "source", "horse_id", "race_date"), window="last_3", relative=True,
           optional=True, implemented=False, note=_LAGGED_NOTE),
 
-        # Active v3: Track/Distance Form (Work 1)
-    _spec("td_final_win_rel", "track_distance", "Hierarchical track/distance win rate relative to race.",
-          ("source", "horse_id", "track_code", "distance_m", "is_winner"), window="career",
-          relative=True, implemented=True, models=("lgbm", "cl_candidate"), monotone=1, status="keep", note=_LAGGED_NOTE),
-    _spec("td_final_top3_rel", "track_distance", "Hierarchical track/distance top-3 rate relative to race.",
-          ("source", "horse_id", "track_code", "distance_m", "is_top3"), window="career",
-          relative=True, implemented=True, models=("lgbm", "cl_candidate"), monotone=1, status="keep", note=_LAGGED_NOTE),
-    _spec("td_final_pct_rel", "track_distance", "Hierarchical track/distance finish percentile relative to race.",
-          ("source", "horse_id", "track_code", "distance_m", "finish_pos"), window="career",
-          relative=True, implemented=True, models=("lgbm", "cl_candidate"), monotone=-1, status="keep", note=_LAGGED_NOTE),
+    # v3.1 track/distance form (Nayeon, roadmap Work 1). Built by
+    # model_logic/track_distance_features.py; see docs/features_v3_track_distance.md.
+    # Hierarchy: source prior -> career -> track -> track x distance; career -> band.
+    _spec("td_track_win_rel", "track_distance", "Track-specific smoothed win rate relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'track_code', 'is_winner'), window="career, earlier dates",
+          shrinkage="to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_track_top3_rel", "track_distance", "Track-specific smoothed top-three rate relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'track_code', 'is_top3'), window="career, earlier dates",
+          shrinkage="to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_track_fin_pct_rel", "track_distance", "Track-specific smoothed finish percentile relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'track_code', 'finish_pos'), window="career, earlier dates",
+          shrinkage="to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=-1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_distance_band_win_rel", "track_distance", "Distance-band smoothed win rate relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'distance_m', 'is_winner'), window="career, earlier dates",
+          shrinkage="to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_distance_band_top3_rel", "track_distance", "Distance-band smoothed top-three rate relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'distance_m', 'is_top3'), window="career, earlier dates",
+          shrinkage="to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_distance_band_fin_pct_rel", "track_distance", "Distance-band smoothed finish percentile relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'distance_m', 'finish_pos'), window="career, earlier dates",
+          shrinkage="to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=-1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_track_distance_win_rel", "track_distance", "Track x distance-band smoothed win rate relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'track_code', 'distance_m', 'is_winner'), window="career, earlier dates",
+          shrinkage="to the horse's track rate, weight 5 (then career, then prior-day source rate)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_track_distance_top3_rel", "track_distance", "Track x distance-band smoothed top-three rate relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'track_code', 'distance_m', 'is_top3'), window="career, earlier dates",
+          shrinkage="to the horse's track rate, weight 5 (then career, then prior-day source rate)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_track_distance_fin_pct_rel", "track_distance", "Track x distance-band smoothed finish percentile relative to the race mean.",
+          ('source', 'horse_id', 'race_date', 'track_code', 'distance_m', 'finish_pos'), window="career, earlier dates",
+          shrinkage="to the horse's track rate, weight 5 (then career, then prior-day source rate)", relative=True, models=("cl_candidate", "lgbm"),
+          monotone=-1, added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_distance_band", "race_context", "Distance band: sprint <=1200, mile <=1650, middle <=2000, staying.",
+          ("distance_m",), added_in="v3.1"),
+    _spec("td_track_starts", "track_distance", "Earlier-date starts by the horse at today's track (history depth).",
+          ("source", "horse_id", "race_date") + ('track_code',), window="career, earlier dates", added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_distance_band_starts", "track_distance", "Earlier-date starts by the horse at today's distance band (history depth).",
+          ("source", "horse_id", "race_date") + ('distance_m',), window="career, earlier dates", added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("td_track_distance_starts", "track_distance", "Earlier-date starts by the horse at today's track x distance band (history depth).",
+          ("source", "horse_id", "race_date") + ('track_code', 'distance_m'), window="career, earlier dates", added_in="v3.1", note=_LAGGED_NOTE),
 
-    # Active v3: Trajectory & Interactions (Missing features)
-    _spec("tr_last_minus_avg3_fin_pct_rel", "trajectory", "Last finish vs 3-race avg relative to race.",
-          ("hf_last_fin_pct_rel", "hf_avg3_fin_pct_rel"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
-    _spec("tr_fin_pct_slope3_rel", "trajectory", "3-race finish-percentile slope.",
-          ("source", "horse_id", "finish_percentile"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
-    _spec("tr_days_since_bucket", "trajectory", "Bucketed days since previous start.",
-          ("hf_days_since",), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
-    _spec("tr_class_change_direction", "trajectory", "Signed class-change direction.",
-          ("hf_class_change",), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
-    _spec("int_recent_form_x_class_change", "interaction", "Recent form interacted with class-change.",
-          ("hf_avg3_fin_pct_rel", "tr_class_change_direction"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
-    _spec("int_jt_strength_x_field_size", "interaction", "Jockey strength interacted with field size.",
-          ("jt_jockey_win365_rel", "n_runners"), implemented=True, models=("lgbm", "cl_candidate"), status="keep", note=_LAGGED_NOTE),
+    # v3.1 trajectory and interaction features (Nayeon, roadmap Works 3-4). Built by
+    # model_logic/trajectory_features.py from the lagged hf_*/jt_* columns.
+    _spec("tr_last_minus_avg3_fin_pct_rel", "trajectory", "Last finish percentile minus three-start average, relative to the race.",
+          ("source", "horse_id", "race_date", "finish_pos"), window="last_3", relative=True,
+          models=("cl_candidate", "lgbm"), added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("tr_fin_pct_slope3_rel", "trajectory", "Least-squares slope of the last three finish percentiles, relative to the race.",
+          ("source", "horse_id", "race_date", "finish_pos"), window="last_3", relative=True,
+          models=("cl_candidate", "lgbm"), added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("tr_days_since_bucket", "trajectory", "Days since previous start in fixed buckets: <=14, 15-28, 29-60, 61-180, >180.",
+          ("source", "horse_id", "race_date"), window="previous_start",
+          models=("cl_candidate", "lgbm"), added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("tr_class_change_direction", "trajectory", "Class move from the previous start: +1 up, -1 down, 0 within 10% prize.",
+          ("source", "horse_id", "race_date", "prize_hkd"), window="previous_start",
+          models=("cl_candidate", "lgbm"), added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("int_recent_form_x_class_change", "interaction", "Three-start relative form times class-change direction.",
+          ("hf_avg3_fin_pct_rel", "tr_class_change_direction"), window="last_3",
+          models=("cl_candidate", "lgbm"), added_in="v3.1", note=_LAGGED_NOTE),
+    _spec("int_jt_strength_x_field_size", "interaction", "Mean relative jockey and trainer win rate times (field size - 12) / 12.",
+          ("jt_jockey_win365_rel", "jt_trainer_win365_rel", "n_runners"), window="365D", relative=True,
+          models=("cl_candidate", "lgbm"), added_in="v3.1", note=_LAGGED_NOTE),
+)
 
 
 _BY_NAME = {spec.name: spec for spec in REGISTRY}
@@ -290,6 +341,15 @@ FEATURE_SETS = {
     "v2_baseline": tuple(spec.name for spec in REGISTRY[:17]),
     "v2_lgbm": tuple(spec.name for spec in REGISTRY[:23]),
     "v3_all": tuple(spec.name for spec in REGISTRY if spec.implemented),
+}
+_V3_NEW = tuple(spec.name for spec in REGISTRY if spec.added_in == "v3.1" and spec.models)
+FEATURE_SETS["v3_cl"] = FEATURE_SETS["v2_baseline"] + _V3_NEW
+FEATURE_SETS["v3_lgbm"] = FEATURE_SETS["v2_lgbm"] + _V3_NEW
+_MODEL_SETS = {
+    ("conditional_logit", "v2"): "v2_baseline",
+    ("conditional_logit", "v3"): "v3_cl",
+    ("lgbm", "v2"): "v2_lgbm",
+    ("lgbm", "v3"): "v3_lgbm",
 }
 
 
@@ -301,14 +361,23 @@ def get_spec(name: str) -> FeatureSpec:
 
 
 def _set_for(model: str, role: str | None, version: str | None) -> tuple[str, ...]:
+    """Resolve a model's feature set. `version` is "v2" (frozen v2 sets) or "v3"
+    (v2 plus the v3.1 track/distance, trajectory and interaction features); it
+    defaults to ACTIVE_VERSION."""
+    model_version = version or ACTIVE_VERSION
+    if model in ("conditional_logit", "lgbm") and (model, model_version) not in _MODEL_SETS:
+        raise ValueError(f"Unknown feature version {model_version!r} for {model}")
     if model == "conditional_logit":
+        active = FEATURE_SETS[_MODEL_SETS[(model, model_version)]]
         if role == "base":
             return tuple(spec.name for spec in REGISTRY if "cl_base" in spec.models)
         if role == "candidate":
-            return tuple(spec.name for spec in REGISTRY if "cl_candidate" in spec.models)
-        return FEATURE_SETS["v2_baseline"]
+            return tuple(
+                spec.name for spec in REGISTRY if "cl_candidate" in spec.models and spec.name in active
+            )
+        return active
     if model == "lgbm":
-        return FEATURE_SETS["v2_lgbm"]
+        return FEATURE_SETS[_MODEL_SETS[(model, model_version)]]
     if model == "all":
         return FEATURE_SETS["v3_all"]
     if version and version in FEATURE_SETS:
@@ -339,6 +408,11 @@ def get_features(
     ]
 
 
+def without_trainer_rates(features: Iterable[str]) -> list[str]:
+    """Return a feature list without trainer-rate inputs or their rank transform."""
+    return [feature for feature in features if feature not in TRAINER_RATE_FEATURES]
+
+
 def monotone_vector(features: list[str]) -> list[int]:
     return [get_spec(feature).monotone_sign for feature in features]
 
@@ -350,7 +424,15 @@ def _jsonable(spec: FeatureSpec) -> dict:
 
 
 def registry_hash() -> str:
-    payload = json.dumps([_jsonable(spec) for spec in REGISTRY], sort_keys=True, separators=(",", ":"))
+    payload = json.dumps(
+        {
+            "features": [_jsonable(spec) for spec in REGISTRY],
+            "feature_sets": FEATURE_SETS,
+            "active_version": ACTIVE_VERSION,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -365,6 +447,7 @@ def export_json(path: str | Path) -> None:
         json.dumps(
             {
                 "registry_version": REGISTRY_VERSION,
+                "active_version": ACTIVE_VERSION,
                 "registry_hash": registry_hash(),
                 "features": [_jsonable(spec) for spec in REGISTRY],
                 "feature_sets": FEATURE_SETS,

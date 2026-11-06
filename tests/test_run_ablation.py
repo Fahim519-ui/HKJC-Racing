@@ -11,6 +11,7 @@ import pytest
 
 import model_logic.run_ablation as command
 from model_logic.ablation_configs import CONFIGS
+from model_logic.aggregate_folds import PRIMARY_CONFIG, PRIMARY_VARIANT, primary_evidence_status
 
 
 def _prediction_frame() -> pd.DataFrame:
@@ -47,6 +48,7 @@ def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, mon
                     {
                         "primary": config.primary,
                         "unavailable_exclusions": [],
+                        "race_counts": {"inner_tune": 200},
                     }
                 )
                 + "\n"
@@ -91,6 +93,8 @@ def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, mon
     }
     metrics = pd.read_csv(output / "ablation_metrics.csv")
     assert set(metrics["config"]) == set(CONFIGS)
+    evidence = json.loads((output / "evidence_summary.json").read_text())
+    assert evidence["eligible_folds"] == ["f1"]
 
 
 def test_run_ablation_does_not_aggregate_after_fold_failure(tmp_path, monkeypatch) -> None:
@@ -112,3 +116,52 @@ def test_run_ablation_does_not_aggregate_after_fold_failure(tmp_path, monkeypatc
     with pytest.raises(RuntimeError, match="failed"):
         command.main()
     assert not aggregate_called
+
+
+def _primary_metrics(rows: list[tuple[str, float, float, float]]) -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            {
+                "config": PRIMARY_CONFIG,
+                "variant": PRIMARY_VARIANT,
+                "fold_id": fold_id,
+                "gain_vs_calibrated": gain,
+                "ci_vs_calibrated_low": low,
+                "ci_vs_calibrated_high": high,
+            }
+            for fold_id, gain, low, high in rows
+        ]
+    )
+
+
+def test_evidence_status_marks_underpowered_and_crossing_interval_ineligible() -> None:
+    status = primary_evidence_status(
+        _primary_metrics(
+            [
+                ("k1", 0.01, 0.001, 0.02),
+                ("k2", 0.01, -0.001, 0.02),
+                ("h1", 0.01, 0.001, 0.02),
+            ]
+        ),
+        {"k1": 200, "k2": 200, "h1": 140},
+    )
+
+    assert status["eligible_folds"] == ["k1", "k2"]
+    assert status["watch_only_folds"] == ["h1"]
+    assert status["positive_folds"] == 2
+    assert not status["all_eligible_intervals_exclude_zero"]
+    assert not status["eligible_for_freeze"]
+
+
+def test_evidence_status_accepts_all_eligible_positive_intervals() -> None:
+    status = primary_evidence_status(
+        _primary_metrics(
+            [
+                ("k1", 0.01, 0.001, 0.02),
+                ("k2", 0.02, 0.002, 0.03),
+            ]
+        ),
+        {"k1": 200, "k2": 200},
+    )
+
+    assert status["eligible_for_freeze"]

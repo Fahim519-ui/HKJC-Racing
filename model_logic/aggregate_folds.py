@@ -67,6 +67,13 @@ def primary_evidence_status(
         and positive_folds == required_positive_folds
         and intervals_pass
     )
+    reasons = []
+    if primary["watch_only"].any():
+        reasons.append(f"watch-only folds below {MIN_INNER_TUNE_RACES} inner-tune races")
+    if positive_folds < required_positive_folds:
+        reasons.append("not every eligible fold has positive calibrated-market gain")
+    if not intervals_pass:
+        reasons.append("not every eligible fold excludes zero versus calibrated market")
     return {
         "config": PRIMARY_CONFIG,
         "variant": PRIMARY_VARIANT,
@@ -78,6 +85,7 @@ def primary_evidence_status(
         "required_positive_folds": required_positive_folds,
         "all_eligible_intervals_exclude_zero": intervals_pass,
         "eligible_for_freeze": eligible_for_freeze,
+        "reasons": reasons,
     }
 
 
@@ -137,6 +145,17 @@ def aggregate_folds(
     if all_configs:
         metrics.to_csv(root / "ablation_metrics.csv", index=False)
         selections.to_csv(root / "ablation_feature_selection_frequency.csv", index=False)
+        inner_tune_races = {
+            path.parent.name: json.loads(path.read_text())["race_counts"]["inner_tune"]
+            for path in (root / PRIMARY_CONFIG).glob("*/meta.json")
+        }
+        evidence = primary_evidence_status(metrics, inner_tune_races)
+        (root / "evidence_summary.json").write_text(json.dumps(evidence, indent=2) + "\n")
+        csv_evidence = {
+            key: ",".join(value) if isinstance(value, list) else value
+            for key, value in evidence.items()
+        }
+        pd.DataFrame([csv_evidence]).to_csv(root / "evidence_summary.csv", index=False)
     return metrics
 
 

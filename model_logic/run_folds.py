@@ -301,6 +301,14 @@ def run_fold(
 ) -> dict:
     started = time.monotonic()
     config = get_config(config_name)
+    lgbm_features = get_features(
+        "lgbm", exclude_groups=config.exclude_groups, exclude_names=config.exclude_names,
+        available_columns=data.columns,
+    )
+    lgbm_features = [feature for feature in lgbm_features if not get_spec(feature).optional]
+    lgbm_features = add_context_features(
+        data, lgbm_features, include_trainer_rates="jt_trainer_win365_rel" in lgbm_features
+    )
     s1 = valid_races(select_period(data, fold.s1_start, fold.s1_end))
     s2, s2_dropped = market_complete(select_period(data, fold.s2_start, fold.s2_end))
     valid, valid_dropped = market_complete(select_period(data, fold.valid_start, fold.valid_end))
@@ -329,14 +337,6 @@ def run_fold(
     s2 = s2.join(cl_predictions[0])
     valid = valid.join(cl_predictions[1])
 
-    lgbm_features = get_features(
-        "lgbm", exclude_groups=config.exclude_groups, exclude_names=config.exclude_names,
-        available_columns=data.columns,
-    )
-    lgbm_features = [feature for feature in lgbm_features if not get_spec(feature).optional]
-    lgbm_features = add_context_features(
-        data, lgbm_features, include_trainer_rates="jt_trainer_win365_rel" in lgbm_features
-    )
     lgbm, lgbm_predictions = fit_lgbm(inner_train, inner_tune, s1, [s2, valid], lgbm_features, seeds)
     s2 = s2.join(lgbm_predictions[0])
     valid = valid.join(lgbm_predictions[1])

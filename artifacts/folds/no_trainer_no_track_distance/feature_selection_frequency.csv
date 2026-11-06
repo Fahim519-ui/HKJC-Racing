@@ -1,0 +1,12 @@
+config,feature,fold_count
+no_trainer_no_track_distance,jt_jockey_win365_rel,3
+no_trainer_no_track_distance,hf_avg3_fin_pct_rel,3
+no_trainer_no_track_distance,rc_draw_pct,3
+no_trainer_no_track_distance,rc_draw_x_hv,3
+no_trainer_no_track_distance,rc_weight_rel,3
+no_trainer_no_track_distance,hf_days_since,3
+no_trainer_no_track_distance,hf_last_fin_pct_rel,3
+no_trainer_no_track_distance,w3_horse_past_top3_rate,1
+no_trainer_no_track_distance,jtp_pair_effect_last_50_rel,1
+no_trainer_no_track_distance,jtp_pair_effect365_rel,1
+no_trainer_no_track_distance,hf_win5_s,1

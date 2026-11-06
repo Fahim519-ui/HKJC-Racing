@@ -1,0 +1,12 @@
+config,feature,fold_count
+primary,jt_jockey_win365_rel,3
+primary,hf_avg3_fin_pct_rel,3
+primary,rc_draw_pct,3
+primary,rc_draw_x_hv,3
+primary,rc_weight_rel,3
+primary,hf_days_since,3
+primary,hf_last_fin_pct_rel,3
+primary,jt_trainer_win365_rel,2
+primary,w3_horse_past_top3_rate,1
+primary,hf_win5_s,1
+primary,jtp_pair_effect_last_50_rel,1

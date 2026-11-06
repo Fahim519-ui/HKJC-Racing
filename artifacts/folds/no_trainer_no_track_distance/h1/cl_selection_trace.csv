@@ -1,0 +1,6 @@
+step,candidate,log_loss,improvement,accepted,note,selected_features
+0,(base),2.382524382256319,,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since"
+1,hf_last_fin_pct_rel,2.3792894458216916,0.0032349364346275777,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel"
+2,w3_horse_past_top3_rate,2.377131169674634,0.0021582761470577694,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, w3_horse_past_top3_rate"
+3,jtp_pair_effect_last_50_rel,2.375854777481653,0.001276392192980591,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, w3_horse_past_top3_rate, jtp_pair_effect_last_50_rel"
+4,rc_weight_x_dist,2.3756337922545607,0.00022098522709246282,False,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, w3_horse_past_top3_rate, jtp_pair_effect_last_50_rel, rc_weight_x_dist"

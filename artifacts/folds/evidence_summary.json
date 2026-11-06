@@ -1,0 +1,22 @@
+{
+  "config": "primary",
+  "variant": "mkt+cl+lgbm",
+  "positive_fold_rule": "all_eligible",
+  "minimum_inner_tune_races": 150,
+  "eligible_folds": [
+    "k1",
+    "k2"
+  ],
+  "watch_only_folds": [
+    "h1"
+  ],
+  "positive_folds": 1,
+  "required_positive_folds": 2,
+  "all_eligible_intervals_exclude_zero": false,
+  "eligible_for_freeze": false,
+  "reasons": [
+    "watch-only folds below 150 inner-tune races",
+    "not every eligible fold has positive calibrated-market gain",
+    "not every eligible fold excludes zero versus calibrated market"
+  ]
+}

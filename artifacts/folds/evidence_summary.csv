@@ -1,0 +1,2 @@
+config,variant,positive_fold_rule,minimum_inner_tune_races,eligible_folds,watch_only_folds,positive_folds,required_positive_folds,all_eligible_intervals_exclude_zero,eligible_for_freeze,reasons
+primary,mkt+cl+lgbm,all_eligible,150,"k1,k2",h1,1,2,False,False,"watch-only folds below 150 inner-tune races,not every eligible fold has positive calibrated-market gain,not every eligible fold excludes zero versus calibrated market"

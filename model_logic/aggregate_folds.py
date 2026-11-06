@@ -12,6 +12,11 @@ from model_logic.ablation_configs import CONFIGS
 from model_logic.validation.evaluation import paired_bootstrap_gain, race_losses
 
 
+PRIMARY_CONFIG = "primary"
+PRIMARY_VARIANT = "mkt+cl+lgbm"
+MIN_INNER_TUNE_RACES = 150
+
+
 def metric_rows(frame: pd.DataFrame, fold_id: str, config: str) -> list[dict]:
     valid = frame.loc[frame["role"].eq("valid")].copy()
     valid["race_day"] = pd.to_datetime(valid["race_date"], errors="raise").dt.normalize()
@@ -20,15 +25,60 @@ def metric_rows(frame: pd.DataFrame, fold_id: str, config: str) -> list[dict]:
     rows = []
     for column in sorted(item for item in valid if item.startswith("p_")):
         loss = race_losses(valid, column)
-        lo, hi = paired_bootstrap_gain(market, loss, valid.groupby("race_id")["race_day"].first())
+        day_ids = valid.groupby("race_id")["race_day"].first()
+        market_lo, market_hi = paired_bootstrap_gain(market, loss, day_ids)
+        calibrated_lo, calibrated_hi = paired_bootstrap_gain(calibrated, loss, day_ids)
         rows.append({
             "config": config, "fold_id": fold_id, "variant": column.removeprefix("p_"),
             "n_races": len(loss),
             "loss": loss.mean(), "market_loss": market.mean(), "market_calibrated_loss": calibrated.mean(),
             "gain_vs_market": market.mean() - loss.mean(),
-            "gain_vs_calibrated": calibrated.mean() - loss.mean(), "ci_low": lo, "ci_high": hi,
+            "gain_vs_calibrated": calibrated.mean() - loss.mean(),
+            "ci_low": market_lo, "ci_high": market_hi,
+            "ci_vs_market_low": market_lo, "ci_vs_market_high": market_hi,
+            "ci_vs_calibrated_low": calibrated_lo, "ci_vs_calibrated_high": calibrated_hi,
         })
     return rows
+
+
+def primary_evidence_status(
+    metrics: pd.DataFrame, inner_tune_races: dict[str, int]
+) -> dict[str, object]:
+    """Assess the pre-registered primary comparison without selecting a configuration."""
+    primary = metrics.loc[
+        metrics["config"].eq(PRIMARY_CONFIG)
+        & metrics["variant"].eq(PRIMARY_VARIANT)
+        & ~metrics["fold_id"].eq("pooled")
+    ].copy()
+    primary["inner_tune_races"] = primary["fold_id"].map(inner_tune_races)
+    if primary["inner_tune_races"].isna().any():
+        missing = primary.loc[primary["inner_tune_races"].isna(), "fold_id"].tolist()
+        raise ValueError(f"Missing inner-tune race counts for folds: {missing}")
+
+    primary["watch_only"] = primary["inner_tune_races"].lt(MIN_INNER_TUNE_RACES)
+    eligible = primary.loc[~primary["watch_only"]]
+    primary["positive_gain"] = primary["gain_vs_calibrated"].gt(0)
+    primary["interval_excludes_zero"] = primary["ci_vs_calibrated_low"].gt(0)
+    required_positive_folds = len(eligible)
+    positive_folds = int(eligible["positive_gain"].sum())
+    intervals_pass = bool(eligible["interval_excludes_zero"].all()) if required_positive_folds else False
+    eligible_for_freeze = (
+        required_positive_folds > 0
+        and positive_folds == required_positive_folds
+        and intervals_pass
+    )
+    return {
+        "config": PRIMARY_CONFIG,
+        "variant": PRIMARY_VARIANT,
+        "positive_fold_rule": "all_eligible",
+        "minimum_inner_tune_races": MIN_INNER_TUNE_RACES,
+        "eligible_folds": eligible["fold_id"].tolist(),
+        "watch_only_folds": primary.loc[primary["watch_only"], "fold_id"].tolist(),
+        "positive_folds": positive_folds,
+        "required_positive_folds": required_positive_folds,
+        "all_eligible_intervals_exclude_zero": intervals_pass,
+        "eligible_for_freeze": eligible_for_freeze,
+    }
 
 
 def aggregate_config(root: Path, config: str) -> tuple[pd.DataFrame, pd.DataFrame]:

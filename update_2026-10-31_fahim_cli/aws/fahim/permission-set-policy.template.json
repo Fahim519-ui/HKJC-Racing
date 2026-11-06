@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SeeSageMaker",
+      "Effect": "Allow",
+      "Action": ["sagemaker:List*", "sagemaker:Describe*", "sagemaker:Get*"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "OpenStudioAsFahimOnly",
+      "Effect": "Allow",
+      "Action": "sagemaker:CreatePresignedDomainUrl",
+      "Resource": "arn:aws:sagemaker:ap-southeast-1:<ACCOUNT_ID>:user-profile/d-ftva2wtce0s1/fahim"
+    },
+    {
+      "Sid": "StopOwnApps",
+      "Effect": "Allow",
+      "Action": "sagemaker:DeleteApp",
+      "Resource": "arn:aws:sagemaker:ap-southeast-1:<ACCOUNT_ID>:app/d-ftva2wtce0s1/*",
+      "Condition": {
+        "ArnLike": { "sagemaker:OwnerUserProfileArn": "arn:aws:sagemaker:ap-southeast-1:<ACCOUNT_ID>:user-profile/d-ftva2wtce0s1/fahim" }
+      }
+    },
+    {
+      "Sid": "ProjectBucketInConsole",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:ListBucketVersions", "s3:GetBucketLocation"],
+      "Resource": "arn:aws:s3:::inns-elec3544-dsfm-sagemaker"
+    },
+    {
+      "Sid": "ProjectBucketObjectsInConsole",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:GetObjectVersion", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::inns-elec3544-dsfm-sagemaker/*"
+    }
+  ]
+}

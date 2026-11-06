@@ -24,6 +24,9 @@ GROUPS = frozenset(
     }
 )
 STATUSES = frozenset({"keep", "watch", "review", "unaudited"})
+TRAINER_RATE_FEATURES = frozenset(
+    {"jt_trainer_win365_rel", "jt_trainer_win365_rk"}
+)
 FORBIDDEN_INPUTS = frozenset(
     {
         "market_prob",
@@ -357,6 +360,11 @@ def get_features(
         and spec.group not in groups
         and (not spec.optional or columns is None or set(spec.inputs).issubset(columns))
     ]
+
+
+def without_trainer_rates(features: Iterable[str]) -> list[str]:
+    """Return a feature list without trainer-rate inputs or their rank transform."""
+    return [feature for feature in features if feature not in TRAINER_RATE_FEATURES]
 
 
 def monotone_vector(features: list[str]) -> list[int]:

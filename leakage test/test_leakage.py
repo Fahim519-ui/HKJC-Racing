@@ -27,19 +27,19 @@ Data: data/clean data/runners_merged.parquet, or set HKJC_DATA to another path.
 """
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
-import sys
-from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from model_logic.feature_builder import ALL_FEATURES, build_features
+from model_logic.lightgbm_independent_probability import FEATURES as V1_FEATURES
+from model_logic.lightgbm_independent_probability_v2 import add_context_features
+
 REPO = Path(__file__).resolve().parents[1]
-LOGIC = REPO / "model_logic"
 ARTIFACTS = REPO / "artifacts"
 KEY = ["source", "race_id", "horse_id"]
 PRIOR_WIN = 1 / 12
@@ -62,19 +62,6 @@ RESULT_COLS = [
 MARKET_COLS = ["win_odds", "implied_prob", "market_prob"]
 
 
-# --------------------------------------------------------------------------- loading
-def _load(name: str):
-    for folder in (str(REPO), str(LOGIC)):          # modules import each other
-        if folder not in sys.path:
-            sys.path.insert(0, folder)
-    path = LOGIC / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
 def _data_path() -> Path:
     candidates = [Path(os.environ["HKJC_DATA"])] if "HKJC_DATA" in os.environ else []
     candidates += [REPO / "data/clean data/runners_merged.parquet",
@@ -85,6 +72,7 @@ def _data_path() -> Path:
     pytest.skip("runners_merged.parquet not found; set HKJC_DATA")
 
 
+<<<<<<< Updated upstream
 @lru_cache(maxsize=1)
 def modules():
     return _load("conditional_logit_tuning_v2"), _load("lightgbm_independent_probability_v2")
@@ -140,6 +128,21 @@ def model_features() -> tuple[str, ...]:
     names |= {c for c in built.columns if c.endswith("_rk")}
     # keep only columns at least one builder actually produces, so checks never compare NaN
     return tuple(sorted(n for n in names if n in built.columns))
+=======
+def fahim_builder(raw: pd.DataFrame) -> pd.DataFrame:
+    """The real pipeline: build_features, then the v2 LightGBM context features."""
+    data = build_features(raw)
+    add_context_features(data, list(ALL_FEATURES))
+    return data
+
+
+def model_features() -> list[str]:
+    """Every feature any of the three scripts can feed a model."""
+    raw = pd.read_parquet(_data_path())
+    data = build_features(raw)
+    v2 = add_context_features(data, list(ALL_FEATURES))
+    return sorted(set(ALL_FEATURES) | set(v2) | set(V1_FEATURES))
+>>>>>>> Stashed changes
 
 
 # ---------------------------------------------------------------------- perturbation

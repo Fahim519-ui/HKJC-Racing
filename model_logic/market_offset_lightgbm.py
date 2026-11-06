@@ -9,7 +9,10 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
-from conditional_logit_tuning_v2 import ALL_FEATURES, build_features
+try:
+    from model_logic.feature_builder import ALL_FEATURES, build_features
+except ModuleNotFoundError:
+    from feature_builder import ALL_FEATURES, build_features
 
 EPSILON = 1e-12
 FOLDS = [

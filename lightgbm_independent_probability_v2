@@ -1,0 +1,294 @@
+"""Odds-free LightGBM win model trained directly on the per-race softmax likelihood,
+plus a market-aware stage-2 blend with honest out-of-month validation.
+
+Changes vs. the binary-classifier version
+
+-----------------------------------------
+1. Listwise objective. Trees add to a per-runner utility u_j and the loss is the same
+   race-softmax cross-entropy the conditional logit optimises:
+       L_r = -sum_j y_j * log softmax_r(u)_j      (dead heat: y_j = 1/k on each winner)
+       g_j = p_j - y_j,   h_j = 2 p_j (1 - p_j)   (XGBoost-style diagonal bound)
+   Binary logloss + post-hoc renormalisation optimises a different quantity and weights
+   races by field size. Early stopping uses the metric you report (per-race log loss).
+2. Context features: within-race rank percentiles of the key form/connection rates and
+   field size, which trees cannot derive from per-runner columns. Monotone constraints
+   on the features whose sign is not in doubt (regularises the Kaggle -> HKJC shift).
+3. Seed bagging: average raw utilities over several subsample seeds.
+4. Stage 2: ridge-to-market blend, theta ~ (1, 0, 0), penalty chosen by leave-one-month-out
+   CV inside h_s2 (never touching h_test). Reports mkt+lgbm, mkt+cl and mkt+lgbm+cl so the
+   marginal contribution of each stage-1 model is visible.
+Requires lightgbm >= 4.0 (callable objective in params).
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+from scipy.optimize import minimize
+
+EPSILON = 1e-12
+
+PARAMS = {
+    "learning_rate": 0.02,
+    "num_leaves": 15,
+    "min_data_in_leaf": 200,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "feature_fraction": 0.7,
+    "lambda_l2": 10.0,
+    "max_bin": 63,
+    "deterministic": True,
+    "force_row_wise": True,
+    "verbose": -1,
+}
+# Rank-percentile context features: source column -> monotone sign of the utility.
+RANK_SOURCES = {
+    "jt_jockey_win365": 1, "jt_trainer_win365": 1, "hf_avg3_fin_pct": -1,
+    "hf_win5_s": 1, "hf_career_win_s": 1, "hf_class_change": 0,
+}
+MONOTONE = {
+    "jt_jockey_win365_rel": 1, "jt_trainer_win365_rel": 1, "jt_jockey_top3_365_rel": 1,
+    "hf_avg3_fin_pct_rel": -1, "hf_last_fin_pct_rel": -1, "hf_avg5_fin_pct_rel": -1,
+    "hf_win5_s": 1, "hf_career_win_s": 1,
+    "w3_horse_past_win_rate": 1, "w3_horse_past_top3_rate": 1,
+}
+
+
+def load_feature_builder() -> object:
+    path = Path(__file__).with_name("conditional_logit_tuning_v2.py")
+    spec = importlib.util.spec_from_file_location("conditional_logit_tuning_v2", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load feature builder from {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+# --------------------------------------------------------------- race-segment engine
+class Races:
+    """Contiguous race segments; every reduction is a reduceat, so races never mix."""
+
+    def __init__(self, race_id) -> None:
+        codes = pd.factorize(pd.Series(np.asarray(race_id)))[0]
+        change = np.r_[True, codes[1:] != codes[:-1]]
+        self.starts = np.flatnonzero(change)
+        assert len(self.starts) == codes.max() + 1, "rows of a race must be contiguous"
+        self.seg = np.cumsum(change) - 1
+
+
+
+
+        params, train_set, num_boost_round=rounds,
+        valid_sets=[lgb.Dataset(vX, label=vwin, reference=train_set)], feval=feval,
+
+        callbacks=[lgb.early_stopping(patience, first_metric_only=True, verbose=False)],
+    )
+
+
+def bag_utility(boosters: list, X: np.ndarray) -> np.ndarray:
+    return np.mean([b.predict(X, raw_score=True) for b in boosters], axis=0)
+
+
+def add_context_features(data: pd.DataFrame, features: list[str]) -> list[str]:
+    out = list(features)
+    for col in RANK_SOURCES:
+        if col in data.columns:
+            data[f"{col}_rk"] = data.groupby("race_id")[col].rank(pct=True)
+            out.append(f"{col}_rk")
+    out.append("n_runners")
+    return out
+
+
+def monotone_vector(features: list[str]) -> list[int]:
+    signs = dict(MONOTONE)
+    for col, sign in RANK_SOURCES.items():
+        signs[f"{col}_rk"] = sign
+    return [signs.get(f, 0) for f in features]
+
+
+# ------------------------------------------------------------------ stage 2: blend
+def fit_blend(frame: pd.DataFrame, cols: list[str], lam: float) -> np.ndarray:
+    """min  mean_r NLL(softmax(log P @ theta)) + lam * ||theta - theta0||^2, theta0 = e_market."""
+    races = Races(frame["race_id"])
+    X = np.log(frame[cols].clip(lower=EPSILON).to_numpy(float))
+    y = races.target(frame["is_winner"].to_numpy(float))
+    n_races = float((np.add.reduceat(y, races.starts) > 0).sum())
+    theta0 = np.zeros(len(cols))
+    theta0[0] = 1.0
+
+    def f(theta):
+        lp = races.log_softmax(X @ theta)
+        diff = theta - theta0
+        grad = X.T @ (np.exp(lp) - y) / n_races + 2 * lam * diff
+        return -(y * lp).sum() / n_races + lam * diff @ diff, grad
+
+    return minimize(f, theta0, jac=True, method="L-BFGS-B").x
+
+
+def blend_prob(frame: pd.DataFrame, cols: list[str], theta: np.ndarray) -> np.ndarray:
+    X = np.log(frame[cols].clip(lower=EPSILON).to_numpy(float))
+    return Races(frame["race_id"]).softmax(X @ theta)
+
+
+def month_cv(frame: pd.DataFrame, cols: list[str], lams: list[float]) -> dict[float, float]:
+    """Leave-one-month-out loss for each ridge strength; uses h_s2 only."""
+    month = frame["race_date"].dt.strftime("%Y-%m").to_numpy()
+    scores = {}
+    for lam in lams:
+        parts = []
+        for m in np.unique(month):
+            tr, te = frame[month != m], frame[month == m]
+            p = blend_prob(te, cols, fit_blend(tr, cols, lam))
+            parts.append(Races(te["race_id"]).loss_vec(p, te["is_winner"].to_numpy(float)))
+        scores[lam] = float(np.concatenate(parts).mean())
+    return scores
+
+
+def merge_conditional_logit(stage1: pd.DataFrame, path: Path) -> pd.DataFrame:
+    cl = pd.read_parquet(path)[["race_id", "horse_id", "split", "p_cl"]]
+    merged = stage1.merge(cl, on=["race_id", "horse_id", "split"], how="left",
+                          validate="one_to_one")
+    if merged["p_cl"].isna().any():
+        raise ValueError(f"{int(merged['p_cl'].isna().sum())} rows lack a conditional-logit prediction")
+    return merged
+
+
+def main() -> int:
+    root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=Path,
+                        default=root / "data/clean data/runners_merged_with_features.parquet")
+    parser.add_argument("--conditional-logit-predictions", type=Path,
+                        default=root / "artifacts/conditional_logit_tuning_v2/predictions.parquet")
+    parser.add_argument("--output-dir", type=Path,
+                        default=root / "artifacts/lightgbm_independent_probability")
+    parser.add_argument("--seeds", type=int, default=5)
+    parser.add_argument("--max-rounds", type=int, default=4000)
+    parser.add_argument("--no-monotone", action="store_true")
+    parser.add_argument("--blend-lambdas", type=float, nargs="+",
+                        default=[0.0, 0.003, 0.01, 0.03, 0.1])
+    args = parser.parse_args()
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    builder = load_feature_builder()
+    data = builder.build_features(pd.read_parquet(args.data))
+    features = add_context_features(data, list(builder.ALL_FEATURES))
+    params = dict(PARAMS)
+    if not args.no_monotone:
+        params["monotone_constraints"] = monotone_vector(features)
+        params["monotone_constraints_method"] = "intermediate"
+
+    train = drop_void_races(data.loc[data["split"].eq("k_train")])
+    tune = drop_void_races(data.loc[data["split"].eq("k_tune")])
+    stage2 = data.loc[data["split"].eq("h_s2")]
+    test = data.loc[data["split"].eq("h_test")]
+    if min(len(train), len(tune), len(stage2), len(test)) == 0:
+        raise ValueError("k_train, k_tune, h_s2 and h_test must all contain rows")
+
+    def arrays(frame):
+        return (frame[features].to_numpy(float), frame["is_winner"].to_numpy(float),
+                Races(frame["race_id"]))
+
+    Xtr, wtr, rtr = arrays(train)
+    Xtu, wtu, rtu = arrays(tune)
+    seeds = [17 + 101 * k for k in range(args.seeds)]
+    seeded = lambda s: {**params, "seed": s, "bagging_seed": s, "feature_fraction_seed": s}  # noqa: E731
+
+    # k_tune only picks the number of rounds (and is therefore mildly optimistic).
+    first = train_booster(seeded(seeds[0]), Xtr, wtr, rtr, args.max_rounds, (Xtu, wtu, rtu))
+    best = int(first.best_iteration or 300)
+    probe = [first] + [train_booster(seeded(s), Xtr, wtr, rtr, best) for s in seeds[1:]]
+    p_tune = rtu.softmax(bag_utility(probe, Xtu))
+
+    final_data = pd.concat([train, tune], ignore_index=True)
+    Xf, wf, rf = arrays(final_data)
+    rounds = max(50, int(round(best * len(rf.starts) / len(rtr.starts))))
+    boosters = [train_booster(seeded(s), Xf, wf, rf, rounds) for s in seeds]
+    for k, b in enumerate(boosters):
+        b.save_model(str(args.output_dir / f"lightgbm_seed{k}.txt"))
+
+    frames = []
+    for window in (stage2, test):
+        u = bag_utility(boosters, window[features].to_numpy(float))
+        frames.append(pd.DataFrame({
+            "race_id": window["race_id"].to_numpy(), "horse_id": window["horse_id"].to_numpy(),
+            "split": window["split"].to_numpy(), "race_date": window["race_date"].to_numpy(),
+            "is_winner": window["is_winner"].to_numpy(),
+            "p_market": window["mkt_p"].to_numpy(), "market_complete": window["mkt_ok"].to_numpy(),
+            "p_lgbm": Races(window["race_id"]).softmax(u),
+        }))
+    stage1 = pd.concat(frames, ignore_index=True)
+    stage1.to_parquet(args.output_dir / "stage1_predictions.parquet", index=False)
+
+    joined = merge_conditional_logit(stage1, args.conditional_logit_predictions)
+    complete = joined["market_complete"].astype(bool)
+    blend_train = drop_void_races(joined.loc[joined["split"].eq("h_s2") & complete])
+    blend_test = drop_void_races(joined.loc[joined["split"].eq("h_test") & complete])
+
+    rows = [
+        ("k_tune", "market_raw", race_loss(tune["mkt_raw"], tune)),
+        ("k_tune", "market_norm", race_loss(tune["mkt_p"], tune)),
+        ("k_tune", "lightgbm", race_loss(p_tune, tune)),
+    ]
+    for name, col in (("market", "p_market"), ("lightgbm", "p_lgbm"), ("conditional_logit", "p_cl")):
+        rows.append(("h_s2", name, race_loss(blend_train[col], blend_train)))
+    for name, col in (("market", "p_market"), ("lightgbm", "p_lgbm"), ("conditional_logit", "p_cl")):
+        rows.append(("h_test", name, race_loss(blend_test[col], blend_test)))
+
+    variants = {"mkt+lgbm": ["p_market", "p_lgbm"], "mkt+cl": ["p_market", "p_cl"],
+                "mkt+lgbm+cl": ["p_market", "p_lgbm", "p_cl"]}
+    coef_rows, cv_rows = [], []
+    for name, cols in variants.items():
+        cv = month_cv(blend_train, cols, args.blend_lambdas)
+        lam = min(cv, key=cv.get)
+        theta = fit_blend(blend_train, cols, lam)
+        rows.append(("h_s2", f"{name} (month-CV)", cv[lam]))
+        rows.append(("h_test", f"{name} (fit on h_s2)", race_loss(blend_prob(blend_test, cols, theta), blend_test)))
+        coef_rows.append({"variant": name, "lambda": lam, **dict(zip(cols, theta))})
+        cv_rows.extend({"variant": name, "lambda": k, "cv_loss": v} for k, v in cv.items())
+        if name == "mkt+lgbm+cl":
+            joined["p_joint"] = blend_prob(joined, cols, theta)
+    joined.to_parquet(args.output_dir / "joint_predictions.parquet", index=False)
+
+    metrics = pd.DataFrame(rows, columns=["window", "model", "per_race_log_loss"])
+    metrics["market_gain"] = metrics.groupby("window")["per_race_log_loss"].transform(
+        lambda v: v.iloc[0] - v)
+    metrics.to_csv(args.output_dir / "metrics.csv", index=False)
+    coefs = pd.DataFrame(coef_rows)
+    coefs.to_csv(args.output_dir / "joint_coefficients.csv", index=False)
+    pd.DataFrame(cv_rows).to_csv(args.output_dir / "blend_cv.csv", index=False)
+    pd.DataFrame({"feature": features,
+                  "gain": np.sum([b.feature_importance("gain") for b in boosters], axis=0)}
+                 ).sort_values("gain", ascending=False).to_csv(
+        args.output_dir / "feature_importance.csv", index=False)
+    (args.output_dir / "stage1_features.json").write_text(json.dumps(features, indent=2) + "\n")
+
+    report = [
+        "# Odds-free listwise LightGBM",
+        "",
+        "Stage 1 optimises the per-race softmax likelihood on Kaggle data and never sees odds "
+        "or any market-derived column. `k_tune` selects only the round count "
+        f"({best} early-stopped, {rounds} on train+tune, {args.seeds}-seed bag).",
+        "Stage-2 ridge strength is chosen by leave-one-month-out CV inside `h_s2`; `h_test` is "
+        "scored once per variant. `(month-CV)` rows are out-of-month, `(fit on h_s2)` rows are "
+        "out-of-time.",
+        "", "## Per-race log loss", "", "```", metrics.round(4).to_string(index=False), "```",
+        "", "## Blend coefficients (log-probability weights; market prior = 1)", "", "```",
+        coefs.round(4).to_string(index=False), "```",
+    ]
+    (args.output_dir / "report.md").write_text("\n".join(report) + "\n", encoding="utf-8")
+    print(metrics.round(4).to_string(index=False))
+    print(f"\nOutputs written to {args.output_dir}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

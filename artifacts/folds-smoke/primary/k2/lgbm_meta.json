@@ -1,0 +1,48 @@
+{
+  "best_iter": 379,
+  "rounds": 482,
+  "seeds": [
+    17,
+    118
+  ],
+  "params": {
+    "learning_rate": 0.02,
+    "num_leaves": 15,
+    "min_data_in_leaf": 200,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "feature_fraction": 0.7,
+    "lambda_l2": 10.0,
+    "max_bin": 63,
+    "deterministic": true,
+    "force_row_wise": true,
+    "verbose": -1,
+    "monotone_constraints": [
+      1,
+      -1,
+      0,
+      0,
+      0,
+      0,
+      -1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      -1,
+      1,
+      0,
+      0
+    ],
+    "monotone_constraints_method": "intermediate"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "lam": 0.0,
+  "l1_ratio": 0.5,
+  "lam_mkt": 0.0,
+  "stage_weights": [
+    1.0
+  ]
+}

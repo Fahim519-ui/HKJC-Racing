@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib.util
 import json
 import subprocess
 import sys
@@ -38,6 +37,12 @@ from statsmodels.discrete.conditional_models import ConditionalLogit
 
 REPO = Path(__file__).resolve().parents[1]
 PROJECT = REPO.parents[1]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from model_logic.feature_builder import ALL_FEATURES, build_features
+from model_logic.lightgbm_independent_probability import FEATURES as V1_FEATURES
+from model_logic.lightgbm_independent_probability_v2 import add_context_features
 
 # Thresholds (see README_FEATURE_STABILITY.md for sources)
 SMD_SMALL, SMD_LARGE = 0.10, 0.25
@@ -51,6 +56,7 @@ HISTORY_GROUPS = ("hf", "jt", "jtp", "td", "w3")
 RAW_VERSIONS = ["jt_jockey_win365", "jt_trainer_win365", "hf_last_fin_pct", "hf_avg3_fin_pct"]
 
 
+<<<<<<< Updated upstream
 # --------------------------------------------------------------------------- loading
 def load(name: str):
     # Fahim's modules import each other (e.g. jt_partnership_features), so put both the
@@ -90,6 +96,13 @@ def build(data_path: Path, all_registry: bool = False) -> tuple[pd.DataFrame, li
     # a feature the builder does not produce cannot be audited; report it instead of crashing
     feats = {f for f in wanted if f in data.columns}
     order = {"rc": 0, "hf": 1, "jt": 2, "jtp": 3, "td": 4, "w3": 5}
+=======
+def build(data_path: Path) -> tuple[pd.DataFrame, list[str]]:
+    data = build_features(pd.read_parquet(data_path))
+    v2 = add_context_features(data, list(ALL_FEATURES))
+    feats = set(ALL_FEATURES) | set(v2) | set(V1_FEATURES) | set(RAW_VERSIONS)
+    order = {"rc": 0, "hf": 1, "jt": 2, "w3": 3}
+>>>>>>> Stashed changes
     feats = sorted(feats, key=lambda f: (order.get(f.split("_")[0], 9), f))
     coverage = {
         "registry_version": fr.REGISTRY_VERSION,

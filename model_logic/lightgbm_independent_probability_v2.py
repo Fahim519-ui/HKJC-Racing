@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
-import sys
 from pathlib import Path
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+
+try:
+    from model_logic.feature_builder import ALL_FEATURES, build_features
+    from model_logic.feature_registry import without_trainer_rates
+except ModuleNotFoundError:
+    from feature_builder import ALL_FEATURES, build_features
+    from feature_registry import without_trainer_rates
 
 EPSILON = 1e-12
 
@@ -48,17 +53,6 @@ MONOTONE = {
     "w3_horse_past_win_rate": 1,
     "w3_horse_past_top3_rate": 1,
 }
-
-
-def load_feature_builder() -> object:
-    path = Path(__file__).with_name("conditional_logit_tuning_v2.py")
-    spec = importlib.util.spec_from_file_location("conditional_logit_tuning_v2", path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Unable to load feature builder from {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 class Races:
@@ -144,9 +138,13 @@ def bag_utility(boosters: list[lgb.Booster], features: np.ndarray) -> np.ndarray
     return np.mean([booster.predict(features, raw_score=True) for booster in boosters], axis=0)
 
 
-def add_context_features(data: pd.DataFrame, features: list[str]) -> list[str]:
+def add_context_features(
+    data: pd.DataFrame, features: list[str], include_trainer_rates: bool = True
+) -> list[str]:
     result = list(features)
     for column in RANK_SOURCES:
+        if column == "jt_trainer_win365" and not include_trainer_rates:
+            continue
         if column in data.columns:
             data[f"{column}_rk"] = data.groupby("race_id")[column].rank(pct=True)
             result.append(f"{column}_rk")
@@ -229,6 +227,11 @@ def main() -> int:
         default=root / "artifacts/lightgbm_independent_probability_v2",
     )
     parser.add_argument("--seeds", type=int, default=5)
+    parser.add_argument(
+        "--without-trainer-rates",
+        action="store_true",
+        help="Ablate trainer win-rate features because their cross-era stability is under review.",
+    )
     parser.add_argument("--max-rounds", type=int, default=4000)
     parser.add_argument("--no-monotone", action="store_true")
     parser.add_argument(
@@ -237,9 +240,13 @@ def main() -> int:
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    builder = load_feature_builder()
-    data = builder.build_features(pd.read_parquet(args.data))
-    features = add_context_features(data, list(builder.ALL_FEATURES))
+    data = build_features(pd.read_parquet(args.data))
+    features = list(ALL_FEATURES)
+    if args.without_trainer_rates:
+        features = without_trainer_rates(features)
+    features = add_context_features(
+        data, features, include_trainer_rates=not args.without_trainer_rates
+    )
     params = dict(PARAMS)
     if not args.no_monotone:
         params["monotone_constraints"] = monotone_vector(features)

@@ -8,7 +8,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from conditional_logit_tuning_v2 import ALL_FEATURES, build_features
+try:
+    from model_logic.feature_builder import ALL_FEATURES, build_features
+except ModuleNotFoundError:
+    from feature_builder import ALL_FEATURES, build_features
 from market_diagnostics import FEATURE_GROUPS
 from market_offset_lightgbm import FOLDS, train_fold
 

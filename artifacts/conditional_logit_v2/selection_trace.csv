@@ -1,0 +1,7 @@
+step,candidate,log_loss,improvement,accepted,note,selected_features
+0,(base),2.1966756475504434,,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since"
+1,hf_last_fin_pct_rel,2.1874357707216268,0.009239876828816662,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel"
+2,jt_trainer_win365_rel,2.1851081421622314,0.0023276285593953894,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, jt_trainer_win365_rel"
+3,hf_first_start,2.1825193191830414,0.002588822979189942,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, jt_trainer_win365_rel, hf_first_start"
+4,hf_win5_s,2.1803994101608537,0.002119909022187727,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, jt_trainer_win365_rel, hf_first_start, hf_win5_s"
+5,rc_draw_x_sprint,2.1796515260420906,0.0007478841187631424,False,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, jt_trainer_win365_rel, hf_first_start, hf_win5_s, rc_draw_x_sprint"

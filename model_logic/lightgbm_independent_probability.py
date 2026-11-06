@@ -13,15 +13,18 @@ on the later ``h_test`` window.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
-import sys
 from pathlib import Path
 
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from statsmodels.discrete.conditional_models import ConditionalLogit
+
+try:
+    from model_logic.feature_builder import build_features
+except ModuleNotFoundError:
+    from feature_builder import build_features
 
 EPSILON = 1e-12
 SEED = 17
@@ -60,18 +63,6 @@ LGB_PARAMS = {
     "force_row_wise": True,
     "verbose": -1,
 }
-
-
-def load_feature_builder() -> object:
-    """Load the established v2 builder without duplicating leakage-sensitive code."""
-    path = Path(__file__).with_name("conditional_logit_tuning_v2.py")
-    spec = importlib.util.spec_from_file_location("conditional_logit_tuning_v2", path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Unable to load feature builder from {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 def normalize_within_race(values: np.ndarray, race_id: pd.Series) -> pd.Series:
@@ -156,8 +147,7 @@ def main() -> int:
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    builder = load_feature_builder()
-    data = builder.build_features(pd.read_parquet(args.data))
+    data = build_features(pd.read_parquet(args.data))
     train = data.loc[data["split"].eq("k_train")].copy()
     tune = data.loc[data["split"].eq("k_tune")].copy()
     stage2 = data.loc[data["split"].eq("h_s2")].copy()

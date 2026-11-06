@@ -37,150 +37,13 @@ import pandas as pd
 from scipy.optimize import minimize
 
 try:
-    from model_logic.jt_partnership_features import add_lagged_jockey_trainer_features
+    from model_logic.feature_builder import ALL_FEATURES, BASE_FEATURES, build_features
+    from model_logic.feature_registry import without_trainer_rates
 except ModuleNotFoundError:
-    from jt_partnership_features import add_lagged_jockey_trainer_features
-
-BASE_FEATURES = [
-    "jt_jockey_win365_rel",
-    "hf_avg3_fin_pct_rel",
-    "rc_draw_pct",
-    "rc_draw_x_hv",
-    "rc_weight_rel",
-    "hf_days_since",
-]
-CANDIDATE_FEATURES = [
-    "hf_last_fin_pct_rel",
-    "jt_trainer_win365_rel",
-    "hf_win5_s",
-    "hf_first_start",
-    "rc_draw_x_sprint",
-    "rc_weight_x_dist",
-    "hf_class_change",
-    "w3_horse_past_win_rate",
-    "w3_horse_past_top3_rate",
-    "jtp_pair_effect365_rel",
-    "jtp_pair_effect_last_50_rel",
-]
-ALL_FEATURES = BASE_FEATURES + CANDIDATE_FEATURES
+    from feature_builder import ALL_FEATURES, BASE_FEATURES, build_features
+    from feature_registry import without_trainer_rates
 SPEARMAN_LIMIT = 0.9
 MIN_PROB = 1e-12
-
-
-# --------------------------------------------------------------------------- features
-def assign_split(data: pd.DataFrame) -> pd.Series:
-    split = pd.Series("warmup", index=data.index)
-    kaggle = data["source"].eq("kaggle")
-    hkjc = data["source"].eq("hkjc")
-    date = data["race_date"]
-    split[kaggle & (date >= "2017-11-01") & (date < "2019-08-01")] = "k_train"
-    split[kaggle & (date >= "2019-08-01")] = "k_tune"
-    split[hkjc & (date >= "2025-11-01") & (date < "2026-04-01")] = "h_s2"
-    split[hkjc & (date >= "2026-04-01")] = "h_test"
-    return split
-
-
-def rolling_rate(
-    data: pd.DataFrame, key: str, target: str, prior: float, weight: float = 30.0,
-    window: int = 365,
-) -> np.ndarray:
-    """Smoothed hit rate over [d-365, d) per (source, key); same-day rides excluded.
-
-    Vectorised: one global cumsum + searchsorted. Keys are packed as gid*BIG + day so a
-    window can never reach into another group (BIG > max_day + window).
-    """
-    gid = data.groupby(["source", key], sort=False, dropna=False).ngroup().to_numpy(np.int64)
-    day = (data["race_date"] - pd.Timestamp("1990-01-01")).dt.days.to_numpy(np.int64)
-    big = np.int64(1 << 20)
-    row_t = gid * big + day
-    uniq_t, inv = np.unique(row_t, return_inverse=True)
-    hits = np.bincount(inv, weights=data[target].to_numpy(float))
-    n = np.bincount(inv).astype(float)
-    c_hits = np.concatenate([[0.0], np.cumsum(hits)])
-    c_n = np.concatenate([[0.0], np.cumsum(n)])
-    lo = np.searchsorted(uniq_t, uniq_t - window, side="left")
-    hi = np.arange(len(uniq_t))  # first index with t >= d is itself -> excludes today
-    value = ((c_hits[hi] - c_hits[lo]) + weight * prior) / ((c_n[hi] - c_n[lo]) + weight)
-    return value[inv]
-
-
-def _nanmean_rows(a: np.ndarray) -> np.ndarray:
-    cnt = (~np.isnan(a)).sum(1)
-    return np.where(cnt > 0, np.nansum(a, 1) / np.maximum(cnt, 1), np.nan)
-
-
-def build_features(raw: pd.DataFrame) -> pd.DataFrame:
-    d = raw.loc[raw["race_valid"].astype(bool) & raw["started"].astype(bool)].copy()
-    d["race_date"] = pd.to_datetime(d["race_date"])
-    d = d.sort_values(["source", "race_date", "race_no"], kind="stable").reset_index(drop=True)
-    d["is_winner"] = d["is_winner"].astype(float)
-    d["is_top3"] = d["is_top3"].astype(float)
-
-    # Choice-set size from ACTUAL starters (robust to late scratchings / stale field_size).
-    d["n_runners"] = d.groupby("race_id")["race_id"].transform("size").astype(float)
-    d = d.loc[d["n_runners"] >= 2].reset_index(drop=True)
-    d["split"] = assign_split(d)
-    n = d["n_runners"]
-    race = d.groupby("race_id")
-
-    # Draw rank among starters (a scratched stall no longer leaves a gap / pct > 1).
-    draw_rank = race["draw"].rank(method="first")
-    d["rc_draw_pct"] = (draw_rank - 1) / (n - 1)
-    is_hv = d["track_code"].eq("HV").astype(float)
-    is_sprint = (d["distance_m"].astype(float) <= 1200).astype(float)
-    d["rc_draw_x_hv"] = d["rc_draw_pct"] * is_hv
-    d["rc_draw_x_sprint"] = d["rc_draw_pct"] * is_sprint
-    w = d["carried_weight_lb"].astype(float)
-    d["rc_weight_rel"] = w - w.groupby(d["race_id"]).transform("mean")
-    d["rc_weight_x_dist"] = d["rc_weight_rel"] * (d["distance_m"].astype(float) - 1400) / 1000
-
-    fp = d["finish_pos"].astype(float).where(lambda s: s > 0)
-    d["finish_percentile"] = (fp - 1) / (n - 1)
-
-    horse = d.groupby(["source", "horse_id"], sort=False)
-
-    def lags(col: str, k: int) -> np.ndarray:
-        return np.column_stack([horse[col].shift(i).to_numpy(float) for i in range(1, k + 1)])
-
-    d["hf_days_since"] = np.log1p(
-        (d["race_date"] - horse["race_date"].shift(1)).dt.days.clip(upper=365)
-    )
-    d["hf_first_start"] = horse.cumcount().eq(0).astype(float)
-    fin_lags = lags("finish_percentile", 3)
-    d["hf_last_fin_pct"] = fin_lags[:, 0]
-    d["hf_avg3_fin_pct"] = _nanmean_rows(fin_lags)
-    prior = 1 / 12
-    win5 = lags("is_winner", 5)
-    d["hf_win5_s"] = (np.nansum(win5, 1) + 5 * prior) / ((~np.isnan(win5)).sum(1) + 5)
-    d["w3_horse_past_win_rate"] = _nanmean_rows(win5[:, :3])
-    d["w3_horse_past_top3_rate"] = _nanmean_rows(lags("is_top3", 3))
-    ratio = d["prize_hkd"].astype(float) / horse["prize_hkd"].shift(1).astype(float)
-    d["hf_class_change"] = np.log(ratio.where((ratio > 0) & np.isfinite(ratio)))
-
-    def rel(col: str) -> pd.Series:
-        return d[col] - d.groupby("race_id")[col].transform("mean")
-
-    d["hf_last_fin_pct_rel"] = rel("hf_last_fin_pct")
-    d["hf_avg3_fin_pct_rel"] = rel("hf_avg3_fin_pct")
-    d["jt_jockey_win365"] = rolling_rate(d, "jockey_key", "is_winner", prior)
-    d["jt_trainer_win365"] = rolling_rate(d, "trainer_key", "is_winner", prior)
-    d["jt_jockey_win365_rel"] = rel("jt_jockey_win365")
-    d["jt_trainer_win365_rel"] = rel("jt_trainer_win365")
-    d = add_lagged_jockey_trainer_features(d)
-
-    # Market: overround removed per race over actual starters; races with any missing /
-    # non-positive price fall back to uniform and are flagged (excluded from comparisons).
-    mp = d["market_prob"].astype(float)
-    ok = (mp > 0).groupby(d["race_id"]).transform("all")
-    mp_norm = mp.where(mp > 0) / mp.where(mp > 0).groupby(d["race_id"]).transform("sum")
-    d["mkt_ok"] = ok.astype(bool)
-    d["mkt_p"] = np.where(ok, mp_norm, 1.0 / n)
-    d["mkt_logit"] = np.log(np.clip(d["mkt_p"].to_numpy(float), 1e-6, None))
-
-    # Contiguous races are required by every reduceat below.
-    return d.drop(columns=["finish_percentile"]).sort_values(
-        "race_id", kind="stable"
-    ).reset_index(drop=True)
 
 
 # ------------------------------------------------------------------ choice-set engine
@@ -415,8 +278,15 @@ def blend_with_market(u: np.ndarray, rs: RaceSet) -> dict:
 
 
 # ------------------------------------------------------------------ feature selection
-def select_features(rs_tr: RaceSet, rs_tu: RaceSet, corr: pd.DataFrame, min_gain: float):
-    idx = [ALL_FEATURES.index(f) for f in BASE_FEATURES]
+def select_features(
+    rs_tr: RaceSet,
+    rs_tu: RaceSet,
+    corr: pd.DataFrame,
+    min_gain: float,
+    features: list[str],
+    base_features: list[str],
+):
+    idx = [features.index(feature) for feature in base_features]
 
     def score(cols: list[int]) -> float:
         beta = fit_beta(rs_tr.select(cols))
@@ -425,15 +295,15 @@ def select_features(rs_tr: RaceSet, rs_tu: RaceSet, corr: pd.DataFrame, min_gain
     current = score(idx)
     rows = [{"step": 0, "candidate": "(base)", "log_loss": current, "improvement": np.nan,
              "accepted": True, "note": "", "selected_features": ", ".join(BASE_FEATURES)}]
-    remaining = list(CANDIDATE_FEATURES)
+    remaining = [feature for feature in features if feature not in base_features]
     while remaining:
         scored, blocked = [], []
-        names = [ALL_FEATURES[i] for i in idx]
+        names = [features[i] for i in idx]
         for c in remaining:
             if corr.loc[c, names].abs().max() > SPEARMAN_LIMIT:
                 blocked.append(c)
                 continue
-            scored.append((score(idx + [ALL_FEATURES.index(c)]), c))
+            scored.append((score(idx + [features.index(c)]), c))
         for c in blocked:
             remaining.remove(c)
             rows.append({"step": len(rows), "candidate": c, "log_loss": np.nan,
@@ -450,7 +320,7 @@ def select_features(rs_tr: RaceSet, rs_tu: RaceSet, corr: pd.DataFrame, min_gain
         remaining.remove(cand)
         if not ok:
             break
-        idx.append(ALL_FEATURES.index(cand))
+        idx.append(features.index(cand))
         current = loss
     return idx, pd.DataFrame(rows)
 
@@ -553,6 +423,11 @@ def main() -> int:
     parser.add_argument("--lambdas", type=float, nargs="+", default=[0.0, 0.003, 0.01])
     parser.add_argument("--mkt-lambdas", type=float, nargs="+", default=[0.0, 0.1, 0.5, 2.0])
     parser.add_argument("--l1-ratio", type=float, default=0.5)
+    parser.add_argument(
+        "--without-trainer-rates",
+        action="store_true",
+        help="Ablate trainer win-rate features because their cross-era stability is under review.",
+    )
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
@@ -560,15 +435,21 @@ def main() -> int:
     data = build_features(pd.read_parquet(args.data))
     train = data.loc[data["split"].eq("k_train")]
     tune = data.loc[data["split"].eq("k_tune")]
-    mean, std = moments(train, ALL_FEATURES)
-    rs_tr = prepare(train, ALL_FEATURES, mean, std, args.stage_weights, penalties=True)
-    rs_tu = prepare(tune, ALL_FEATURES, mean, std, [1.0])
-    corr_all = train[ALL_FEATURES].corr(method="spearman")
+    features = list(ALL_FEATURES)
+    if args.without_trainer_rates:
+        features = without_trainer_rates(features)
+    base_features = [feature for feature in BASE_FEATURES if feature in features]
+    mean, std = moments(train, features)
+    rs_tr = prepare(train, features, mean, std, args.stage_weights, penalties=True)
+    rs_tu = prepare(tune, features, mean, std, [1.0])
+    corr_all = train[features].corr(method="spearman")
     print(f"features+sets built in {time.time() - t0:.1f}s "
           f"(train races {rs_tr.n_valid}, tune races {rs_tu.n_valid})")
 
-    idx, trace = select_features(rs_tr, rs_tu, corr_all, args.minimum_gain)
-    selected = [ALL_FEATURES[i] for i in idx]
+    idx, trace = select_features(
+        rs_tr, rs_tu, corr_all, args.minimum_gain, features, base_features
+    )
+    selected = [features[i] for i in idx]
     tr_s, tu_s = rs_tr.select(idx), rs_tu.select(idx)
     grid = run_grid(tr_s, tu_s, args)
     best = grid.sort_values("blend_gain", ascending=False).iloc[0]

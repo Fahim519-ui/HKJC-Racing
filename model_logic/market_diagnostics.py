@@ -10,7 +10,12 @@ import pandas as pd
 from scipy.optimize import minimize
 from scipy.stats import chi2
 
-from conditional_logit_tuning_v2 import MIN_PROB, build_features, prepare, seg_lse
+try:
+    from model_logic.conditional_logit_tuning_v2 import MIN_PROB, prepare, seg_lse
+    from model_logic.feature_builder import build_features
+except ModuleNotFoundError:
+    from conditional_logit_tuning_v2 import MIN_PROB, prepare, seg_lse
+    from feature_builder import build_features
 
 
 FEATURE_GROUPS = {

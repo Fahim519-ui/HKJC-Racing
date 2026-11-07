@@ -116,8 +116,11 @@ Removing the trainer features changes nothing measurable (market + logit −0.00
 market: market + logit +0.0016 (−0.0005 to +0.0037); market + both +0.0015 (−0.0007 to
 +0.0038). *Stale: registry v3.0, unpushed code. Re-run on v3.1 before quoting.*
 
-**Stage 2 weights** (`analysis/stage2_results/report.md`, in-sample, stamped UNVERIFIED for
-the fold windows): on HKJC Stage 2 the logit gets a **negative** weight (α = −0.344,
+**Stage 2 weights** (`analysis/stage2_results/report.md`, in-sample) *provisional*. The whole
+table is stamped UNVERIFIED: no window passes the provenance check yet. The fold windows come
+from the stale v3.0 runs, and the h_s2 window comes from the 5 Nov LightGBM v2 predictions in
+the combined file, which have no `meta.json`. Re-run on v3.1 before quoting. As it stands: on
+HKJC Stage 2 the logit gets a **negative** weight (α = −0.344,
 SE 0.106) with β = 1.237 on the market; on Kaggle windows α is near 0 (k1 +0.050, k2 −0.063,
 SE ≈ 0.10). Read: on HKJC the blend gains by leaning against the model, acting as an extra
 favourite-longshot correction rather than adding the model's information.

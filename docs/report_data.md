@@ -28,8 +28,11 @@ No free source covers 2020-2025, so there is a five-year gap between the two sou
   void race). Modelling rows = valid races, started runners: **38,942 rows, 3,179 races**.
 - 10 Kaggle races have one finish-time swap; checked against HKJC pages, some are amended
   placings and some are time typos. Placings kept; times flagged as unreliable for speed figures.
-- HKJC horse country / age / rating are missing for 28.5% of 2025/26 runners and the gap is
-  **not random**: those horses won 4.0% of races vs 9.7% for the rest, because they had left
+- HKJC horse country / age / rating are missing for 34.0% of the 7,040 HKJC runners before the
+  test window (Sep 2025-Mar 2026) and the gap is **not random**: those horses won 4.1% of
+  races vs 10.1% for the rest (recomputed 7 Nov from `runners_merged.parquet`, valid started
+  HKJC runners with `race_date` < 2026-04-01, `profile_missing`; the cleaning report's 28.5% /
+  4.0% / 9.7% cover the whole 2025/26 season, which includes test races), because they had left
   Hong Kong racing before the scrape. `profile_missing` is therefore never a feature, and the
   rows are kept to avoid biasing the sample.
 
@@ -136,8 +139,8 @@ interval excludes zero, in any design. The only stable pattern is the longshot b
 ## 4. Limitations (paste-ready)
 
 > **The test period was seen before the final run.** It was seen twice. First, in Week 2
-> (mid-October), the exploratory analysis (`data/clean data/02_eda.ipynb`) was run on every
-> HKJC race, including April-October 2026, before the test split was defined: it reported
+> (mid-October), the exploratory analysis (`data/clean data/02_eda.ipynb`) was run on all
+> HKJC races, including the later test window: it reported
 > the market's per-race log loss, market calibration, the favourite's win rate, draw bias
 > and win rate by carried weight over all HKJC races. Second, on 4 Nov, model scripts and a
 > market diagnostic committed test-window results to the repository: per-race log loss for

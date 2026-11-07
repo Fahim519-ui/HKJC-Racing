@@ -45,8 +45,9 @@ Ten Kaggle races contain one pair of runners whose finish times are in the wrong
 checked them against the HKJC website. Some are real amended placings after a protest and
 some are typing errors in the times. We keep the official placings and do not use the times.
 
-HKJC horse country, age and rating are missing for 28.5% of 2025/26 runners, and the gap is
-not random. Those horses won 4.0% of their races against 9.7% for the rest, because they had
+HKJC horse country, age and rating are missing for 34.0% of the 7,040 HKJC runners before the
+test window (September 2025 to March 2026), and the gap is not random. Those horses won 4.1%
+of their races against 10.1% for the rest, because they had
 left Hong Kong racing before we scraped their profiles. Whether a profile is missing
 therefore carries information about the horse's future. We never use missingness as a
 feature, and we keep those rows, because dropping them would remove mostly weaker horses
@@ -233,8 +234,8 @@ before scoring.]
 ## 5. Limitations
 
 **The test period was seen before the final run.** It was seen twice. First, in Week 2
-(mid-October), the exploratory analysis (`data/clean data/02_eda.ipynb`) was run on every
-HKJC race, including April-October 2026, before the test split was defined: it reported
+(mid-October), the exploratory analysis (`data/clean data/02_eda.ipynb`) was run on all
+HKJC races, including the later test window: it reported
 the market's per-race log loss, market calibration, the favourite's win rate, draw bias
 and win rate by carried weight over all HKJC races. Second, on 4 Nov, model scripts and a
 market diagnostic committed test-window results to the repository: per-race log loss for

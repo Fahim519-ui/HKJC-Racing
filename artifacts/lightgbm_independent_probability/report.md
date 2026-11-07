@@ -1,5 +1,7 @@
 # Odds-free LightGBM probability model
 
+> **7 Nov:** the `h_test` (HKJC Apr-Oct 2026) rows were removed from this report and from `metrics.csv`. The test window is scored once, in Week 5, by `analysis/final_scoring.py`. These numbers had been committed on 4 Nov and were seen early; see `docs/report_data.md` (Limitations). The scripts that wrote them still score h_test when re-run, so do not re-run them before the final scoring without removing that.
+
 Stage 1 uses only the listed physical and strictly lagged historical features. It excludes odds, implied probability, normalized market probability, and every other market-derived column. The binary classifier output is normalized within race.
 
 - LightGBM early-stopping trees: 205
@@ -16,10 +18,6 @@ k_tune          lightgbm           2.183708    -0.189015
   h_s2          lightgbm           2.309663    -0.271283
   h_s2 conditional_logit           2.315355    -0.276975
   h_s2   joint_in_sample           2.024395     0.013985
-h_test            market           2.056461     0.000000
-h_test          lightgbm           2.251498    -0.195036
-h_test conditional_logit           2.261698    -0.205237
-h_test             joint           2.063982    -0.007521
 ```
 
 ## Joint blend coefficients

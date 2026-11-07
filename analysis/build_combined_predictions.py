@@ -98,7 +98,7 @@ def main() -> int:
 
     report = [
         "# Combined predictions", "",
-        f"Source predictions: `{args.predictions.relative_to(REPO)}`.",
+        f"Source predictions: `{prov._label(args.predictions)}`.",
         f"Rows: {len(out)} ({out['split'].value_counts().to_dict()}).",
         f"Market-only refit beta (fitted on h_s2): {beta:.4f}.", "",
         "## Columns", "",
@@ -121,7 +121,7 @@ def main() -> int:
                "h_test is for Week 5 one-shot scoring only and is not scored here."]
     (args.output.parent / "combined_predictions_report.md").write_text("\n".join(report) + "\n", encoding="utf-8")
 
-    print(f"wrote {args.output.relative_to(REPO)}  rows={len(out)}  cols={list(out.columns)}")
+    print(f"wrote {prov._label(args.output)}  rows={len(out)}  cols={list(out.columns)}")
     print("sums-to-1 / no-NaN:", checks)
     print("\n".join(checked.lines()))
     if missing_track_b:

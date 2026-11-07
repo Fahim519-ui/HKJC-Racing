@@ -297,7 +297,7 @@ def report(summary: pd.DataFrame, meta: dict, path: Path) -> None:
         "Effects use k_train, k_early, k_tune and h_s2 only, never h_test. The h_test columns are "
         "information only.", "",
         "**This is a warning list, not a feature-selection rule.** Features are chosen on k_tune only "
-        "(DATA_RULES.md). Confirm any change on k_tune before acting on a flag here.", "",
+        "(docs/DATA_RULES.md). Confirm any change on k_tune before acting on a flag here.", "",
         "## Summary", "",
         "Columns: shift of HKJC Stage 2 (h_s2) against Kaggle train, and against Kaggle early "
         "(history-matched). Coefficients are per 1 SD of the feature in Kaggle train.", "",

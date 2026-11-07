@@ -1,4 +1,8 @@
-"""Weeks 3-4 starter pipeline (Group 17): features -> baselines -> logit + LightGBM -> Stage 2.
+"""Reference copy (restored 7 Nov 2026 from update_2026-10-31_fahim_cli/): the 31 Oct Week 3-4
+starter. Kept because eval_utils.py and the evaluation docs cite its conventions (dead-heat rule,
+odds baselines). Not part of the current pipeline; model_logic/ is.
+
+Weeks 3-4 starter pipeline (Group 17): features -> baselines -> logit + LightGBM -> Stage 2.
 
 Run from the project folder (SageMaker terminal or laptop venv):
     python week34_starter.py

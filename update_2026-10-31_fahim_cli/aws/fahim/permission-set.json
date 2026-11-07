@@ -1,7 +1,0 @@
-{
-  "Name": "ELEC3544-DSFM-Fahim",
-  "Description": "ELEC3544 DSFM - Fahim: open Studio as fahim, project bucket only",
-  "SessionDuration": "PT12H",
-  "RelayState": "https://ap-southeast-1.console.aws.amazon.com/sagemaker/home?region=ap-southeast-1",
-  "Tags": [ { "Key": "Project", "Value": "ELEC3544 DSFM Group Project" } ]
-}

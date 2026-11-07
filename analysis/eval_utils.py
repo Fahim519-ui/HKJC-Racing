@@ -1,6 +1,6 @@
 """Shared, leakage-safe evaluation for every model (Week 5 "scoreboard").
 
-Design rules (from WEEK5_PLAN.md and DATA_RULES.md):
+Design rules (from WEEK5_PLAN.md and docs/DATA_RULES.md):
   * The race is the unit. Every metric is a mean over races. The bootstrap resamples whole
     race DAYS (races on one day are correlated), keeping both models' predictions paired.
   * h_test (HKJC Apr-Oct 2026) is scored ONCE, in Week 5. Every function that touches
@@ -80,7 +80,7 @@ def race_losses(p: pd.Series, df: pd.DataFrame) -> pd.Series:
     """One cross-entropy loss per race: -log p(winner).
 
     Dead heat (two or more winners): -log of the MEAN winner probability. This matches the
-    project convention in week34_starter.py and Fahim's model_logic/run_folds.py (checked 6 Nov:
+    project convention in docs/week34_starter.py and Fahim's model_logic/run_folds.py (checked 6 Nov:
     identical on every fold). Before 6 Nov this used the mean of the -log values, which differs
     only in dead-heat races (1 race in fold k1, 2 in h1).
     Returns a Series indexed by race_id, so two models' losses align for pairing."""

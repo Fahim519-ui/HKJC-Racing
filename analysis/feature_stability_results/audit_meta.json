@@ -1,8 +1,8 @@
 {
-  "generated": "2026-11-06 21:50",
+  "generated": "2026-11-07 13:51",
   "data": "runners_merged.parquet",
   "data_sha256": "d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0",
-  "repo_commit": "fcafb9e",
+  "repo_commit": "388aa09",
   "n_features": 42,
   "features": [
     "rc_draw_pct",
@@ -75,7 +75,7 @@
   ],
   "coverage": {
     "registry_version": "v3.1",
-    "registry_hash": "58b0e1c59516540df4110440e117db55f36aad5b872abd96976985292c29fd88",
+    "registry_hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac",
     "registry_implemented": 56,
     "registry_implemented_not_audited": [
       "jtp_pair_baseline365",

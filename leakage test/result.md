@@ -26,7 +26,7 @@
 
 42 features checked (registry v3.1): **30 keep, 10 watch, 2 review.** Script and details: `analysis/feature_stability_audit.py`, `analysis/README_FEATURE_STABILITY.md`. Report: `analysis/feature_stability_results/stability_report.md`.
 
-The original 27 features are unchanged by the builder rewrite (every number identical). Of the 15 new model features, 13 are `keep` and 2 are `watch` (`tr_days_since_bucket`: moderate Kaggle-to-HKJC shift; `tr_fin_pct_slope3_rel`: blank rate 5.6 points higher in HKJC). The registry marks all 15 as `unaudited`; the audit now gives them a status.
+The original 27 features are unchanged by the builder rewrite (every number identical). Of the 15 new model features, 13 are `keep` and 2 are `watch` (`tr_days_since_bucket`: moderate Kaggle-to-HKJC shift; `tr_fin_pct_slope3_rel`: blank rate 5.6 points higher in HKJC). On 7 Nov the registry was updated to these statuses (and the trainer features to `review`), so the registry and the audit now agree.
 
 | What | Result |
 |---|---|
@@ -35,7 +35,7 @@ The original 27 features are unchanged by the builder rewrite (every number iden
 | **Form, draw, weight** (keep) | Look and behave the same in both datasets. |
 | **Watch features** | Mostly shifted because HKJC horses have shorter histories (the HKJC data starts in Sep 2025). Harmless. One real difference: HKJC fields are bigger (`n_runners`). |
 
-The audit is a warning list, not a rule for dropping features. Features are chosen on `k_tune` only (`DATA_RULES.md`), so settle the trainer question there.
+The audit is a warning list, not a rule for dropping features. Features are chosen on `k_tune` only (`docs/DATA_RULES.md`), so settle the trainer question there.
 
 ## 3. Fahim's "residual edge" claim: not supported
 

@@ -1,5 +1,14 @@
 # Fahim's fold runner vs eval_utils / rolling_validation (checked 6 Nov)
 
+> **Update 7 Nov: these fold runs are stale.** Every `meta.json` under `artifacts/folds/`
+> records `registry_version: v3.0` and commit `fc759fe`, which is not on GitHub. LightGBM
+> used 24 features (22 without trainer), not the 38 in registry v3.1, so Nayeon's `td_*`
+> and the `tr_`/`int_` features were never in these runs. That is why `primary` and
+> `no_track_distance` give identical numbers. The agreement below (same losses, same CIs)
+> still holds as a check of the two scoring codes, but the results describe the v3.0
+> feature set only. Re-run `run_ablation` on v3.1 from a clean checkout of a pushed commit;
+> `analysis/provenance.py` now refuses fold files that fail this check.
+
 Question: do Fahim's fold results (`model_logic/run_folds.py` + `aggregate_folds.py`, primary
 config) agree with our evaluation code? Short answer: yes. The losses and gains are identical,
 and after two fixes on our side the confidence intervals are identical too. Both pipelines say
@@ -36,7 +45,7 @@ No interval excludes zero in any fold or pooled.
 ## 2. What had to change in eval_utils to match
 
 1. **Dead heats.** We used the mean of `-log p` over the winners; he (and
-   `week34_starter.py`) uses `-log` of the mean winner probability. We switched to his rule.
+   `docs/week34_starter.py`) uses `-log` of the mean winner probability. We switched to his rule.
    It changes only dead-heat races (1 in k1 valid, 2 in h1 valid, 3 in h_s2). Side effect:
    the h_s2 market refit beta in the combined file moved from 1.0454 to 1.0537 (only
    `p_market_refit` changed, max 0.005 per runner).

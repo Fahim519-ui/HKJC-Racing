@@ -14,9 +14,16 @@ Three modes, run in this order:
 
   3. Final, one shot. Refuses unless: the freeze record exists, the predictions file still
      matches its SHA-256, the confirmation phrase is given, and no final result exists yet.
+
+Provenance (added 7 Nov, analysis/provenance.py): --freeze and --final also refuse unless the
+predictions file has a matching .provenance.json sidecar and every model run it was built
+from recorded the live registry version and a git commit that is on origin/main. Run
+`git fetch origin` first. The dry run only warns, so the pipeline can still be tested on
+older files. This stops a stale run (like the 6 Nov folds: registry v3.0, unpublished commit
+fc759fe) from being frozen or scored.
          python analysis/final_scoring.py --final --confirm "score h_test once"
 
-Rules kept here (DATA_RULES.md, WEEK5_PLAN.md):
+Rules kept here (docs/DATA_RULES.md, WEEK5_PLAN.md):
   * Nothing is refitted on h_test. p_market_refit carries the beta fitted on h_s2
     (build_combined_predictions.py); the Stage-2 blend p_joint was fitted on h_s2.
   * All models are scored on the same races (every column present, market complete).
@@ -42,6 +49,7 @@ for _p in (str(REPO), str(REPO / "analysis")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 import eval_utils as ev  # noqa: E402
+import provenance as prov  # noqa: E402
 
 PREDICTIONS = REPO / "artifacts/combined/combined_predictions.parquet"
 OUT_ROOT = REPO / "analysis/final_scoring_results"
@@ -136,15 +144,28 @@ def write_outputs(out: Path, df: pd.DataFrame, cols: list[str], table: pd.DataFr
 
 
 # --------------------------------------------------------------------------- modes
+def provenance_report(args) -> "prov.Report":
+    return prov.check_predictions_file(args.predictions, remote_ref=args.remote_ref)
+
+
 def dry_run(args) -> int:
     df = ev.load_predictions(args.predictions, split="h_s2")       # h_s2 only, guarded
     cols = model_columns(df, args.models)
+    checked = provenance_report(args)
+    if not checked.ok:
+        print("Provenance check FAILED (dry run continues; --freeze and --final would refuse):")
+    print("\n".join(f"  {line}" for line in checked.lines()))
     table, lines = score(df, cols, final_run=False)
     out = args.output_root / "dry_run_h_s2"
     header = ["# Final-scoring DRY RUN on h_s2 (not the test)", "",
               f"Predictions: `{args.predictions.name}`, SHA-256 {file_hashes(args.predictions)['sha256']}.",
               "h_s2 is the Stage-2 fitting window: p_joint and p_market_refit were fitted on it, "
-              "so these numbers are in-sample. This checks the pipeline only; it is not evidence."]
+              "so these numbers are in-sample. This checks the pipeline only; it is not evidence.",
+              "", "## Provenance", "",
+              ("Passed: every source run used the live registry and published code."
+               if checked.ok else
+               "**FAILED.** These predictions could not be frozen or scored on h_test as they are:"),
+              *[f"- {line}" for line in checked.lines() if not line.startswith("provenance OK")]]
     write_outputs(out, df, cols, table, lines, header, overwrite=True)
     print("\n".join(lines))
     print(f"\nDry run written to {out}")
@@ -154,6 +175,8 @@ def dry_run(args) -> int:
 def freeze(args) -> int:
     if args.freeze_record.exists():
         raise SystemExit(f"{args.freeze_record} already exists; delete it deliberately to re-freeze.")
+    checked = provenance_report(args)
+    prov.require(checked, "--freeze")
     meta = pd.read_parquet(args.predictions, columns=["race_id", "split"])   # no outcomes read
     cols = list(pq.read_schema(args.predictions).names)
     record = {
@@ -167,6 +190,8 @@ def freeze(args) -> int:
         "models_to_score": model_columns(pd.DataFrame(columns=cols), args.models),
         "baseline": BASELINE,
         "git": git_state(),
+        "provenance": {"registry": prov.current_registry(), "remote_ref": args.remote_ref,
+                       "sources": checked.checked, "warnings": checked.warnings},
     }
     if args.s3_uri:
         s3 = s3_version(args.s3_uri, args.profile, args.region)
@@ -188,6 +213,7 @@ def final(args) -> int:
     record = json.loads(args.freeze_record.read_text())
     if file_hashes(args.predictions)["sha256"] != record["sha256"]:
         raise SystemExit("Refusing: predictions file changed since the freeze (SHA-256 differs).")
+    prov.require(provenance_report(args), "--final")
     out = args.output_root / "h_test"
     if out.exists():
         raise SystemExit(f"Refusing: {out} exists. h_test is scored once.")
@@ -219,6 +245,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--s3-uri", default=None)
     parser.add_argument("--profile", default="cloudpc")
     parser.add_argument("--region", default="ap-southeast-1")
+    parser.add_argument("--remote-ref", default=prov.REMOTE_REF,
+                        help="branch whose history must contain each run's git commit")
     args = parser.parse_args(argv)
     if args.final:
         return final(args)

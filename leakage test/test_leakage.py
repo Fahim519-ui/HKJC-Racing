@@ -1,6 +1,6 @@
 """Leakage tests for the shared feature builder (Week 4 roadmap, step 2).
 
-What is tested (rules from DATA_RULES.md and WEEK3-4_PLAN.md section 5.2):
+What is tested (rules from docs/DATA_RULES.md and docs/WEEK3-4_PLAN.md section 5.2):
   1. Same-day exclusion: shuffling the results of one race day changes no feature on that
      day or before it. Jockey/trainer rates are equal for all of a person's rides on a day.
   2. Source separation: shuffling every result in one source (kaggle / hkjc) changes no
@@ -53,7 +53,7 @@ ARTIFACTS = REPO / "artifacts"
 KEY = ["source", "race_id", "horse_id"]
 PRIOR_WIN = 1 / 12
 
-# Never features (DATA_RULES.md). Matched exactly, or by prefix.
+# Never features (docs/DATA_RULES.md). Matched exactly, or by prefix.
 FORBIDDEN = {
     "is_winner", "is_top3", "running_positions", "race_winner_time_s", "kaggle_fg_figure",
     "kaggle_path", "dead_heat", "finished", "win_odds", "implied_prob", "market_prob",

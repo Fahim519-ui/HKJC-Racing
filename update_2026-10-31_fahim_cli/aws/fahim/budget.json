@@ -1,8 +1,0 @@
-{
-  "BudgetName": "ELEC3544-DSFM-SageMaker-Monthly",
-  "BudgetLimit": { "Amount": "20", "Unit": "USD" },
-  "BudgetType": "COST",
-  "TimeUnit": "MONTHLY",
-  "FilterExpression": { "Dimensions": { "Key": "SERVICE", "Values": ["Amazon SageMaker"] } },
-  "Metrics": ["UNBLENDED_COST"]
-}

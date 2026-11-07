@@ -1,12 +1,12 @@
 # Feature stability audit (generated)
 
-Generated 2026-11-06 21:50 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `fcafb9e`. 42 features.
+Generated 2026-11-07 13:51 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `388aa09`. 42 features.
 
 **Result:** 2 review, 10 watch, 30 keep.
 
 Thresholds: SMD 0.10 / 0.25, PSI 0.10 / 0.25, blank rate 5 pp, effect difference 2 SE. Effects use k_train, k_early, k_tune and h_s2 only, never h_test. The h_test columns are information only.
 
-**This is a warning list, not a feature-selection rule.** Features are chosen on k_tune only (DATA_RULES.md). Confirm any change on k_tune before acting on a flag here.
+**This is a warning list, not a feature-selection rule.** Features are chosen on k_tune only (docs/DATA_RULES.md). Confirm any change on k_tune before acting on a flag here.
 
 ## Summary
 
@@ -59,29 +59,9 @@ Columns: shift of HKJC Stage 2 (h_s2) against Kaggle train, and against Kaggle e
 
 ## Agreement with the feature registry
 
-Registry `v3.1` (hash `58b0e1c59516...`). 56 implemented features; 14 not audited in this run (default: model inputs only; use --all-registry for helper columns).
+Registry `v3.1` (hash `50ff25aaa1da...`). 56 implemented features; 14 not audited in this run (default: model inputs only; use --all-registry for helper columns).
 
-These features have a different status in the registry than in this audit. Ask the registry owner to update the label, or explain why not.
-
-| Feature | This audit | Registry | Why this audit says so |
-|---|---|---|---|
-| `jt_trainer_win365` | **review** | watch | large Kaggle->HKJC shift, also against the history-matched window; large drift inside Kaggle (train->tune); effect weaker in HKJC, also against the history-matched window |
-| `jt_trainer_win365_rel` | **review** | watch | large Kaggle->HKJC shift, also against the history-matched window; moderate drift inside Kaggle (train->tune); effect weaker in HKJC, also against the history-matched window |
-| `td_distance_band_fin_pct_rel` | **keep** | unaudited | - |
-| `td_distance_band_top3_rel` | **keep** | unaudited | - |
-| `td_distance_band_win_rel` | **keep** | unaudited | - |
-| `td_track_distance_fin_pct_rel` | **keep** | unaudited | - |
-| `td_track_distance_top3_rel` | **keep** | unaudited | - |
-| `td_track_distance_win_rel` | **keep** | unaudited | - |
-| `td_track_fin_pct_rel` | **keep** | unaudited | - |
-| `td_track_top3_rel` | **keep** | unaudited | - |
-| `td_track_win_rel` | **keep** | unaudited | - |
-| `int_jt_strength_x_field_size` | **keep** | unaudited | - |
-| `int_recent_form_x_class_change` | **keep** | unaudited | - |
-| `tr_class_change_direction` | **keep** | unaudited | - |
-| `tr_days_since_bucket` | **watch** | unaudited | moderate Kaggle->HKJC shift |
-| `tr_fin_pct_slope3_rel` | **watch** | unaudited | blank rate differs by +5.6 pp |
-| `tr_last_minus_avg3_fin_pct_rel` | **keep** | unaudited | - |
+Every audited feature has the same status in the registry and in this audit.
 
 ## h_test (information only, do not use for feature choice)
 

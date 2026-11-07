@@ -1,4 +1,11 @@
-# Data rules for this project
+# Data rules - Group 17 (ELEC3544 DSFM)
+
+Copied from the project's Kiro rules (31 Oct 2026). Applies to everyone's code.
+
+> Restored to `docs/` on 7 Nov 2026 from `update_2026-10-31_fahim_cli/docs/` (removed in the
+> cleanup). The bucket name is replaced by `<project-bucket>` because the repository is public.
+
+## Data
 
 - Never change the raw files in `data/` (the two input CSVs). Write outputs only to `data/interim`, `data/processed` and `reports`.
 - `clean_data.py` and `docs/data_dictionary.md` are the source of truth for column names and meanings.
@@ -9,7 +16,7 @@
 - Model only on `race_valid & started` rows. Split by race date, never randomly by row.
 - Never put AWS keys, tokens or passwords in any file.
 
-# Features and models (Weeks 3-4, see `docs/WEEK3-4_PLAN.md`)
+## Features and models (Weeks 3-4, see `docs/WEEK3-4_PLAN.md`)
 
 - Features use history from earlier race days only, within the same source (`kaggle` / `hkjc`). Horse IDs never link across sources.
 - Build history only from `race_valid & started` rows.
@@ -21,8 +28,6 @@
 - Check Spearman correlations between logit features on `k_train`; for pairs above 0.9, keep only one in `FEATS_CL`.
 - Choose features and settings on the Kaggle tuning window (`k_tune`) only. Stage 2 is fitted on `h_s2`; its log loss there is in-sample.
 
-# Environment and AWS
+## AWS
 
-- Python 3.14 virtual environment in `.venv`. Activate it (`.\.venv\Scripts\Activate.ps1`) before running anything. Don't edit files inside `.venv`.
-- AWS for this project: region `ap-southeast-1` (Singapore) only, AWS CLI profile `cloudpc` (sign in with `aws sso login --profile cloudpc`). Always pass `--region ap-southeast-1`.
-- The S3 bucket name contains `sagemaker`. Keep it private: no public access, no public links.
+- Region `ap-southeast-1` (Singapore). Bucket `<project-bucket>` is private: no public access, no public links, no AWS keys in any file.

@@ -1,5 +1,8 @@
 # Weeks 3-4 plan: features and model training (Group 17)
 
+> Restored to `docs/` on 7 Nov 2026 from `update_2026-10-31_fahim_cli/docs/`. Plan as of 31 Oct;
+> bucket and SageMaker space names replaced by placeholders because the repository is public.
+
 **Written:** Fri 16 Oct 2026. **Updated:** Sat 31 Oct 2026.
 
 > **Status 31 Oct (evening):** owners agreed - **Week 3 features: Nayeon** (on her laptop; no AWS needed), **Week 4 models: Fahim** in his own SageMaker space (access: `docs/FAHIM_ACCESS_RUNBOOK.md`), **Inns:** data, AWS, access and costs. The real deadlines replace the week dates below: **Weeks 3-4 done by Wed 11 Nov** (group target), report **Tue 17 Nov 11:59 PM**, presentations **18 / 25 Nov** (about 10 min). The starter pipeline (`week34_starter.py`, fixed 31 Oct) does a first version of Weeks 3-4 in one run. Still to write: better features + checks (5.3-5.5, Nayeon), `eval_utils.py` (6.2), the tuned models and Track B (6.4-6.7, Fahim). Changes on 31 Oct: `rc_weight_x_dist` centred (5.3), starter results (7.1), proposal mismatches (8).
@@ -217,7 +220,7 @@ That's a pseudo-R² of 0.19, where pseudo-R² = 1 - model / guessing.
 
 | | Week 3 (features) | Week 4 (models) | Target |
 |---|---|---|---|
-| **Nayeon** | Feature table `features_v1.parquet` (5.1-5.4, incl. running style `rs_` and the rating/age fills), `feature_dictionary.md`, checks 5.5 → `feature_checks.md`. Laptop is fine; send the files to Inns or Fahim to upload to `s3://inns-elec3544-dsfm-sagemaker/features/` | - | as early as possible before Wed 11 Nov, so Fahim can use them |
+| **Nayeon** | Feature table `features_v1.parquet` (5.1-5.4, incl. running style `rs_` and the rating/age fills), `feature_dictionary.md`, checks 5.5 → `feature_checks.md`. Laptop is fine; send the files to Inns or Fahim to upload to `s3://<project-bucket>/features/` | - | as early as possible before Wed 11 Nov, so Fahim can use them |
 | **Fahim** | - | Baselines, conditional logit, LightGBM, Stage 2, Track B (6.3-6.7); `predictions_v1.parquet`, `models/`, `week4_models.md` in S3 (6.8). In his own SageMaker space, guide `docs/WEEK4_FAHIM.md` | Wed 11 Nov |
 | **Inns** | Data questions; upload Nayeon's features if needed | Fahim's AWS access (31 Oct), costs/budget; `eval_utils.py` (6.2) for Week 5 (suggested - not agreed yet) | access tonight; `eval_utils.py` before Week 5 |
 | **All** | | | Week 5 scoring ~12-14 Nov; report Tue 17 Nov; presentation 18/25 Nov |
@@ -362,13 +365,13 @@ Columns marked "A+B" are used in both tracks; "B" means HKJC only (Track B). "re
 ### 5.6 Week 3 is done when
 
 - [ ] `features_v1.parquet`, `feature_dictionary.md` and `feature_checks.md` exist, and all checks pass;
-- [ ] they're uploaded to `s3://inns-elec3544-dsfm-sagemaker/features/`;
+- [ ] they're uploaded to `s3://<project-bucket>/features/`;
 - [ ] the group has agreed the splits (section 3) and the feature list.
 
 Upload (laptop, venv active, signed in with `aws sso login --profile cloudpc`):
 
 ```powershell
-$B = "inns-elec3544-dsfm-sagemaker"
+$B = "<project-bucket>"
 $R = "--region", "ap-southeast-1", "--profile", "cloudpc"
 aws s3 cp data\features "s3://$B/features/" --recursive @R
 aws s3 cp build_features.py "s3://$B/code/" @R
@@ -382,7 +385,7 @@ aws s3 cp reports\feature_checks.md "s3://$B/reports/" @R
 
 ### 6.1 Where to run
 
-**SageMaker.** Use the space `inns-elec3544-dsfm-datacleaning` (ml.t3.medium).
+**SageMaker.** Use the space `<data-cleaning space>` (ml.t3.medium).
 
 - Its image (SageMaker Distribution 4.5.0) already has lightgbm 4.6.0, statsmodels 0.15.0 and scikit-learn 1.7.2, so nothing needs installing.
 - Take the final numbers from SageMaker, so everyone's numbers match.
@@ -559,7 +562,7 @@ def shin_probs(odds, tol=1e-12, max_iter=1000):
 **Upload,** in a SageMaker terminal:
 
 ```bash
-B=inns-elec3544-dsfm-sagemaker
+B=<project-bucket>
 aws s3 cp data/predictions "s3://$B/predictions/" --recursive
 aws s3 cp models "s3://$B/models/" --recursive
 aws s3 cp reports/week4_models.md "s3://$B/reports/"

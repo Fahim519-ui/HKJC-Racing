@@ -11,8 +11,42 @@ unless that window is a fitting window, and h_test is scored once.
 | `stage2_alpha_beta.py` | Stage 2 weights (beta for market, alpha for each model) with standard errors | No |
 | `final_scoring.py` | Dry run on h_s2, freeze record, then the one-shot h_test scoring | Only in `--final` |
 | `build_combined_predictions.py` | One predictions file with every model and baseline | Writes predictions only, scores nothing |
+| `provenance.py` | Refuses predictions not made by the live registry and published code | No (reads `meta.json` files only) |
 
 Run everything from the repo root with the project venv active.
+
+## Provenance check (added 7 Nov)
+
+Every fold run in `artifacts/folds/` (6 Nov) recorded `registry_version: v3.0` and commit
+`fc759fe`, which is not on GitHub. The registry was already v3.1, so those runs never used
+the track/distance, trajectory or interaction features, and the scores gave no sign of it.
+`provenance.py` now checks each run's `meta.json`:
+
+- `registry_version` must equal `REGISTRY_VERSION` in `model_logic/feature_registry.py`;
+- `git_commit` must be on `origin/main` (run `git fetch origin` first);
+- a different `registry_hash` with the same version is a **warning** (registry edited after the run).
+
+Where it is enforced:
+
+| Script | Behaviour on a failed check |
+|---|---|
+| `final_scoring.py` dry run | Runs, prints the problems and writes them into the dry-run report |
+| `final_scoring.py --freeze` / `--final` | **Refuses** |
+| `stage2_alpha_beta.py` | Refuses; `--allow-unverified` reproduces the table stamped UNVERIFIED |
+| `provenance.load_fold_predictions()` | Refuses; use it instead of `pd.read_parquet` for fold files |
+| `build_combined_predictions.py` | Writes `combined_predictions.provenance.json` (source run's meta) next to the output |
+
+```bash
+git fetch origin
+python analysis/provenance.py        # checks the combined file and artifacts/folds/primary
+```
+
+Today this fails on purpose: the combined file was built from the 5 Nov LightGBM v2 output,
+which has no `meta.json`, and the fold runs are v3.0 from an unpushed commit. To pass, the
+model scripts must write a `meta.json` (as `run_folds.py` does) from a clean checkout of a
+pushed commit on registry v3.1, and the combined file must be rebuilt from that run.
+Limitation: `run_folds.py` records `git rev-parse HEAD` even if the tree had uncommitted
+edits, so only a run from a clean checkout really proves the code.
 
 ## eval_utils.py
 
@@ -30,7 +64,7 @@ Main functions:
   as test if `split == "h_test"` **or** `race_date >= 2026-04-01`, so files without a `split`
   column (the fold-runner predictions) are caught too. `load_predictions` and `scoreboard` call it.
 - `race_losses(p, df)` gives one loss per race, `-log p(winner)`. Dead heat (two or more
-  winners): `-log(mean winner p)`. This is the same rule as `week34_starter.py` and Fahim's
+  winners): `-log(mean winner p)`. This is the same rule as `docs/week34_starter.py` and Fahim's
   `model_logic/validation/evaluation.race_losses`. Before 6 Nov this module used the mean of
   the two `-log` values, which differed only in dead-heat races.
 - `per_race_log_loss`, `brier`, `top1`, `pseudo_r2` (1 - model loss / 1-over-field loss),

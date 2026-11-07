@@ -124,16 +124,11 @@ status
 keep      30
 watch     10
 review     2
-registry disagreements: 17
-                       feature status registry_status
-             jt_trainer_win365 review           watch
-         jt_trainer_win365_rel review           watch
-  td_distance_band_fin_pct_rel   keep       unaudited
-  ... (13 more v3.1 features: registry "unaudited", audit keep/watch)
-42 features in 79.9s -> ...\analysis\feature_stability_results
+registry disagreements: 0
+42 features in about 50-80s -> ...\analysis\feature_stability_results
 ```
 
-Of the 17 disagreements, only the 2 trainer features are real disagreements. The other 15 are the new v3.1 features, which the registry still marks `unaudited`; the audit is what audits them (13 `keep`, 2 `watch`: `tr_days_since_bucket` for a moderate Kaggle-to-HKJC shift, `tr_fin_pct_slope3_rel` for a blank rate 5.6 points higher in HKJC).
+Until 7 Nov this showed 17 disagreements: the 2 trainer features (registry `watch`, audit `review`) and the 15 new v3.1 features, which the registry marked `unaudited`. On 7 Nov the registry statuses were set from this audit (branch `inns/provenance-cleanup`): trainer features `review`; v3.1 features 13 `keep` and 2 `watch` (`tr_days_since_bucket` for a moderate Kaggle-to-HKJC shift, `tr_fin_pct_slope3_rel` for a blank rate 5.6 points higher in HKJC). Status is a label only; no model's feature list changed.
 
 The numbers change whenever Fahim or Nayeon add features. That is expected; check that the new features appear in the report.
 
@@ -144,7 +139,7 @@ Options:
 
 **Where the feature list comes from (changed 6 Nov).** The audit reads Fahim's registry (`model_logic/feature_registry.py`) and joins it with the model scripts' own lists. So a feature added to the registry is audited automatically, as long as the feature builder actually produces it. A feature the registry or a model lists but the builder does not produce is reported in the "not built" line instead of crashing. Run the leakage tests first (`leakage test/README_LEAKAGE_TESTS.md`), then this audit.
 
-**Agreement with the registry.** Each feature in the registry carries its own status (`keep`, `watch`, `review`, `unaudited`). The report has a section listing every feature where the registry and this audit disagree. Today that is the two trainer features (registry `watch`, audit `review`). The audit never edits the registry; the registry owner changes the label, or explains why not.
+**Agreement with the registry.** Each feature in the registry carries its own status (`keep`, `watch`, `review`, `unaudited`). The report has a section listing every feature where the registry and this audit disagree. After the 7 Nov registry update there are none. The audit script never edits the registry; a label change goes through a reviewed commit (the 7 Nov one is in a PR for Fahim, who owns the registry).
 
 **What the `--all-registry` run showed (6 Nov, 37 features: 20 keep, 15 watch, 2 review).** The 10 extra helper columns are all `jtp_pair_*`. None is `review`. Seven are `watch`, mostly because HKJC horses and pairs have shorter histories, and two more (`jtp_pair_win365_rel`, `jtp_pair_win_last_50_rel`) are marked `keep` in the registry but `watch` here (PSI 0.19 and 0.15). They are not model inputs; the models read the `*_effect_*_rel` versions, which are `keep` in both.
 

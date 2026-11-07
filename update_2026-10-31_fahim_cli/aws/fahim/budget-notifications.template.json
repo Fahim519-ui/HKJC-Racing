@@ -1,8 +1,0 @@
-[
-  { "Notification": { "NotificationType": "ACTUAL", "ComparisonOperator": "GREATER_THAN", "Threshold": 50, "ThresholdType": "PERCENTAGE" },
-    "Subscribers": [ { "SubscriptionType": "EMAIL", "Address": "<EMAIL>" } ] },
-  { "Notification": { "NotificationType": "ACTUAL", "ComparisonOperator": "GREATER_THAN", "Threshold": 100, "ThresholdType": "PERCENTAGE" },
-    "Subscribers": [ { "SubscriptionType": "EMAIL", "Address": "<EMAIL>" } ] },
-  { "Notification": { "NotificationType": "FORECASTED", "ComparisonOperator": "GREATER_THAN", "Threshold": 100, "ThresholdType": "PERCENTAGE" },
-    "Subscribers": [ { "SubscriptionType": "EMAIL", "Address": "<EMAIL>" } ] }
-]

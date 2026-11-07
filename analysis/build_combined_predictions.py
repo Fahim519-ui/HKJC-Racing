@@ -13,6 +13,13 @@ to both windows, so no test-window outcome is used. It minimises eval_utils.per_
 so it follows the same dead-heat rule as the scoring (since 6 Nov: -log mean winner p).
 race_date is carried so the scoreboard can bootstrap over whole race days.
 
+Provenance (7 Nov): next to the output it writes combined_predictions.provenance.json with
+the SHA-256 of the output and, for the source predictions, the registry version, registry
+hash and git commit from the source run's meta.json (default: meta.json in the same folder,
+or --source-meta). final_scoring.py --freeze/--final refuse the file unless that source used
+the live registry and published code (analysis/provenance.py). The 5 Nov source below has
+no meta.json, so a file built from it can be dry-run but not frozen: rebuild from a v3.1 run.
+
     python analysis/build_combined_predictions.py
 """
 from __future__ import annotations
@@ -29,6 +36,7 @@ for _p in (str(REPO), str(REPO / "analysis")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 import eval_utils as ev  # noqa: E402
+import provenance as prov  # noqa: E402
 
 KEYS = ["race_id", "horse_id", "split", "is_winner"]
 MODEL_COLS = ["p_market", "p_cl", "p_lgbm", "p_joint"]
@@ -41,6 +49,9 @@ def main() -> int:
                         default=REPO / "artifacts/lightgbm_independent_probability_v2/joint_predictions.parquet")
     parser.add_argument("--clean", type=Path, default=REPO / "data/clean data/runners_merged.parquet")
     parser.add_argument("--output", type=Path, default=REPO / "artifacts/combined/combined_predictions.parquet")
+    parser.add_argument("--source-meta", type=Path, default=None,
+                        help="meta.json of the run that wrote --predictions "
+                             "(default: meta.json next to it)")
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -70,6 +81,14 @@ def main() -> int:
     out = df[keep].copy()
     out.attrs.clear()
     out.to_parquet(args.output, index=False)
+    source_meta = args.source_meta or args.predictions.parent / "meta.json"
+    source = prov.source_entry(args.predictions, source_meta)
+    try:
+        source["path"] = str(args.predictions.resolve().relative_to(REPO))
+    except ValueError:
+        pass
+    sidecar = prov.write_sidecar(args.output, [source])
+    checked = prov.check_predictions_file(args.output)
 
     # sanity: every probability column sums to 1 per race (within each window)
     checks = {}
@@ -90,6 +109,12 @@ def main() -> int:
                       f"{checks.get(c, '-') if c in present else '-'} |")
     for c in TRACK_B:
         report.append(f"| `{c}` | NO (Track B not built yet) | - |")
+    report += ["", "## Provenance", "",
+               f"Sidecar: `{sidecar.name}`. "
+               + ("Passed: the source run used the live registry and published code."
+                  if checked.ok else
+                  "**Failed**: this file can be dry-run but `final_scoring.py --freeze` will refuse it."),
+               *[f"- {line}" for line in checked.lines() if line != "provenance OK"]]
     report += ["",
                "Track B columns are absent because Track B has not been built. Add them to "
                "this file once it exists. The file holds predictions for h_s2 and h_test; "
@@ -98,6 +123,7 @@ def main() -> int:
 
     print(f"wrote {args.output.relative_to(REPO)}  rows={len(out)}  cols={list(out.columns)}")
     print("sums-to-1 / no-NaN:", checks)
+    print("\n".join(checked.lines()))
     if missing_track_b:
         print("missing (Track B, expected):", missing_track_b)
     return 0

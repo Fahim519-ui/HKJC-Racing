@@ -5,6 +5,7 @@ window is never touched. The fake "h_test" rows here are synthetic.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -16,6 +17,14 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "analysis"))
 import eval_utils as ev  # noqa: E402
 import final_scoring as fs  # noqa: E402
+import provenance as prov  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _published_commit(monkeypatch):
+    """The fake source runs below record a made-up commit. Treat it as published so these
+    tests exercise scoring; tests/test_provenance.py tests the provenance rules themselves."""
+    monkeypatch.setattr(prov, "commit_on_remote", lambda *a, **k: (True, "test: published"))
 
 
 def _fake(n_days: int = 8, races_per_day: int = 4, runners: int = 6, seed: int = 0,
@@ -45,11 +54,21 @@ def _fake(n_days: int = 8, races_per_day: int = 4, runners: int = 6, seed: int =
     return df.drop(columns=["_s", "_n"])
 
 
-def _fake_file(tmp_path: Path) -> Path:
+def _fake_file(tmp_path: Path, registry_version: str | None = None) -> Path:
+    """Fake combined file plus its provenance sidecar, built from a fake source run whose
+    meta.json records `registry_version` (default: the live registry, i.e. a valid run)."""
     s2 = _fake(split="h_s2", start="2026-01-03", seed=1)
     test = _fake(split="h_test", start="2026-04-04", seed=2)
+    run = tmp_path / "source_run"
+    run.mkdir(exist_ok=True)
+    source = run / "predictions.parquet"
+    pd.concat([s2, test], ignore_index=True).to_parquet(source, index=False)
+    (run / "meta.json").write_text(json.dumps({
+        "registry_version": registry_version or prov.current_registry()["version"],
+        "git_commit": "abc1234"}))
     path = tmp_path / "preds.parquet"
     pd.concat([s2, test], ignore_index=True).to_parquet(path, index=False)
+    prov.write_sidecar(path, [prov.source_entry(source, run / "meta.json")])
     return path
 
 
@@ -138,6 +157,35 @@ def test_final_refuses_changed_file(tmp_path):
     df.to_parquet(preds, index=False)
     with pytest.raises(SystemExit, match="changed since the freeze"):
         fs.main(_args(tmp_path, preds, "--final", "--confirm", fs.CONFIRM))
+
+
+def test_freeze_and_final_refuse_stale_registry(tmp_path):
+    preds = _fake_file(tmp_path, registry_version="v3.0")
+    assert fs.main(_args(tmp_path, preds)) == 0               # dry run only warns
+    report = (tmp_path / "out" / "dry_run_h_s2" / "report.md").read_text()
+    assert "FAILED" in report and "v3.0" in report
+    with pytest.raises(SystemExit, match="provenance check failed"):
+        fs.main(_args(tmp_path, preds, "--freeze"))
+    assert not (tmp_path / "out" / "freeze.json").exists()
+
+
+def test_freeze_refuses_file_without_sidecar(tmp_path):
+    preds = _fake_file(tmp_path)
+    prov.sidecar_path(preds).unlink()
+    with pytest.raises(SystemExit, match="provenance"):
+        fs.main(_args(tmp_path, preds, "--freeze"))
+
+
+def test_final_rechecks_provenance(tmp_path):
+    preds = _fake_file(tmp_path)
+    assert fs.main(_args(tmp_path, preds, "--freeze")) == 0
+    side = prov.sidecar_path(preds)
+    record = json.loads(side.read_text())
+    record["sources"][0]["meta"]["registry_version"] = "v3.0"   # registry moved on after freeze
+    side.write_text(json.dumps(record))
+    with pytest.raises(SystemExit, match="provenance check failed"):
+        fs.main(_args(tmp_path, preds, "--final", "--confirm", fs.CONFIRM))
+    assert not (tmp_path / "out" / "h_test").exists()
 
 
 def test_final_runs_once_on_test_rows_only(tmp_path):

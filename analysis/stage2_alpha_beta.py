@@ -23,7 +23,15 @@ Read the numbers with care:
   * h_test is never read: the combined file is filtered to h_s2 and every frame goes through
     eval_utils.check_not_test.
 
-    python analysis/stage2_alpha_beta.py
+Provenance (7 Nov): fold predictions are read through provenance.load_fold_predictions,
+which refuses a run whose meta.json does not record the live registry version and a commit
+on origin/main. The 6 Nov fold runs (registry v3.0, unpublished commit fc759fe) fail that
+check. --allow-unverified reproduces the table from them anyway and stamps the report
+UNVERIFIED with the reasons. The h_s2 rows of the combined file are checked the same way
+(analysis/provenance.py check_predictions_file).
+
+    python analysis/stage2_alpha_beta.py                     # refuses stale fold runs
+    python analysis/stage2_alpha_beta.py --allow-unverified  # labelled reproduction
 """
 from __future__ import annotations
 
@@ -42,6 +50,7 @@ for _p in (str(REPO), str(REPO / "analysis")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 import eval_utils as ev  # noqa: E402
+import provenance as prov  # noqa: E402
 
 EPSILON = 1e-12
 SPECS = {
@@ -78,7 +87,14 @@ def fit(df: pd.DataFrame, cols: list[str]):
     return res, ev.per_race_log_loss(p, df)
 
 
-def load_windows(combined: Path, folds_root: Path) -> dict[str, pd.DataFrame]:
+def load_windows(combined: Path, folds_root: Path, allow_unverified: bool = False,
+                 checks: "prov.Report | None" = None) -> dict[str, pd.DataFrame]:
+    """checks (if given) collects every provenance problem/warning for the report."""
+    checks = checks if checks is not None else prov.Report()
+    combined_check = prov.check_predictions_file(combined)
+    checks.extend(combined_check)
+    if not combined_check.ok and not allow_unverified:
+        prov.require(combined_check, f"{combined.name} (pass --allow-unverified to reproduce)")
     windows = {}
     h = ev.load_predictions(combined, split="h_s2")          # filters to h_s2 + guard
     windows["h_s2"] = h
@@ -86,8 +102,9 @@ def load_windows(combined: Path, folds_root: Path) -> dict[str, pd.DataFrame]:
         path = folds_root / fold / "predictions.parquet"
         if not path.exists():
             continue
-        f = pd.read_parquet(path)
-        f = f.loc[f["role"].eq("s2")].reset_index(drop=True)
+        f, checked = prov.load_fold_predictions(folds_root / fold, role="s2",
+                                                allow_unverified=allow_unverified)
+        checks.extend(checked)
         ev.check_not_test(f)
         windows[f"{fold}_s2"] = f
     return windows
@@ -118,10 +135,13 @@ def main() -> int:
     parser.add_argument("--joint-coefficients", type=Path,
                         default=REPO / "artifacts/lightgbm_independent_probability_v2/joint_coefficients.csv")
     parser.add_argument("--output-dir", type=Path, default=REPO / "analysis/stage2_results")
+    parser.add_argument("--allow-unverified", action="store_true",
+                        help="read runs that fail the provenance check; the report is stamped UNVERIFIED")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    windows = load_windows(args.combined, args.folds_root)
+    checks = prov.Report()
+    windows = load_windows(args.combined, args.folds_root, args.allow_unverified, checks)
     ref = penalised_reference(args.folds_root, args.joint_coefficients)
     coef_rows, fit_rows = [], []
     for wname, raw in windows.items():
@@ -160,8 +180,12 @@ def main() -> int:
     for c in ["in_sample_log_loss", "gain_vs_market_only"]:
         fshow[c] = fshow[c].round(5)
     fshow["lr_p"] = fshow["lr_p"].map(lambda v: "" if pd.isna(v) else f"{v:.3g}")
+    stamp = [] if checks.ok else [
+        "**UNVERIFIED.** Built with --allow-unverified from runs that fail the provenance check "
+        "(analysis/provenance.py). Do not quote these numbers as current results:", "",
+        *[f"- {line}" for line in checks.lines()], ""]
     report = [
-        "# Stage 2 alpha/beta table", "",
+        "# Stage 2 alpha/beta table", "", *stamp,
         "Blend: score = beta * log p_market + alpha * log p_model, softmax within race. Plain "
         "(unpenalised) conditional logit, so each weight has a standard error. All fits are "
         "in-sample on their Stage-2 window; out-of-sample evidence is in the fold validation. "

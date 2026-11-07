@@ -1,5 +1,15 @@
 # Stage 2 alpha/beta table
 
+**UNVERIFIED.** Built with --allow-unverified from runs that fail the provenance check (analysis/provenance.py). Do not quote these numbers as current results:
+
+- PROBLEM: combined_predictions.parquet: no combined_predictions.provenance.json; rebuild it with analysis/build_combined_predictions.py so its sources are recorded
+- PROBLEM: artifacts/folds/primary/k1: registry_version 'v3.0', live registry is 'v3.1'; re-run it on the current registry
+- PROBLEM: artifacts/folds/primary/k1: commit fc759fe does not exist in this clone; it was never pushed (or run `git fetch origin` if a teammate pushed it recently)
+- PROBLEM: artifacts/folds/primary/k2: registry_version 'v3.0', live registry is 'v3.1'; re-run it on the current registry
+- PROBLEM: artifacts/folds/primary/k2: commit fc759fe does not exist in this clone; it was never pushed (or run `git fetch origin` if a teammate pushed it recently)
+- PROBLEM: artifacts/folds/primary/h1: registry_version 'v3.0', live registry is 'v3.1'; re-run it on the current registry
+- PROBLEM: artifacts/folds/primary/h1: commit fc759fe does not exist in this clone; it was never pushed (or run `git fetch origin` if a teammate pushed it recently)
+
 Blend: score = beta * log p_market + alpha * log p_model, softmax within race. Plain (unpenalised) conditional logit, so each weight has a standard error. All fits are in-sample on their Stage-2 window; out-of-sample evidence is in the fold validation. SEs treat races as independent (same-day races are correlated, so true SEs are larger). `penalised_coef` is the ridge-penalised weight the team's scripts used (h_s2: lightgbm_independent_probability_v2/joint_coefficients.csv; folds: blend.json; for the folds' 'market only' row it is the calibrated-market beta).
 
 Windows: h_s2 = HKJC 2025-11..2026-03 Stage-2 rows of the combined file; k1_s2, k2_s2, h1_s2 = s2 rows of the fold runner (see model_logic/validation/folds.csv). h1_s2 lies inside h_s2. h_test is not read.

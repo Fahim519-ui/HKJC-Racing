@@ -23,7 +23,7 @@ older files. This stops a stale run (like the 6 Nov folds: registry v3.0, unpubl
 fc759fe) from being frozen or scored.
          python analysis/final_scoring.py --final --confirm "score h_test once"
 
-Rules kept here (DATA_RULES.md, WEEK5_PLAN.md):
+Rules kept here (docs/DATA_RULES.md, WEEK5_PLAN.md):
   * Nothing is refitted on h_test. p_market_refit carries the beta fitted on h_s2
     (build_combined_predictions.py); the Stage-2 blend p_joint was fitted on h_s2.
   * All models are scored on the same races (every column present, market complete).

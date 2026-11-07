@@ -45,7 +45,7 @@ No interval excludes zero in any fold or pooled.
 ## 2. What had to change in eval_utils to match
 
 1. **Dead heats.** We used the mean of `-log p` over the winners; he (and
-   `week34_starter.py`) uses `-log` of the mean winner probability. We switched to his rule.
+   `docs/week34_starter.py`) uses `-log` of the mean winner probability. We switched to his rule.
    It changes only dead-heat races (1 in k1 valid, 2 in h1 valid, 3 in h_s2). Side effect:
    the h_s2 market refit beta in the combined file moved from 1.0454 to 1.0537 (only
    `p_market_refit` changed, max 0.005 per runner).

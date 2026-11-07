@@ -12,7 +12,7 @@
 
 ## 1. Why these tests exist
 
-A model "leaks" when a feature contains information that would not be known before the race starts. A leaky model looks great in testing and is useless in real life. In this project the rules are in `DATA_RULES.md`:
+A model "leaks" when a feature contains information that would not be known before the race starts. A leaky model looks great in testing and is useless in real life. In this project the rules are in `docs/DATA_RULES.md`:
 
 1. **Earlier race days only.** A feature may use results from previous days, never from the same day. A jockey rides many races a day, so even his earlier rides that day are off limits.
 2. **Same source only.** Kaggle (2017-20) and HKJC (2025-26) histories never mix.

@@ -35,7 +35,7 @@ The original 27 features are unchanged by the builder rewrite (every number iden
 | **Form, draw, weight** (keep) | Look and behave the same in both datasets. |
 | **Watch features** | Mostly shifted because HKJC horses have shorter histories (the HKJC data starts in Sep 2025). Harmless. One real difference: HKJC fields are bigger (`n_runners`). |
 
-The audit is a warning list, not a rule for dropping features. Features are chosen on `k_tune` only (`DATA_RULES.md`), so settle the trainer question there.
+The audit is a warning list, not a rule for dropping features. Features are chosen on `k_tune` only (`docs/DATA_RULES.md`), so settle the trainer question there.
 
 ## 3. Fahim's "residual edge" claim: not supported
 

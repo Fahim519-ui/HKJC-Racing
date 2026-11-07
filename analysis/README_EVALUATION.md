@@ -64,7 +64,7 @@ Main functions:
   as test if `split == "h_test"` **or** `race_date >= 2026-04-01`, so files without a `split`
   column (the fold-runner predictions) are caught too. `load_predictions` and `scoreboard` call it.
 - `race_losses(p, df)` gives one loss per race, `-log p(winner)`. Dead heat (two or more
-  winners): `-log(mean winner p)`. This is the same rule as `week34_starter.py` and Fahim's
+  winners): `-log(mean winner p)`. This is the same rule as `docs/week34_starter.py` and Fahim's
   `model_logic/validation/evaluation.race_losses`. Before 6 Nov this module used the mean of
   the two `-log` values, which differed only in dead-heat races.
 - `per_race_log_loss`, `brier`, `top1`, `pseudo_r2` (1 - model loss / 1-over-field loss),

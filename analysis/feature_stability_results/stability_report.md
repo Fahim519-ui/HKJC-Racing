@@ -6,7 +6,7 @@ Generated 2026-11-07 13:51 from `runners_merged.parquet` (SHA-256 `d2f8418a5972.
 
 Thresholds: SMD 0.10 / 0.25, PSI 0.10 / 0.25, blank rate 5 pp, effect difference 2 SE. Effects use k_train, k_early, k_tune and h_s2 only, never h_test. The h_test columns are information only.
 
-**This is a warning list, not a feature-selection rule.** Features are chosen on k_tune only (DATA_RULES.md). Confirm any change on k_tune before acting on a flag here.
+**This is a warning list, not a feature-selection rule.** Features are chosen on k_tune only (docs/DATA_RULES.md). Confirm any change on k_tune before acting on a flag here.
 
 ## Summary
 

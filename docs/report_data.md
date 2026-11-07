@@ -135,19 +135,25 @@ interval excludes zero, in any design. The only stable pattern is the longshot b
 
 ## 4. Limitations (paste-ready)
 
-> **The test period was seen before the final run.** On 4 Nov, model scripts and a market
-> diagnostic committed HKJC test-window (Apr-Oct 2026) results to the repository: per-race
-> log loss for the market, both models and the blends, and market calibration by
-> probability decile. These were read by team members during development. Nothing was
-> fitted or tuned on the test window: the Stage 2 blend, the market-refit β and all feature
-> choices use Kaggle data and HKJC Stage 2 (Nov 2025-Mar 2026) only, and the leakage tests
-> and stability audit never use test outcomes. The test rows were removed from the
-> repository on 7 Nov, but they remain in its history, so the final test result should be
-> read as a lightly exposed hold-out rather than an untouched one. The stability audit also
-> reports the distribution of each feature in the test window (inputs only, no outcomes).
+> **The test period was seen before the final run.** It was seen twice. First, in Week 2
+> (mid-October), the exploratory analysis (`data/clean data/02_eda.ipynb`) was run on every
+> HKJC race, including April-October 2026, before the test split was defined: it reported
+> the market's per-race log loss, market calibration, the favourite's win rate, draw bias
+> and win rate by carried weight over all HKJC races. Second, on 4 Nov, model scripts and a
+> market diagnostic committed test-window results to the repository: per-race log loss for
+> the market, both models and the blends, and market calibration by probability decile.
+> Both were read by team members during development. Nothing was fitted or tuned on the
+> test window: the Stage 2 blend, the market-refit β and all feature choices use Kaggle data
+> and HKJC Stage 2 (Nov 2025-Mar 2026) only, and the leakage tests and stability audit never
+> use test outcomes. Some design choices (for example the draw × Happy Valley feature) may
+> have been informed by the Week 2 overview, although the same patterns are well known and
+> appear in the Kaggle years. The 4 Nov rows were removed on 7 Nov but remain in the public
+> repository's history, so the final test result should be read as a lightly exposed
+> hold-out rather than an untouched one. The stability audit also reports the distribution
+> of each feature in the test window (inputs only, no outcomes).
 
 Points still to confirm before submitting: whether the decision to use the favourite-longshot
-(market^β) correction was influenced by the test-window calibration seen on 4 Nov. The same
+(market^β) correction was influenced by the test-window calibration seen in the Week 2 EDA or on 4 Nov. The same
 bias appears in Kaggle and HKJC Stage 2, so the method stands either way, but if it was,
 the report should say so.
 

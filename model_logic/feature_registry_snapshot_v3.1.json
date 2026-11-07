@@ -364,7 +364,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to constant 1/12, weight 30",
-      "status": "watch",
+      "status": "review",
       "window": "365D"
     },
     {
@@ -790,7 +790,7 @@
       "optional": false,
       "relative_to_race": false,
       "shrinkage": "to constant 1/12, weight 30",
-      "status": "watch",
+      "status": "review",
       "window": "365D"
     },
     {
@@ -1352,7 +1352,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1377,7 +1377,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1402,7 +1402,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1427,7 +1427,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1452,7 +1452,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1477,7 +1477,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's career rate, weight 5 (career shrinks to the prior-day source rate, weight 5)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1503,7 +1503,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's track rate, weight 5 (then career, then prior-day source rate)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1529,7 +1529,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's track rate, weight 5 (then career, then prior-day source rate)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1555,7 +1555,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": "to the horse's track rate, weight 5 (then career, then prior-day source rate)",
-      "status": "unaudited",
+      "status": "keep",
       "window": "career, earlier dates"
     },
     {
@@ -1661,7 +1661,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": null,
-      "status": "unaudited",
+      "status": "keep",
       "window": "last_3"
     },
     {
@@ -1685,7 +1685,7 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": null,
-      "status": "unaudited",
+      "status": "watch",
       "window": "last_3"
     },
     {
@@ -1708,7 +1708,7 @@
       "optional": false,
       "relative_to_race": false,
       "shrinkage": null,
-      "status": "unaudited",
+      "status": "watch",
       "window": "previous_start"
     },
     {
@@ -1732,7 +1732,7 @@
       "optional": false,
       "relative_to_race": false,
       "shrinkage": null,
-      "status": "unaudited",
+      "status": "keep",
       "window": "previous_start"
     },
     {
@@ -1754,7 +1754,7 @@
       "optional": false,
       "relative_to_race": false,
       "shrinkage": null,
-      "status": "unaudited",
+      "status": "keep",
       "window": "last_3"
     },
     {
@@ -1777,10 +1777,10 @@
       "optional": false,
       "relative_to_race": true,
       "shrinkage": null,
-      "status": "unaudited",
+      "status": "keep",
       "window": "365D"
     }
   ],
-  "registry_hash": "58b0e1c59516540df4110440e117db55f36aad5b872abd96976985292c29fd88",
+  "registry_hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac",
   "registry_version": "v3.1"
 }

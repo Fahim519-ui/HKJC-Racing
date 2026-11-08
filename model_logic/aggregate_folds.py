@@ -223,6 +223,18 @@ def ladder_step_rows(
     return rows
 
 
+def markdown_table(frame: pd.DataFrame) -> str:
+    """Render a dependency-free Markdown table for ladder artifacts."""
+    columns = list(frame.columns)
+    header = "| " + " | ".join(columns) + " |"
+    separator = "| " + " | ".join("---" for _ in columns) + " |"
+    body = [
+        "| " + " | ".join(str(value).replace("|", "\\|") for value in row) + " |"
+        for row in frame.itertuples(index=False, name=None)
+    ]
+    return "\n".join([header, separator, *body])
+
+
 def write_ladder(
     root: Path,
     config: str,
@@ -253,11 +265,11 @@ def write_ladder(
         "",
         "All rows use valid-period races only. h1's s1 period mixes Kaggle and HKJC data.",
         "",
-        ladder.to_markdown(index=False),
+        markdown_table(ladder),
         "",
         "## Paired steps",
         "",
-        ladder_steps.to_markdown(index=False),
+        markdown_table(ladder_steps),
         "",
         "Each positive gain means the second named rung has lower log loss than the first; "
         "intervals are paired race-day bootstrap intervals.",

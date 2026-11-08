@@ -287,6 +287,11 @@ def aggregate_config(root: Path, config: str) -> tuple[pd.DataFrame, pd.DataFram
         baseline_prediction = pd.read_parquet(baseline_directory / "baseline_predictions.parquet")
         baseline_meta = json.loads((baseline_directory / "meta.json").read_text())
         assert_baseline_provenance(meta, baseline_meta, directory.name)
+        print(
+            f"{directory.name}: excluded "
+            f"{meta['race_counts'].get('valid_market_dropped', 0)} "
+            "market-incomplete valid races"
+        )
         rows.extend(metric_rows(prediction, directory.name, config))
         frames.append(prediction.assign(fold_id=directory.name))
         ladder_frames.append(

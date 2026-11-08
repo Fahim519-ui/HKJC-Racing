@@ -32,7 +32,6 @@ calibrated market baseline?**
 - [Freeze and final scoring](#freeze-and-final-scoring)
 - [Testing](#testing)
 - [Reproducibility notes](#reproducibility-notes)
-- [Known issues and open items](#known-issues-and-open-items)
 - [Acknowledgements, data terms, and licence](#acknowledgements-data-terms-and-licence)
 
 ## Project overview
@@ -419,34 +418,6 @@ PYTHONPATH=. .venv/bin/python -m pytest -q tests/test_run_folds.py
 - Provenance detects stale registry versions and unpublished commits, but it does not reject a
   dirty worktree or compare data hashes across all evidence workflows.
 - No thread-count setting or cross-platform determinism guarantee is documented for LightGBM.
-
-## Known issues and open items
-
-- Data acquisition is not reproducible: no scraper or download command is included.
-- The tracked data has no documented licence or source terms; redistribution has not been
-  checked.
-- Tracked fold metadata is stale (`v3.0`, `fc759fe`), while newly generated ladder/evidence
-  paths are git-ignored. A clean v3.1 rerun is required before results are evidence.
-- Existing hard-coded or historical result text is outdated and must not be used as current
-  evidence: [`docs/report_data.md`](docs/report_data.md),
-  [`docs/report_inns_sections.md`](docs/report_inns_sections.md),
-  [`analysis/README_EVALUATION.md`](analysis/README_EVALUATION.md),
-  [`analysis/FOLD_RUNNER_COMPARISON.md`](analysis/FOLD_RUNNER_COMPARISON.md), and
-  [`leakage test/result.md`](leakage%20test/result.md).
-- Existing documentation has outdated test counts, including
-  [`leakage test/README_LEAKAGE_TESTS.md`](leakage%20test/README_LEAKAGE_TESTS.md) and
-  [`analysis/README_EVALUATION.md`](analysis/README_EVALUATION.md).
-- `clean_data.py` and `docs/data_dictionary.md` are referenced by older documentation but do
-  not exist. The available data documentation is under `data/clean data/`.
-- `final_scoring.py` has hashing and one-shot checks, but no freeze record exists and its
-  final gate is split-based rather than a post-freeze timestamp gate.
-- Provenance does not reject a dirty worktree or compare data hashes across all evidence runs.
-- Before this README task, no lockfile existed; `requirements-modeling.txt` still has ranges
-  only, and does not list `pytest`.
-- At the clean-checkout verification point, `git status --short` reported no dirty files. New
-  ignored artifacts can still be created by pipeline commands and are not represented in that
-  status output.
-- Packaging metadata is absent, so commands require `PYTHONPATH=.`.
 
 ## Acknowledgements, data terms, and licence
 

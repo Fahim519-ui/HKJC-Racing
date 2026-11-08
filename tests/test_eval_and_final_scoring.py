@@ -199,3 +199,31 @@ def test_final_runs_once_on_test_rows_only(tmp_path):
     assert "p_market_refit" in set(board["model"])
     with pytest.raises(SystemExit, match="scored once"):
         fs.main(_args(tmp_path, preds, "--final", "--confirm", fs.CONFIRM))
+
+
+def test_freeze_records_timestamp_and_race_dates(tmp_path):
+    """Tier 3 (8 Nov): the freeze timestamp is recorded explicitly, with each split's date range
+    and the number of races dated after the freeze day. Reported only; nothing is filtered."""
+    preds = _fake_file(tmp_path)
+    assert fs.main(_args(tmp_path, preds, "--freeze")) == 0
+    record = json.loads((tmp_path / "out" / "freeze.json").read_text())
+    assert record["freeze_timestamp_utc"] == record["created_utc"]
+    assert record["race_dates_per_split"]["h_s2"][0] == "2026-01-03"
+    assert record["race_dates_per_split"]["h_test"][0] == "2026-04-04"
+    # the fake test races are all before today, so none is after the freeze
+    assert record["races_after_freeze_per_split"] == {"h_s2": 0, "h_test": 0}
+    assert fs.main(_args(tmp_path, preds, "--final", "--confirm", fs.CONFIRM)) == 0
+    report = (tmp_path / "out" / "h_test" / "report.md").read_text()
+    assert "Freeze timestamp (UTC)" in report and "0 of 32" in report
+
+
+def test_race_date_summary_counts_only_days_after_the_freeze_day():
+    from datetime import datetime, timezone
+    meta = pd.DataFrame({"race_id": ["a", "a", "b", "c"], "split": ["h_test"] * 4,
+                         "race_date": pd.to_datetime(["2026-11-12", "2026-11-12", "2026-11-13",
+                                                      "2026-11-01"])})
+    out = fs.race_date_summary(meta, datetime(2026, 11, 12, 15, 59, tzinfo=timezone.utc))
+    assert out["races_after_freeze_per_split"] == {"h_test": 1}     # only 13 Nov counts
+    assert out["race_dates_per_split"]["h_test"] == ["2026-11-01", "2026-11-13"]
+    no_dates = fs.race_date_summary(meta.drop(columns="race_date"), datetime.now(timezone.utc))
+    assert no_dates["races_after_freeze_per_split"] is None

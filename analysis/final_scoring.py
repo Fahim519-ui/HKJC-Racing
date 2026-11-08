@@ -23,6 +23,12 @@ older files. This stops a stale run (like the 6 Nov folds: registry v3.0, unpubl
 fc759fe) from being frozen or scored.
          python analysis/final_scoring.py --final --confirm "score h_test once"
 
+Freeze timestamp (8 Nov, Tier 3): the freeze record stores freeze_timestamp_utc, each split's
+race-date range, and how many races are dated after the freeze day; the final report repeats
+them. This is recorded, not enforced: whether final scoring may use only post-freeze races
+(docs/evaluation_protocol.md) is still a group decision, and every h_test race (Apr-Oct 2026)
+is dated before a 12 Nov freeze.
+
 Rules kept here (docs/DATA_RULES.md, WEEK5_PLAN.md):
   * Nothing is refitted on h_test. p_market_refit carries the beta fitted on h_s2
     (build_combined_predictions.py); the Stage-2 blend p_joint was fitted on h_s2.
@@ -143,6 +149,23 @@ def write_outputs(out: Path, df: pd.DataFrame, cols: list[str], table: pd.DataFr
     (out / "report.md").write_text("\n".join(text) + "\n", encoding="utf-8")
 
 
+def race_date_summary(meta: pd.DataFrame, frozen_at: datetime) -> dict:
+    """Date range per split and how many races are dated after the freeze. Information only:
+    whether final scoring may use only post-freeze races (evaluation_protocol.md) is a group
+    decision still open on 8 Nov, so nothing here refuses or filters. Dates are not outcomes."""
+    if "race_date" not in meta.columns:
+        return {"race_dates_per_split": None, "races_after_freeze_per_split": None}
+    dates = pd.to_datetime(meta["race_date"])
+    cutoff = pd.Timestamp(frozen_at).tz_convert(None).normalize()   # a race day after the freeze day
+    per_race = meta.assign(_d=dates).groupby("race_id").agg(split=("split", "first"), d=("_d", "first"))
+    return {
+        "race_dates_per_split": {s: [g["d"].min().date().isoformat(), g["d"].max().date().isoformat()]
+                                 for s, g in per_race.groupby("split")},
+        "races_after_freeze_per_split": {s: int((g["d"] > cutoff).sum())
+                                         for s, g in per_race.groupby("split")},
+    }
+
+
 # --------------------------------------------------------------------------- modes
 def provenance_report(args) -> "prov.Report":
     return prov.check_predictions_file(args.predictions, remote_ref=args.remote_ref)
@@ -177,15 +200,20 @@ def freeze(args) -> int:
         raise SystemExit(f"{args.freeze_record} already exists; delete it deliberately to re-freeze.")
     checked = provenance_report(args)
     prov.require(checked, "--freeze")
-    meta = pd.read_parquet(args.predictions, columns=["race_id", "split"])   # no outcomes read
     cols = list(pq.read_schema(args.predictions).names)
+    keys = ["race_id", "split"] + (["race_date"] if "race_date" in cols else [])
+    meta = pd.read_parquet(args.predictions, columns=keys)   # ids, split and dates: no outcomes read
+    frozen_at = datetime.now(timezone.utc)
     record = {
-        "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "created_utc": frozen_at.isoformat(timespec="seconds"),
+        # the freeze timestamp, recorded explicitly (status sheet 8 Nov, Tier 3); same instant
+        "freeze_timestamp_utc": frozen_at.isoformat(timespec="seconds"),
         "predictions": (str(args.predictions.resolve().relative_to(REPO))
                         if args.predictions.resolve().is_relative_to(REPO) else str(args.predictions)),
         **file_hashes(args.predictions),
         "rows_per_split": meta["split"].value_counts().to_dict(),
         "races_per_split": meta.groupby("split")["race_id"].nunique().to_dict(),
+        **race_date_summary(meta, frozen_at),
         "columns": cols,
         "models_to_score": model_columns(pd.DataFrame(columns=cols), args.models),
         "baseline": BASELINE,
@@ -225,6 +253,10 @@ def final(args) -> int:
               f"Run at {datetime.now(timezone.utc).isoformat(timespec='seconds')} UTC from git "
               f"{git_state()['commit']}.",
               f"Predictions SHA-256 {record['sha256']} (matches freeze record of {record['created_utc']}).",
+              f"Freeze timestamp (UTC): {record.get('freeze_timestamp_utc', record['created_utc'])}. "
+              f"Scored races dated after the freeze day: "
+              f"{(record.get('races_after_freeze_per_split') or {}).get('h_test', 'not recorded')} "
+              f"of {df['race_id'].nunique()} (reported, not enforced; see docs/evaluation_protocol.md).",
               "Nothing was refitted on h_test: p_market_refit and p_joint carry h_s2 fits."]
     write_outputs(out, df, cols, table, lines, header)
     print("\n".join(lines))

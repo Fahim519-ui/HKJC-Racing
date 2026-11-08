@@ -73,6 +73,7 @@ def main() -> int:
     same_data, same_reg = len(set(hashes.values())) == 1, len(set(regs.values())) == 1
     full_status = full_audit.set_index("feature")["status"]
     agree_runs = all(full_status.get(f) == audited.loc[f, "status"] for f in audited.index)
+    reg_disagree = [f for f in inputs if get_spec(f).status != audited.loc[f, "status"]]
 
     # 1. model inputs
     rows = []
@@ -121,7 +122,9 @@ def main() -> int:
         f"## 1. Every model input has an explicit status ({len(inputs)} inputs)", "",
         f"All {len(inputs)} inputs (LightGBM uses all of them; the conditional logit {len(cl)}) are "
         f"audited. Audit: {counts.get('keep', 0)} keep, {counts.get('watch', 0)} watch, "
-        f"{counts.get('review', 0)} review. Registry and audit agree on every input.", "",
+        f"{counts.get('review', 0)} review. "
+        + ("Registry and audit agree on every input." if not reg_disagree else
+           f"Registry and audit disagree on: {', '.join('`' + f + '`' for f in reg_disagree)}."), "",
         *md_table(inputs_df), "",
         "## 2. Building blocks (not model inputs)", "",
         f"The {len(helpers)} intermediate columns the builder makes but no model reads (pair ride "
@@ -145,7 +148,9 @@ def main() -> int:
         "h_s2 (HKJC Stage 2) has about as much history as k_early, the history-matched Kaggle "
         "window, and much less than k_train. So a Kaggle-to-HKJC shift in a history feature is "
         "first a history-length effect; the audit already tests every flag against k_early.", "",
-        "Missing values of model inputs (% of rows); every blank comes from a short history:", "",
+        "Missing values of model inputs (% of rows). Per Nayeon's report, every blank comes from a "
+        "short history (a first start has no previous finish; the slope needs two earlier "
+        "finishes), which the equal rates across these features fit:", "",
         *md_table(mp_df), "",
         f"Never missing ({len(never)}): {', '.join('`' + f + '`' for f in never)}.", "",
         "## 4. Treatment rule per status: PROPOSED, not agreed", "",
@@ -155,7 +160,8 @@ def main() -> int:
     ]
     OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote {OUT.relative_to(REPO)}: {len(inputs)} inputs {counts}, {len(helpers)} building blocks, "
-          f"same data {same_data}, same registry {same_reg}, runs agree {agree_runs}")
+          f"same data {same_data}, same registry {same_reg}, runs agree {agree_runs}, "
+          f"registry disagreements {len(reg_disagree)}")
     return 0 if same_data and same_reg and agree_runs else 1
 
 

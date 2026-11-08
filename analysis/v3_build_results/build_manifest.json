@@ -1,0 +1,301 @@
+{
+  "build": {
+    "columns": 106,
+    "races": 3179,
+    "rows": 38942,
+    "rows_by_source": {
+      "hkjc": 12018,
+      "kaggle": 26924
+    },
+    "v3_columns": [
+      "td_track_win_rel",
+      "td_track_top3_rel",
+      "td_track_fin_pct_rel",
+      "td_distance_band_win_rel",
+      "td_distance_band_top3_rel",
+      "td_distance_band_fin_pct_rel",
+      "td_track_distance_win_rel",
+      "td_track_distance_top3_rel",
+      "td_track_distance_fin_pct_rel",
+      "td_distance_band",
+      "td_track_starts",
+      "td_distance_band_starts",
+      "td_track_distance_starts",
+      "tr_last_minus_avg3_fin_pct_rel",
+      "tr_fin_pct_slope3_rel",
+      "tr_days_since_bucket",
+      "tr_class_change_direction",
+      "int_recent_form_x_class_change",
+      "int_jt_strength_x_field_size"
+    ]
+  },
+  "builder_source": {
+    "combined": "07133c4e382fc490919bd6b5ce48698c9d9ad55375f5077a223a30131195c9c5",
+    "files": {
+      "model_logic/feature_builder.py": "a56f2817d562c7df0546794ec3308741383183bcb260fd798ff807f49e789cc9",
+      "model_logic/feature_registry.py": "73c6d6b336eb3eabbe662650ac56b6acfc67cc445a09cf4c54a263dcde6f07d9",
+      "model_logic/jt_partnership_features.py": "008989cebf9945d02f1dfd870fcd05cf1bba9e1c53ef244e8dffc8432cee6fa3",
+      "model_logic/track_distance_features.py": "4cf02b8b5142e14f79d7f4e6d20e9bb5317f34347f078ce65584507daf38ff85",
+      "model_logic/trajectory_features.py": "cd8dc271d8205476de4d6613fcff1ccce832c8186ccb393278e80490edefa4a6"
+    }
+  },
+  "checks": {
+    "cutoff_hkjc": {
+      "detail": "races after 2026-03-01 deleted: 0 earlier rows changed",
+      "passed": true
+    },
+    "cutoff_kaggle": {
+      "detail": "races after 2019-02-24 deleted: 0 earlier rows changed",
+      "passed": true
+    },
+    "deterministic_rebuild": {
+      "detail": "two builds from the same raw file are identical",
+      "passed": true
+    },
+    "market_exclusion": {
+      "detail": "odds shuffled: 0 rows moved",
+      "passed": true
+    },
+    "no_version2_dependence": {
+      "detail": "no builder module mentions version2_runners_merged",
+      "passed": true
+    },
+    "same_day_invariance_hkjc": {
+      "detail": "results of 2026-03-01 shuffled: 0 rows on/before that day or in the other source moved; later history features moved: True",
+      "passed": true
+    },
+    "same_day_invariance_kaggle": {
+      "detail": "results of 2019-02-24 shuffled: 0 rows on/before that day or in the other source moved; later history features moved: True",
+      "passed": true
+    },
+    "source_isolation": {
+      "detail": "all Kaggle results shuffled: 0 HKJC rows moved",
+      "passed": true
+    }
+  },
+  "data": {
+    "path": "data/clean data/runners_merged.parquet",
+    "sha256": "d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0"
+  },
+  "environment": {
+    "lightgbm": "4.7.0",
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "pyarrow": "26.0.1",
+    "python": "3.13.18",
+    "scipy": "1.18.1"
+  },
+  "frozen_definitions": {
+    "class_deadband": 0.1,
+    "days_since_edges": [
+      14,
+      28,
+      60,
+      180
+    ],
+    "distance_bands_m": [
+      [
+        "sprint",
+        1200
+      ],
+      [
+        "mile",
+        1650
+      ],
+      [
+        "middle",
+        2000
+      ],
+      [
+        "staying",
+        null
+      ]
+    ],
+    "field_size_centre": 12.0,
+    "pseudo_counts": {
+      "career": 5.0,
+      "distance_band": 5.0,
+      "track": 5.0,
+      "track_distance": 5.0
+    },
+    "source_defaults": {
+      "fin_pct": 0.5,
+      "top3": 0.25,
+      "win": 0.08333333333333333
+    }
+  },
+  "generated_utc": "2026-11-08T07:15:04+00:00",
+  "git": {
+    "commit": "1b986def7735fd539a77a1dd169081564153b1ea",
+    "remote_branches_containing_commit": [
+      "upstream/main"
+    ],
+    "worktree_clean": true
+  },
+  "output": {
+    "path": "features_v3.parquet",
+    "sha256": "ea2873583fbdb77b6cbd327cc05c6535226bafe4cf67af5fa24b5252dc727773"
+  },
+  "registry": {
+    "active_version": "v3",
+    "hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac",
+    "version": "v3.1"
+  },
+  "v3_column_sha256": {
+    "int_jt_strength_x_field_size": "917d92d1fc5cb490a1a895d76b250033f7a8765a83513d6c8ad443f8468e6e6e",
+    "int_recent_form_x_class_change": "69373ff1005abf12fbae16669968e9a8f138285614d527a9ecfb3b6122a817a6",
+    "td_distance_band": "7e00c0f2ef003e1ca649a782d147ca5de1e55324c66333520bc6dc0ed43b7db6",
+    "td_distance_band_fin_pct_rel": "e81decc3e2a1a12f24fdce80c3687a34826655bce8374290c7a1ea8c3eea98ac",
+    "td_distance_band_starts": "1883530e27b772554f199f9c90a6ba271dd62a310ac8e4f2ba28de83bc578054",
+    "td_distance_band_top3_rel": "f835e6190001017b8147e71d2a865800d69da7c6b0282b6dcd982de2ceca8d36",
+    "td_distance_band_win_rel": "4eb5c4d238cb8e628d2a0fe7534d65ab865adb4b8457bc13f7e81498392ae2f6",
+    "td_track_distance_fin_pct_rel": "067415513f9dd43df6838b7e2b492967785e9df36ba2b403b623057c20511d5e",
+    "td_track_distance_starts": "82de0efe5a4d34d9385acf335555a0802d40043e3c52d5a5b55ed9fedde2956a",
+    "td_track_distance_top3_rel": "72e404032d960d2ed003004c1016ea044ce74f1edc17abfffa7787b0d81ed29f",
+    "td_track_distance_win_rel": "08afd20535105625843277790a9397b2cf2d4678258826f2a154d1db49181a2d",
+    "td_track_fin_pct_rel": "088cb6447e339e3871b06426da04664e4c53670f8bd2772b5d40e6e9acf05f7a",
+    "td_track_starts": "5fde6d89cd0f5c53f1ce0643c1fda4ac38a4698c100e18da84f3467806ea0347",
+    "td_track_top3_rel": "664e4bd45774dce060b9f198ffba71a5693351556f4191242389cdc4528ea9ea",
+    "td_track_win_rel": "aa843aaccfbd263e2fca1b24c323e10fcad99a7e82f495f7b41a7b1cf8b43099",
+    "tr_class_change_direction": "cf13df2b6ebfcb76dae9376798ad3c77f12d2b3ef78f349cd1ec494ed88565f6",
+    "tr_days_since_bucket": "e755fffe1e669859c490ad7da67188e88fac8e14f601988e716685a0b5c5a0b2",
+    "tr_fin_pct_slope3_rel": "fd1115d9c59fa373f9561632cd7a125f2e528341e931daf660895382727110c5",
+    "tr_last_minus_avg3_fin_pct_rel": "891d24f36c9554d3f49f69117a2e6a018d953e77bee833aea75c730d75b229e1"
+  },
+  "v3_column_summary": {
+    "int_jt_strength_x_field_size": {
+      "max": 0.0295632580172573,
+      "mean": -4.215197188493282e-21,
+      "min": -0.040022790961447216,
+      "n_missing": 0,
+      "sum": -1.6414820891430537e-16
+    },
+    "int_recent_form_x_class_change": {
+      "max": 0.6243363118363119,
+      "mean": -0.013139622008403058,
+      "min": -0.6008816800483466,
+      "n_missing": 0,
+      "sum": -511.68316025123187
+    },
+    "td_distance_band": {
+      "counts": {
+        "middle": 3847,
+        "mile": 16174,
+        "sprint": 18383,
+        "staying": 538
+      }
+    },
+    "td_distance_band_fin_pct_rel": {
+      "max": 0.43635935750406224,
+      "mean": -4.2051742625497043e-19,
+      "min": -0.4197375819872211,
+      "n_missing": 0,
+      "sum": -1.637578961322106e-14
+    },
+    "td_distance_band_starts": {
+      "max": 37.0,
+      "mean": 5.026783421498639,
+      "min": 0.0,
+      "n_missing": 0,
+      "sum": 195753.0
+    },
+    "td_distance_band_top3_rel": {
+      "max": 0.6288916870014356,
+      "mean": 1.8388728131149556e-19,
+      "min": -0.5249046730428607,
+      "n_missing": 0,
+      "sum": 7.16093850883226e-15
+    },
+    "td_distance_band_win_rel": {
+      "max": 0.585977031604966,
+      "mean": -1.6393052209939526e-19,
+      "min": -0.3435434083466033,
+      "n_missing": 0,
+      "sum": -6.38378239159465e-15
+    },
+    "td_track_distance_fin_pct_rel": {
+      "max": 0.468107823029268,
+      "mean": 7.854410232762329e-19,
+      "min": -0.4468329500417007,
+      "n_missing": 0,
+      "sum": 3.058664432842306e-14
+    },
+    "td_track_distance_starts": {
+      "max": 31.0,
+      "mean": 3.3565559036515844,
+      "min": 0.0,
+      "n_missing": 0,
+      "sum": 130711.0
+    },
+    "td_track_distance_top3_rel": {
+      "max": 0.6864229261442042,
+      "mean": 3.7917842502990555e-19,
+      "min": -0.5046939323678031,
+      "n_missing": 0,
+      "sum": 1.4765966227514582e-14
+    },
+    "td_track_distance_win_rel": {
+      "max": 0.695231662040644,
+      "mean": 4.775367382895427e-20,
+      "min": -0.3637983509837006,
+      "n_missing": 0,
+      "sum": 1.8596235662471372e-15
+    },
+    "td_track_fin_pct_rel": {
+      "max": 0.42055312771743025,
+      "mean": 9.707537873885927e-19,
+      "min": -0.408356553766303,
+      "n_missing": 0,
+      "sum": 3.780309398848658e-14
+    },
+    "td_track_starts": {
+      "max": 37.0,
+      "mean": 4.852652662934621,
+      "min": 0.0,
+      "n_missing": 0,
+      "sum": 188972.0
+    },
+    "td_track_top3_rel": {
+      "max": 0.6000305486551312,
+      "mean": -1.3542086608210912e-19,
+      "min": -0.4634925390128003,
+      "n_missing": 0,
+      "sum": -5.2735593669694936e-15
+    },
+    "td_track_win_rel": {
+      "max": 0.6213986051773631,
+      "mean": -3.357011996035442e-19,
+      "min": -0.31093370271679527,
+      "n_missing": 0,
+      "sum": -1.3072876114961218e-14
+    },
+    "tr_class_change_direction": {
+      "max": 1.0,
+      "mean": -0.008499820245493298,
+      "min": -1.0,
+      "n_missing": 0,
+      "sum": -331.0
+    },
+    "tr_days_since_bucket": {
+      "max": 4.0,
+      "mean": 1.2637074975103144,
+      "min": 0.0,
+      "n_missing": 3797,
+      "sum": 44413.0
+    },
+    "tr_fin_pct_slope3_rel": {
+      "max": 0.9270629370629371,
+      "mean": 1.9985697449353816e-19,
+      "min": -1.0228438228438228,
+      "n_missing": 7278,
+      "sum": 6.328271240363392e-15
+    },
+    "tr_last_minus_avg3_fin_pct_rel": {
+      "max": 0.7083378160301238,
+      "mean": -3.159877685001157e-20,
+      "min": -0.7036829836829837,
+      "n_missing": 3807,
+      "sum": -1.1102230246251565e-15
+    }
+  }
+}

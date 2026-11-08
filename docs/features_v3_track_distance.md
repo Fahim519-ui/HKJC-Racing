@@ -11,6 +11,53 @@ Every feature is rebuilt from the raw runners file (`data/clean data/runners_mer
 by `build_features()`. Nothing reads `version2_runners_merged.parquet` or any other
 pre-built feature file.
 
+## Frozen definitions (8 Nov)
+
+The definitions below are frozen for the evaluation rerun. Changing any of them is a new
+feature version: bump `REGISTRY_VERSION`, regenerate the build and rerun every fold.
+`tests/test_v3_features_leakage.py::test_frozen_definitions` fails if a constant moves, and
+`python analysis/v3_build.py --check` fails if any v3 column changes.
+
+| Definition | Frozen value | Where |
+|---|---|---|
+| Distance bands | sprint <= 1200 m, mile <= 1650 m, middle <= 2000 m, staying > 2000 m | `track_distance_features.DISTANCE_BANDS` |
+| Pseudo-counts K | career 5, track 5, distance band 5, track x distance 5 (starts) | `track_distance_features.K` |
+| Source defaults (before a source's first day only) | win 1/12, top3 3/12, fin_pct 0.5, weight 1 | `track_distance_features.SOURCE_DEFAULTS` |
+| Hierarchy | track x band -> track -> career -> prior-day source rate; band -> career | `add_track_distance_features` |
+| History cut-off | strictly earlier race dates; every row of the current date excluded | `prior_day_sums` |
+| Layoff buckets | <= 14, 15-28, 29-60, 61-180, > 180 days; NaN on a first start | `trajectory_features.DAYS_SINCE_EDGES` |
+| Class-change deadband | 0.10 on the log prize ratio | `trajectory_features.CLASS_DEADBAND` |
+| Field-size centre | 12 runners | `trajectory_features.FIELD_SIZE_CENTRE` |
+
+### Stamped build
+
+`python analysis/v3_build.py` regenerates every feature from the raw runners file, runs the
+checks below on the v3 columns and writes `analysis/v3_build_results/build_manifest.json`
+(the build itself goes to `artifacts/v3_build/`, which git ignores). Reference build:
+
+| Field | Value |
+|---|---|
+| Raw data | `data/clean data/runners_merged.parquet`, SHA-256 `d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0` |
+| Registry | `v3.1`, hash `50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac` |
+| Builder source (5 files) | SHA-256 `07133c4e382fc490919bd6b5ce48698c9d9ad55375f5077a223a30131195c9c5` |
+| Code | commit `1b986de` on `main`, clean worktree |
+| Rows | 38942 runners (26924 Kaggle, 12018 HKJC), 3179 races |
+
+Checks, all passed: no builder module mentions `version2_runners_merged`; an input that
+already carries built feature columns is refused; two builds are identical; shuffling one
+day's results moves nothing on or before that day or in the other source (Kaggle and HKJC);
+deleting every race after a mid-season date leaves earlier rows identical (both sources);
+shuffling all Kaggle results moves no HKJC row; shuffling odds moves nothing.
+
+To confirm a checkout reproduces the reference build bit for bit:
+
+```
+python analysis/v3_build.py --check
+```
+
+History depth and missingness for the stability report: `python analysis/history_depth.py`
+writes `analysis/history_depth_results/`.
+
 ## Rules every feature follows
 
 1. **Earlier dates only.** History totals are taken over strictly earlier race dates. Every

@@ -1,6 +1,6 @@
 # Feature stability audit (generated)
 
-Generated 2026-11-07 13:51 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `388aa09`. 42 features.
+Generated 2026-11-08 19:04 from `runners_merged.parquet` (SHA-256 `d2f8418a5972...`), repo commit `506a056`. 42 features.
 
 **Result:** 2 review, 10 watch, 30 keep.
 

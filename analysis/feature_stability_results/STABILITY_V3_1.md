@@ -88,7 +88,7 @@ Earlier-date starts at race time, median / share of runners with zero starts:
 
 h_s2 (HKJC Stage 2) has about as much history as k_early, the history-matched Kaggle window, and much less than k_train. So a Kaggle-to-HKJC shift in a history feature is first a history-length effect; the audit already tests every flag against k_early.
 
-Missing values of model inputs (% of rows); every blank comes from a short history:
+Missing values of model inputs (% of rows). Per Nayeon's report, every blank comes from a short history (a first start has no previous finish; the slope needs two earlier finishes), which the equal rates across these features fit:
 
 | feature | k_train | k_early | k_tune | h_s2 | audit |
 |---|---|---|---|---|---|

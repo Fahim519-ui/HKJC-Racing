@@ -79,7 +79,7 @@ def _nanmean_rows(values: np.ndarray) -> np.ndarray:
     return np.where(count > 0, np.nansum(values, 1) / np.maximum(count, 1), np.nan)
 
 
-def build_features(raw: pd.DataFrame) -> pd.DataFrame:
+def build_features(raw: pd.DataFrame, include_market: bool = True) -> pd.DataFrame:
     """Build all pre-race features used by the active conditional-logit and LightGBM models."""
     data = raw.loc[raw["race_valid"].astype(bool) & raw["started"].astype(bool)].copy()
     data["race_date"] = pd.to_datetime(data["race_date"])
@@ -145,13 +145,14 @@ def build_features(raw: pd.DataFrame) -> pd.DataFrame:
     data = add_track_distance_features(data)
     data = add_trajectory_features(data)
 
-    market_probability = data["market_prob"].astype(float)
-    market_complete = (market_probability > 0).groupby(data["race_id"]).transform("all")
-    normalized_market = market_probability.where(market_probability > 0)
-    normalized_market /= normalized_market.groupby(data["race_id"]).transform("sum")
-    data["mkt_ok"] = market_complete.astype(bool)
-    data["mkt_p"] = np.where(market_complete, normalized_market, 1.0 / n_runners)
-    data["mkt_logit"] = np.log(np.clip(data["mkt_p"].to_numpy(float), 1e-6, None))
+    if include_market:
+        market_probability = data["market_prob"].astype(float)
+        market_complete = (market_probability > 0).groupby(data["race_id"]).transform("all")
+        normalized_market = market_probability.where(market_probability > 0)
+        normalized_market /= normalized_market.groupby(data["race_id"]).transform("sum")
+        data["mkt_ok"] = market_complete.astype(bool)
+        data["mkt_p"] = np.where(market_complete, normalized_market, 1.0 / n_runners)
+        data["mkt_logit"] = np.log(np.clip(data["mkt_p"].to_numpy(float), 1e-6, None))
 
     data = data.drop(columns=["finish_percentile"]).sort_values(
         "race_id", kind="stable"

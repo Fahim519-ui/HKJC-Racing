@@ -261,6 +261,26 @@ def test_baseline_resume_key_requires_all_inputs(tmp_path, monkeypatch) -> None:
     assert calls == ["f1", "f1", "f1", "f1", "f1"]
 
 
+def test_baseline_feature_build_drops_market_columns(tmp_path, monkeypatch) -> None:
+    raw = pd.DataFrame({
+        "market_prob": [0.7],
+        "mkt_p": [0.7],
+        "win_odds": [2.0],
+        "ordinary": [1.0],
+    })
+    observed = {}
+    monkeypatch.setattr(command.pd, "read_parquet", lambda _: raw.copy())
+
+    def fake_builder(frame, include_market=True):
+        observed["columns"] = set(frame.columns)
+        observed["include_market"] = include_market
+        return frame.assign(built=1.0)
+
+    monkeypatch.setattr(command, "build_features", fake_builder)
+    command.load_featured_data(tmp_path / "raw.parquet", tmp_path, "hash")
+    assert observed == {"columns": {"ordinary"}, "include_market": False}
+
+
 def test_baseline_runner_rejects_test_period(tmp_path) -> None:
     folds = pd.DataFrame([{
         "fold_id": "bad", "era": "kaggle",

@@ -74,11 +74,17 @@ def draw_deviation(frame: pd.DataFrame) -> dict[str, float | int]:
 
 
 def load_featured_data(data_path: Path, output: Path, data_hash: str) -> pd.DataFrame:
-    cache = output / ".cache" / f"{registry_hash()}-{data_hash}.parquet"
+    cache = output / ".cache" / f"baselines-{registry_hash()}-{data_hash}.parquet"
     cache.parent.mkdir(parents=True, exist_ok=True)
     if cache.exists():
         return pd.read_parquet(cache)
-    data = build_features(pd.read_parquet(data_path))
+    raw = pd.read_parquet(data_path)
+    market_columns = [
+        column for column in raw
+        if column in {"market_prob", "win_odds", "implied_prob"}
+        or column.startswith(("mkt_", "market_", "odds_"))
+    ]
+    data = build_features(raw.drop(columns=market_columns), include_market=False)
     data.to_parquet(cache, index=False)
     return data
 

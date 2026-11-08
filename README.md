@@ -4,18 +4,7 @@ This repository builds race-level win-probability models for Hong Kong horse
 racing and evaluates whether combining them with market odds improves
 probability forecasts. The main question is: **on chronologically later races,
 does a market-plus-model blend reduce per-race log loss compared with a
-calibrated market baseline?**
-
-> **Status — verified 2026-11-08**
->
-> - Registry: `v3.1` (`50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac`).
-> - README verification commit: `b6dcde81dfdb2c2ca4e154e47449e960920a1afb`.
-> - Verification environment: Python `3.13.5`.
-> - Clean-checkout tests: 62 core tests passed (one deprecation warning) and 26 leakage
->   tests passed.
-> - Evidence status: [`artifacts/folds/evidence_summary.json`](artifacts/folds/evidence_summary.json)
->   reports `eligible_for_freeze: false`; tracked fold metadata is stale and must not be used
->   as evidence. See [Findings and limitations](#findings-and-limitations).
+calibrated market baseline?
 
 ## Contents
 

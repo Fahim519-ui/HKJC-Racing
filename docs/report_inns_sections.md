@@ -1,7 +1,9 @@
 # Report draft: Inns's sections (data, validation, results, limitations)
 
 Draft of 7 Nov 2026, written from `docs/report_data.md`, where every number has a source
-file. Two kinds of gap are left on purpose:
+file. Updated 8 Nov: the evidence is now the pre-registered v3.1 fold re-run
+(`docs/evaluation_protocol.md`); earlier designs are diagnostics (`analysis/quarantine.json`)
+and are not quoted as results. Two kinds of gap are left on purpose:
 
 - `[PROVISIONAL: ...]` marks a number that will change when the models are re-run on
   registry v3.1 before the freeze (23:59 Wed 12 Nov). The bracket says where the current
@@ -137,16 +139,30 @@ only if the whole 95% interval of its gain lies above zero.
 
 ### 3.4 Out-of-sample designs
 
-Two chronological designs check whether any gain carries over to later periods.
+The evidence comes from one pre-registered design (`docs/evaluation_protocol.md`, committed
+before the v3.1 re-run).
 
-- **Rolling validation** (`analysis/rolling_validation.py`): three Kaggle folds with
-  validation windows Feb-Jul 2019, Aug 2019-Jan 2020 and Feb-Jul 2020. Each fold trains
-  only on earlier races, chooses the LightGBM tree count on an inner split inside training,
-  and fits the market blend on out-of-fold Stage 1 predictions, so the scored window is
-  used once.
-- **Fold runner** (`model_logic/run_folds.py`, Fahim): folds k1 and k2 on Kaggle and h1 on
-  HKJC (Feb-Mar 2026), each with its own Stage 2 window. Both scoring codes give identical
-  losses and intervals on the same prediction files (`analysis/FOLD_RUNNER_COMPARISON.md`).
+- **Fold runner** (`model_logic/run_folds.py`, run through `model_logic/run_ablation.py`):
+  folds k1 and k2 on Kaggle and h1 on HKJC (Feb-Mar 2026), each with its own Stage 1
+  training, Stage 2 and validation windows (`model_logic/validation/folds.csv`). The Stage 2
+  blend is fitted on each fold's Stage 2 window and scored on the later validation window.
+- **Primary comparison:** the `primary` configuration's market + logit + LightGBM blend
+  against the calibrated market (the same idea as the market refit, p ∝ market^β with β fitted
+  on the Stage 2 window), by per-race log loss.
+- **Repeat rule:** a fold counts only with at least 150 inner-tune races, which makes k1 and
+  k2 eligible and h1 watch-only. Every eligible fold must show a positive gain whose 95%
+  race-day interval lies entirely above zero (here 2 of 2). Everything else, including the
+  ten-row baseline ladder from uniform to market + both models, is exploratory.
+- Both scoring codes, the fold runner's and `analysis/eval_utils.py`, give identical losses
+  and intervals on the same prediction files (`analysis/FOLD_RUNNER_COMPARISON.md`).
+
+The rule is strict for folds of 377-379 races, so a null result is the expected outcome of an
+honest test, not a surprise; it was written down before the re-run for that reason.
+
+Earlier designs are kept as **diagnostics, not evidence** (`analysis/quarantine.json`): the
+rolling validation (`analysis/rolling_validation.py`, three Kaggle folds with simplified
+stand-in models and no run record), the market-offset LightGBM runs, the in-sample Stage 2
+table and the 3-5 November model runs. They helped find problems but are not quoted as results.
 
 ### 3.5 Run provenance and the one-shot test
 
@@ -156,22 +172,26 @@ and final scoring (`analysis/final_scoring.py`) refuse predictions unless that r
 current registry and a commit published on the shared repository
 (`analysis/provenance.py`). This check was added after we found that all fold runs of
 6 November had used an older registry and unpublished code, so they lacked the v3.1
-features. Nothing in their scores showed this.
+features. Nothing in their scores showed this. Since then an evidence run also refuses to
+start unless the working tree is clean and its commit is on the shared repository, and it
+records the data, registry and configuration hashes; those 6 November runs are quarantined.
 
 The test window is scored once. The freeze step records the SHA-256 of the predictions
-file, the git commit and the S3 version. The final run refuses to start without that
+file, the git commit, the S3 version and the freeze timestamp. The final run refuses to start without that
 record, if the file has changed, or if a result already exists, and it refits nothing on
 the test window: the market-refit β and the Stage 2 blend carry their h_s2 fits.
 
 ## 4. Results
 
-### 4.1 An earlier "edge" did not survive a fair check
+### 4.1 An earlier "edge" did not survive a fair check (diagnostic)
 
 An earlier experiment reported that a LightGBM model starting from the market odds improved
 log loss by +0.0013 per race on four Kaggle walk-forward periods. In that setup the scored
 period also chose the number of trees. Choosing it on training data only, the gain fell to
 +0.00005 (95% CI −0.0008 to +0.0009), and against the bias-corrected market it was −0.0009
-(−0.0036 to +0.0018). How the comparison is set up mattered more than the model itself.
+(−0.0036 to +0.0018). How the comparison is set up mattered more than the model itself. That
+model starts from the odds, so it is a residual diagnostic, not an independent comparator,
+and its runs are quarantined; the point here is the method lesson, not the number.
 
 ### 4.2 The favourite-longshot bias
 
@@ -185,40 +205,43 @@ baseline.
 
 ### 4.3 Validation results
 
-**Rolling validation (Kaggle).** Pooled gain over the market refit, 95% race-day interval:
+All numbers in this section come from the v3.1 re-run (`artifacts/folds/`, made through the
+run-gate). Check `python analysis/provenance.py` passes on those runs before quoting them.
 
-| Model | Pooled log loss | Gain vs market refit | 95% CI |
-|---|---:|---:|---|
-| market refit | [PROVISIONAL: rolling_validation_results/pooled_summary.csv] | 0 | - |
-| conditional logit alone | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
-| LightGBM alone | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
-| market + logit | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
-| market + LightGBM | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
-| market + both | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
+**Primary comparison** (market + logit + LightGBM vs calibrated market, per-race log loss):
 
-[PROVISIONAL: replace once the final model scripts and features are fixed for v3.1; re-run
-`python analysis/rolling_validation.py`. Current file shows no blend beating the refit.]
-Removing the trainer features: [PROVISIONAL: `ablation_no_trainer.csv`].
+| Fold | Role | Validation window | Races | Race days | Gain | 95% race-day CI | Above zero? |
+|---|---|---|---:|---:|---:|---|---|
+| k1 | eligible | Sep 2019 - Jan 2020 | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
+| k2 | eligible | Feb - Jun 2020 | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
+| h1 | watch-only | Feb - Mar 2026 | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | reported only |
 
-**Fold runner (k1, k2, h1 pooled).** Gain over the calibrated market: market + logit
-[PROVISIONAL], market + LightGBM [PROVISIONAL], market + both [PROVISIONAL]. [PROVISIONAL:
-the 6 Nov runs used registry v3.0 and unpublished code; take the numbers from
-`artifacts/folds/primary/fold_metrics.csv` (pooled rows) after Fahim's v3.1 re-run, and
-check `python analysis/provenance.py` passes first.]
+Repeat rule (2 of 2 eligible folds positive with intervals above zero): [PROVISIONAL: passed /
+not passed, from `artifacts/folds/evidence_summary.csv`]. [PROVISIONAL: one sentence on what
+this means for the freeze.]
 
-Two design points do not depend on the re-run. First, the HKJC fold h1 (171 races on 17
-race days) has wide intervals; in the 6 November runs its market + logit gain looked
-significant with single-race resampling and was not with race-day resampling. Second, h1's
-window lies inside h_s2, so it is not independent of the main Stage 2 blend.
+**Baseline ladder** (exploratory; pooled over the folds): uniform, draw-only, original
+conditional logit, raw market, calibrated market, logit alone, LightGBM alone, market + logit,
+market + LightGBM, market + both. [PROVISIONAL: table from `artifacts/folds/` ladder output;
+rows whose inputs are missing are marked incomplete, not negative.]
 
-**Stage 2 weights.** Refitting the blend score = β·log p_market + α·log p_model without a
-penalty gives each weight a standard error. On HKJC Stage 2 the logit weight is
-α = [PROVISIONAL] (SE [PROVISIONAL]) with β = [PROVISIONAL]; on the Kaggle Stage 2 windows
-α = [PROVISIONAL]. [PROVISIONAL: `analysis/stage2_results/alpha_beta.csv`, re-run
-`stage2_alpha_beta.py` on the v3.1 predictions. The current, unverified table has a negative
-α on HKJC and α near zero on Kaggle. If that holds, the reading is that on HKJC the blend
-gains by leaning against the model, which acts as an extra favourite-longshot correction
-rather than adding the model's own information.]
+**Feature-group ablations** (exploratory): without the trainer rate, without the
+track/distance group, and without both. [PROVISIONAL: change in the primary gain per
+ablation, from `artifacts/folds/ablation_metrics.csv`.]
+
+**Stage 2 weights out of sample.** The weights on the market (β) and on each model (α) come
+from each fold's Stage 2 window and are scored on the later validation window, so the
+weights are tested on data they were not fitted on. [PROVISIONAL: β and α per fold, from each
+fold's `blend.json`, with a sentence on their sign.] An earlier in-sample refit (now a
+diagnostic) gave the logit a negative weight on HKJC Stage 2 and about zero on Kaggle; if the
+out-of-sample weights show the same pattern, the blend's gains on HKJC come from leaning
+against the model, an extra favourite-longshot correction, not from the model's own
+information.
+
+Two design points do not depend on the re-run. First, h1 has 171 races on 17 race days, so
+its intervals are wide; in the 6 November runs its market + logit gain looked significant
+with single-race resampling and was not with race-day resampling. Second, h1's window lies
+inside h_s2, so it is not independent of the main Stage 2 blend.
 
 ### 4.4 Test window (one shot)
 
@@ -227,9 +250,11 @@ Brier, top-1, and gain over the market refit and the raw market with 95% race-da
 intervals; races and race days scored; calibration table. State the headline model chosen
 before scoring.]
 
-**Headline so far:** no model or blend shows a gain over the bias-corrected market whose
-95% interval excludes zero, in any design. The only stable pattern is the longshot bias.
-[FINAL: confirm or revise after the test scoring.]
+**Headline:** [PROVISIONAL: from the v3.1 primary comparison and, if a model is frozen, the
+test score; not before]. For orientation only: none of the earlier designs, all now
+diagnostics, showed a gain over the bias-corrected market with an interval above zero, and
+the only pattern that held in every split was the longshot bias. That is not evidence and is
+not quoted as a result.
 
 ## 5. Limitations
 
@@ -260,10 +285,14 @@ Other limitations:
   the main blend.
 - **Five-year gap between the sources.** Short HKJC histories shift several features, and
   the trainer win rate behaves differently across the eras.
-- **Validation models.** The rolling validation uses simplified versions of the models
-  (binary LightGBM, unpenalised logit), not the tuned production models.
-- **Code provenance.** The fold runner records the commit even if the working tree had
-  uncommitted edits, so only a run from a clean checkout fully proves the code.
+- **Few folds, strict rule.** Two eligible folds of about 380 races each give wide
+  intervals; the repeat rule can fail even if a small real edge exists.
+- **Earlier runs are diagnostics only.** The rolling validation used simplified models, and
+  the 6 November fold runs used an older registry and unpublished code. Both are quarantined
+  and only the v3.1 re-run is evidence.
+- **Code provenance.** Until 8 November the fold runner recorded the commit even if the
+  working tree had uncommitted edits. The run-gate now refuses such runs; earlier runs cannot
+  prove their code.
 - **Stage 2 standard errors** treat races as independent; same-day races are correlated,
   so the true uncertainty is larger.
 - **Non-random missing data** in HKJC horse profiles, handled by never using missingness.

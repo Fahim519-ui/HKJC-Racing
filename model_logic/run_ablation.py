@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 
 from model_logic.aggregate_folds import aggregate_folds
+from model_logic.run_baselines import run_baselines
 from model_logic.run_folds import run_folds
 
 
@@ -25,6 +26,15 @@ def main() -> int:
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
 
+    baseline_reports = run_baselines(
+        folds_path=args.folds,
+        data_path=args.data,
+        output=args.out,
+        inner_tune_months=args.inner_tune_months,
+        minimum_gain=args.min_gain,
+        fold_ids=args.fold_ids,
+        resume=args.resume,
+    )
     reports = run_folds(
         folds_path=args.folds,
         data_path=args.data,
@@ -37,6 +47,8 @@ def main() -> int:
         resume=args.resume,
     )
     metrics = aggregate_folds(root=args.out, all_configs=True)
+    if baseline_reports:
+        print(pd.DataFrame(baseline_reports).to_string(index=False))
     if reports:
         print(pd.DataFrame(reports).to_string(index=False))
     print(metrics.to_string(index=False))

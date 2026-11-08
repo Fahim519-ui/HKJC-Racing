@@ -383,6 +383,22 @@ This section will be completed only after a clean current-registry v3.1 rerun. U
 repository still provides a complete evaluation path: common-race comparisons, race-day
 uncertainty intervals, explicit baseline steps, and a pre-specified freeze rule.
 
+### Preliminary diagnostic (not current evidence)
+
+The stale primary ladder does contain a useful, but non-decisive, diagnostic. Across its pooled
+927 validation races, `mkt+cl+lgbm` reduced loss by `0.001030` relative to the calibrated market;
+the paired 95% race-day bootstrap interval was `[-0.001379, 0.003227]`.
+[`artifacts/folds/primary/ladder.md`](artifacts/folds/primary/ladder.md). This small positive
+point estimate is compatible with no gain because the interval crosses zero. The two eligible
+Kaggle folds did not agree (`k1`: `-0.000414`; `k2`: `0.000653`), and the positive HKJC `h1`
+estimate (`0.005061`) is watch-only because its tuning period has fewer than 150 races.
+
+The same stale ladder does show that its ordered comparisons behave plausibly: draw-only improves
+on uniform probabilities by `0.025373` pooled log-loss units (95% interval
+`[0.012290, 0.038531]`), and the frozen original conditional logit improves on draw-only by
+`0.276306` (`[0.227990, 0.330080]`). These are diagnostic checks on the ladder, not evidence
+that the current v3.1 system outperforms the market.
+
 ### General limitations
 
 Log-loss differences do not establish profitable wagering after takeout, odds timing, and

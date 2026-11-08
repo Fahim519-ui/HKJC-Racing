@@ -50,6 +50,28 @@ pushed commit on registry v3.1, and the combined file must be rebuilt from that 
 Limitation: `run_folds.py` records `git rev-parse HEAD` even if the tree had uncommitted
 edits, so only a run from a clean checkout really proves the code.
 
+## Frozen odds-free baseline ladder
+
+`model_logic.run_baselines` fits two historical conditional-logit rungs once per fold from
+`s1` only. Both are unpenalised and use the same `s1` inner train/tune split as the main
+conditional-logit selector; neither reads market or odds columns. `draw_only` uses
+`rc_draw_pct`, `rc_draw_x_hv`, and `rc_draw_x_sprint`. `original_cl` starts with
+`jt_jockey_win365_rel`, `hf_avg3_fin_pct_rel`, `rc_draw_pct`, `rc_draw_x_hv`,
+`rc_weight_rel`, and `hf_days_since`, then selects only from
+`hf_last_fin_pct_rel`, `jt_trainer_win365_rel`, `hf_win5_s`, `hf_first_start`,
+`rc_draw_x_sprint`, `rc_weight_x_dist`, `hf_class_change`, `w3_horse_past_win_rate`, and
+`w3_horse_past_top3_rate`.
+
+The lists are deliberately frozen rather than derived from active registry sets, which contain
+later feature families. The current builder defines `rc_draw_pct` by rank among actual starters;
+the historical expression was `(draw - 1) / (field_size - 1)`. Each baseline artifact records
+the count and fraction of runners where those definitions differ.
+
+Aggregation writes `ladder.csv`, `ladder.md`, and `ladder_steps.csv` per configuration. All
+rungs use the same market-complete valid races within a fold; positive step gain means the second
+rung has lower log loss, with a paired race-day bootstrap interval. Pooled rows contain valid
+races only. h1's `s1` period mixes Kaggle and HKJC data.
+
 ## eval_utils.py
 
 ```python

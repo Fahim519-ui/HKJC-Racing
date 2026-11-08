@@ -2,7 +2,9 @@
 
 Four scripts share one scoring module. All of them follow `docs/DATA_RULES.md`: the race is the
 unit, models are compared on the same races, nothing is fitted on the window being scored
-unless that window is a fitting window, and h_test is scored once.
+unless that window is a fitting window, and h_test is scored once. The decision criteria for
+forward-fold evidence, freezing, and final scoring are fixed in
+[`docs/evaluation_protocol.md`](../docs/evaluation_protocol.md).
 
 | File | What it does | Touches h_test? |
 |---|---|---|

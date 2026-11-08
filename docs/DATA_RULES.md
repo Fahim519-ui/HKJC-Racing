@@ -4,6 +4,10 @@ Copied from the project's Kiro rules (31 Oct 2026). Applies to everyone's code.
 
 > Restored to `docs/` on 7 Nov 2026 from `update_2026-10-31_fahim_cli/docs/` (removed in the
 > cleanup). The bucket name is replaced by `<project-bucket>` because the repository is public.
+>
+> For forward-fold comparisons, ablations, freeze decisions, and final scoring, follow
+> [`evaluation_protocol.md`](evaluation_protocol.md). It is the source of truth for decision
+> criteria; these rules remain the source of truth for data handling.
 
 ## Data
 

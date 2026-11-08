@@ -2,7 +2,7 @@
 
 This repository builds race-level win-probability models for Hong Kong horse
 racing and evaluates whether combining them with market odds improves
-probability forecasts. The main question is: **on chronologically later races,
+probability forecasts. The main question is: on chronologically later races,
 does a market-plus-model blend reduce per-race log loss compared with a
 calibrated market baseline?
 

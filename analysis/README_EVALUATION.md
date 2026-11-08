@@ -19,7 +19,7 @@ Run everything from the repo root with the project venv active.
 
 ## Provenance check (added 7 Nov)
 
-Every fold run in `artifacts/folds/` (6 Nov) recorded `registry_version: v3.0` and commit
+Every fold run then in `artifacts/folds/` (6 Nov; moved to `artifacts/quarantine/folds_v3.0_fc759fe/` on 8 Nov) recorded `registry_version: v3.0` and commit
 `fc759fe`, which is not on GitHub. The registry was already v3.1, so those runs never used
 the track/distance, trajectory or interaction features, and the scores gave no sign of it.
 `provenance.py` now checks each run's `meta.json`:
@@ -37,6 +37,31 @@ Where it is enforced:
 | `stage2_alpha_beta.py` | Refuses; `--allow-unverified` reproduces the table stamped UNVERIFIED |
 | `provenance.load_fold_predictions()` | Refuses; use it instead of `pd.read_parquet` for fold files |
 | `build_combined_predictions.py` | Writes `combined_predictions.provenance.json` (source run's meta) next to the output |
+
+## Run-gate for evidence runs (added 8 Nov, Tier 1)
+
+`python -m model_logic.run_ablation`, `python -m model_logic.run_folds` and
+`python -m model_logic.run_baselines` call `provenance.require_evidence_run` before doing any
+work. They refuse to start, listing every reason, when the working tree has modified or
+untracked files (git-ignored files are fine), when `HEAD` is not on `origin/main` (run
+`git fetch origin` and push first), or when the data file is missing. A passing run records the
+full commit, `git_dirty: false`, `evidence: true`, the data, registry and config hashes in every
+`meta.json`. `--resume` reuses a fold only when the commit and config hash also match.
+
+`--smoke` skips the gate for quick checks: it records `evidence: false`, refuses to write under
+`artifacts/folds/`, and `check_meta` refuses such runs (and any `git_dirty` /
+`dirty_worktree: true` run) at freeze time. Direct Python calls to `run_folds()` /
+`run_baselines()` without a gate record are marked `evidence: false` too.
+
+## Quarantine (added 8 Nov, Tier 1)
+
+`analysis/quarantine.json` lists folders that are not evidence; each has a `NOT_EVIDENCE.md`
+saying why and what replaces it. `provenance.check_run_dir` and `check_predictions_file` refuse
+anything inside them (matched by resolved path parts). The 6 Nov v3.0 fold runs were moved to
+`artifacts/quarantine/folds_v3.0_fc759fe/`, so the v3.1 re-run writes into an empty `artifacts/folds/`.
+Quarantined: the v3.0 folds, the rolling validation, both market-offset folders, the Stage 2
+table, and the 3-5 Nov LightGBM / partnership result folders (the current combined predictions
+file is built from one of them, so it cannot be frozen until rebuilt from a v3.1 run).
 
 ```bash
 git fetch origin

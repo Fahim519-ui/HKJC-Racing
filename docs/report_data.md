@@ -115,7 +115,7 @@ against the bias-corrected market.
 Removing the trainer features changes nothing measurable (market + logit −0.0000,
 −0.0025 to +0.0024).
 
-**Fahim's fold runner** (`artifacts/folds/`), pooled k1+k2+h1, 927 races, gain vs calibrated
+**Fahim's fold runner** (stale v3.0 runs, now `artifacts/quarantine/folds_v3.0_fc759fe/`), pooled k1+k2+h1, 927 races, gain vs calibrated
 market: market + logit +0.0016 (−0.0005 to +0.0037); market + both +0.0015 (−0.0007 to
 +0.0038). *Stale: registry v3.0, unpushed code. Re-run on v3.1 before quoting.*
 

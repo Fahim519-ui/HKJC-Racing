@@ -1,0 +1,38 @@
+[
+  {
+    "path": "artifacts/quarantine/folds_v3.0_fc759fe",
+    "reason": "Every meta.json records registry_version v3.0 and git commit fc759fe, which is not on GitHub."
+  },
+  {
+    "path": "analysis/rolling_validation_results",
+    "reason": "Uses registry v3.1 features but simplified stand-in models (binary LightGBM, unpenalised logit), not the production models, and writes no meta.json, so its code and data cannot be verified by the provenance check."
+  },
+  {
+    "path": "artifacts/market_offset_lightgbm",
+    "reason": "The model starts from the market odds (a residual diagnostic, not an independent comparator); the scored period also chose the tree count; pre-registry code; no meta.json."
+  },
+  {
+    "path": "artifacts/market_offset_feature_families",
+    "reason": "Same setup as market_offset_lightgbm, and the best of 15 feature sets was picked on the same periods that chose the tree count; no meta.json."
+  },
+  {
+    "path": "analysis/stage2_results",
+    "reason": "All fits are in-sample on their Stage 2 window; the fold windows come from the stale v3.0 runs; already stamped UNVERIFIED."
+  },
+  {
+    "path": "artifacts/lightgbm_independent_probability",
+    "reason": "Pre-registry feature set, no meta.json, and the run scored h_test (those rows were removed on 7 Nov)."
+  },
+  {
+    "path": "artifacts/lightgbm_independent_probability_v2",
+    "reason": "Pre-registry feature set, no meta.json, and the run scored h_test (rows removed 7 Nov)."
+  },
+  {
+    "path": "artifacts/lightgbm_independent_probability_v2_2026-11-05",
+    "reason": "Same as lightgbm_independent_probability_v2: pre-registry, no meta.json, h_test scored then (rows removed 7 Nov)."
+  },
+  {
+    "path": "artifacts/jtp_experiment",
+    "reason": "Pre-registry feature set, no meta.json, and the LightGBM part scored h_test (rows removed 7 Nov)."
+  }
+]

@@ -1,5 +1,8 @@
 # Fahim's fold runner vs eval_utils / rolling_validation (checked 6 Nov)
 
+> **Update 8 Nov:** the stale runs below were moved to `artifacts/quarantine/folds_v3.0_fc759fe/` and quarantined
+> (`analysis/quarantine.json`); `artifacts/folds/` now holds only fresh v3.1 runs.
+>
 > **Update 7 Nov: these fold runs are stale.** Every `meta.json` under `artifacts/folds/`
 > records `registry_version: v3.0` and commit `fc759fe`, which is not on GitHub. LightGBM
 > used 24 features (22 without trainer), not the 38 in registry v3.1, so Nayeon's `td_*`
@@ -17,7 +20,7 @@ the same thing: no blend shows a clear gain over the calibrated market.
 ## 1. Same predictions, our scoring code
 
 `eval_utils` was run on Fahim's own prediction files,
-`artifacts/folds/primary/{k1,k2,h1}/predictions.parquet` (`role == "valid"` rows), against his
+`artifacts/quarantine/folds_v3.0_fc759fe/primary/{k1,k2,h1}/predictions.parquet` (then under `artifacts/folds/`) (`role == "valid"` rows), against his
 `fold_metrics.csv`. Gain is calibrated-market loss minus blend loss (positive means the blend
 is better). CI is the 95% race-day bootstrap, seed 0.
 

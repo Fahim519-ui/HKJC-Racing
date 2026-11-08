@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from model_logic.ablation_configs import CONFIGS, get_config
+from model_logic.baselines import validate_baseline_features
 from model_logic.conditional_logit_tuning_v2 import (
     RaceSet,
     fit_beta,
@@ -46,6 +47,8 @@ from model_logic.lightgbm_independent_probability_v2 import (
     train_booster,
 )
 
+
+validate_baseline_features(REGISTRY)
 
 TEST_START = pd.Timestamp("2026-04-01")
 EPSILON = 1e-12
@@ -160,22 +163,37 @@ def fit_conditional_logit(
     features: list[str],
     base_features: list[str],
     minimum_gain: float,
+    selected_features: list[str] | None = None,
+    fixed_penalty: float | None = None,
 ) -> tuple[dict, list[pd.DataFrame]]:
     mean, std = moments(inner_train, features)
     train_races = stage1_races(inner_train, features, mean, std)
     tune_races = stage1_races(inner_tune, features, mean, std)
-    index, trace = select_features(
-        train_races, tune_races, inner_train[features].corr(method="spearman"),
-        minimum_gain, features, base_features,
-    )
+    if selected_features is None:
+        index, trace = select_features(
+            train_races, tune_races, inner_train[features].corr(method="spearman"),
+            minimum_gain, features, base_features,
+        )
+    else:
+        unknown = set(selected_features).difference(features)
+        if unknown:
+            raise ValueError(f"Selected conditional-logit features are unavailable: {sorted(unknown)}")
+        index = [features.index(feature) for feature in selected_features]
+        trace = pd.DataFrame()
     selected = [features[item] for item in index]
     train_selected, tune_selected = train_races.select(index), tune_races.select(index)
-    rows = []
-    for lam in PENALTIES:
-        beta = fit_beta(train_selected, lam=lam, l1_ratio=0.5, lam_mkt=0.0)
-        rows.append({"lam": lam, "loss": tune_loss(beta, tune_selected)})
-    grid = pd.DataFrame(rows)
-    lam = float(grid.loc[grid["loss"].idxmin(), "lam"])
+    if fixed_penalty is None:
+        rows = []
+        for lam in PENALTIES:
+            beta = fit_beta(train_selected, lam=lam, l1_ratio=0.5, lam_mkt=0.0)
+            rows.append({"lam": lam, "loss": tune_loss(beta, tune_selected)})
+        grid = pd.DataFrame(rows)
+        lam = float(grid.loc[grid["loss"].idxmin(), "lam"])
+    else:
+        lam = float(fixed_penalty)
+        grid = pd.DataFrame([{"lam": lam, "loss": tune_loss(
+            fit_beta(train_selected, lam=lam, l1_ratio=0.5, lam_mkt=0.0), tune_selected
+        )}])
 
     final_mean, final_std = moments(s1, selected)
     final = stage1_races(s1, selected, final_mean, final_std)

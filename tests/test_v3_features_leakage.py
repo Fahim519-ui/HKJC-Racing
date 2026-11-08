@@ -160,3 +160,30 @@ def test_registry_model_sets_and_documentation():
 def test_builder_needs_only_raw_runners():
     for module in (feature_builder, track_distance_features, trajectory_features):
         assert "version2_runners_merged" not in inspect.getsource(module)
+
+
+# ------------------------------------------------------------- frozen definitions (8 Nov)
+FROZEN = {
+    "distance_bands_m": [["sprint", 1200], ["mile", 1650], ["middle", 2000], ["staying", None]],
+    "pseudo_counts": {"career": 5.0, "track": 5.0, "distance_band": 5.0, "track_distance": 5.0},
+    "source_defaults": {"win": 1 / 12, "top3": 3 / 12, "fin_pct": 0.5},
+    "days_since_edges": [14, 28, 60, 180],
+    "class_deadband": 0.10,
+    "field_size_centre": 12.0,
+}
+
+
+def test_frozen_definitions():
+    from analysis.v3_build import frozen_definitions
+
+    assert frozen_definitions() == FROZEN
+
+
+def test_build_reproduces_the_stamped_manifest(raw):
+    import json
+
+    from analysis.v3_build import MANIFEST, compare, stamp
+
+    reference = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    current = stamp(DATA, build(raw), None)
+    assert compare(reference, current) == []

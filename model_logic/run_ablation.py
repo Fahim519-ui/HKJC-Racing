@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from analysis.provenance import require_evidence_run, smoke_record
 from model_logic.aggregate_folds import aggregate_folds
 from model_logic.run_baselines import run_baselines
-from model_logic.run_folds import run_folds
+from model_logic.run_folds import REPO, run_folds
 
 
 def main() -> int:
@@ -24,7 +25,13 @@ def main() -> int:
     parser.add_argument("--min-gain", type=float, default=0.001)
     parser.add_argument("--fold-ids", nargs="*")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--smoke", action="store_true",
+                        help="non-evidence run: skips the run-gate, records evidence=false, "
+                             "and may not write to artifacts/folds")
     args = parser.parse_args()
+    # Run-gate: an evidence run needs a clean tree, a pushed commit and the data file.
+    run_record = (smoke_record(REPO, args.out) if args.smoke
+                  else require_evidence_run(REPO, args.data))
 
     baseline_reports = run_baselines(
         folds_path=args.folds,
@@ -34,6 +41,7 @@ def main() -> int:
         minimum_gain=args.min_gain,
         fold_ids=args.fold_ids,
         resume=args.resume,
+        run_record=run_record,
     )
     reports = run_folds(
         folds_path=args.folds,
@@ -45,6 +53,7 @@ def main() -> int:
         fold_ids=args.fold_ids,
         all_configs=True,
         resume=args.resume,
+        run_record=run_record,
     )
     metrics = aggregate_folds(root=args.out, all_configs=True)
     if baseline_reports:

@@ -239,7 +239,8 @@ def test_baseline_resume_key_requires_all_inputs(tmp_path, monkeypatch) -> None:
         calls.append(fold.fold_id)
         target.mkdir(parents=True, exist_ok=True)
         (target / "meta.json").write_text(json.dumps({
-            "registry_hash": "registry", "data_hash": "data", "baseline_feature_hash": "features"
+            "registry_hash": "registry", "data_hash": "data", "baseline_feature_hash": "features",
+            "git_commit": "commit",
         }))
         return {}
 
@@ -247,8 +248,17 @@ def test_baseline_resume_key_requires_all_inputs(tmp_path, monkeypatch) -> None:
     command.run_baselines(Path("folds.csv"), data_path, tmp_path, resume=True)
     command.run_baselines(Path("folds.csv"), data_path, tmp_path, resume=True)
     assert calls == ["f1"]
+    # Same hashes but output from a different commit must not be reused.
     (tmp_path / "_baselines" / "f1" / "meta.json").write_text(json.dumps({
-        "registry_hash": "old", "data_hash": "data", "baseline_feature_hash": "features"
+        "registry_hash": "registry", "data_hash": "data", "baseline_feature_hash": "features",
+        "git_commit": "other",
+    }))
+    command.run_baselines(Path("folds.csv"), data_path, tmp_path, resume=True)
+    assert calls == ["f1", "f1"]
+    calls.pop()
+    (tmp_path / "_baselines" / "f1" / "meta.json").write_text(json.dumps({
+        "registry_hash": "old", "data_hash": "data", "baseline_feature_hash": "features",
+        "git_commit": "commit",
     }))
     command.run_baselines(Path("folds.csv"), data_path, tmp_path, resume=True)
     assert calls == ["f1", "f1"]

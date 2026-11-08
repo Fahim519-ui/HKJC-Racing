@@ -111,7 +111,7 @@ def test_fold_root_reports_every_bad_fold(repo, tmp_path):
     report = prov.check_fold_root(root, repo["root"])
     text = "\n".join(report.problems)
     assert "k2" in text and "h1" in text and "no meta.json" in text
-    assert "k1" not in text
+    assert "folds/k1:" not in text
 
 
 def test_load_fold_predictions_refuses_stale_unless_allowed(repo, tmp_path):

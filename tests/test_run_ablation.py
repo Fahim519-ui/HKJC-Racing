@@ -27,6 +27,10 @@ def _prediction_frame() -> pd.DataFrame:
             "p_lgbm": [0.52, 0.48],
             "p_uniform": [0.5, 0.5],
             "p_market_calibrated": [0.6, 0.4],
+            "p_cl_only": [0.55, 0.45],
+            "p_lgbm_only": [0.52, 0.48],
+            "p_mkt+cl": [0.56, 0.44],
+            "p_mkt+lgbm": [0.54, 0.46],
             "p_mkt+cl+lgbm": [0.56, 0.44],
         }
     )
@@ -35,6 +39,19 @@ def _prediction_frame() -> pd.DataFrame:
 def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, monkeypatch) -> None:
     output = tmp_path / "out"
     captured: dict = {}
+
+    def fake_run_baselines(**kwargs):
+        for fold_id in ("f1",):
+            directory = output / "_baselines" / fold_id
+            directory.mkdir(parents=True)
+            frame = _prediction_frame()[["race_id", "horse_id", "role", "is_winner", "p_uniform"]].copy()
+            frame["p_draw_only"] = [0.55, 0.45]
+            frame["p_original_cl"] = [0.56, 0.44]
+            frame.to_parquet(directory / "baseline_predictions.parquet", index=False)
+            (directory / "meta.json").write_text(json.dumps({
+                "data_hash": "data", "registry_hash": "registry", "git_commit": "commit",
+            }))
+        return [{"fold_id": "f1"}]
 
     def fake_run_folds(**kwargs):
         captured.update(kwargs)
@@ -49,12 +66,17 @@ def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, mon
                         "primary": config.primary,
                         "unavailable_exclusions": [],
                         "race_counts": {"inner_tune": 200},
+                        "data_hash": "data",
+                        "registry_hash": "registry",
+                        "git_commit": "commit",
+                        "fold": {"era": "kaggle"},
                     }
                 )
                 + "\n"
             )
         return [{"config": "primary", "fold_id": "f1"}]
 
+    monkeypatch.setattr(command, "run_baselines", fake_run_baselines)
     monkeypatch.setattr(command, "run_folds", fake_run_folds)
     monkeypatch.setattr(
         sys,
@@ -98,6 +120,7 @@ def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, mon
 
 
 def test_run_ablation_does_not_aggregate_after_fold_failure(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(command, "run_baselines", lambda **kwargs: [])
     monkeypatch.setattr(command, "run_folds", lambda **kwargs: (_ for _ in ()).throw(RuntimeError("failed")))
     aggregate_called = False
 

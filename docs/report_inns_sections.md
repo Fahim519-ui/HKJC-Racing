@@ -1,18 +1,12 @@
 # Report draft: Inns's sections (data, validation, results, limitations)
 
 Draft of 7 Nov 2026, written from `docs/report_data.md`, where every number has a source
-file. **This is an archival drafting template:** its provisional placeholders and
-no-`h_test` statement are superseded by `docs/submission_summary.md` and
-`analysis/final_scoring_results/h_test/report.md`. Re-checked 11 Nov against `main` at `0594916`. Updated 8 Nov: the evidence is now the pre-registered v3.1 fold re-run
-(`docs/evaluation_protocol.md`); earlier designs are diagnostics (`analysis/quarantine.json`)
-and are not quoted as results. Two kinds of gap are left on purpose:
-
-- `[PROVISIONAL: ...]` marks a number that will change when the models are re-run on
-  registry v3.1 before the freeze (23:59 Thu 12 Nov). The bracket says where the current
-  value lives and what replaces it.
-- `[FINAL: ...]` marks a number that exists only after the one-shot test scoring in Week 5.
-
-No test-window (h_test) result appears in this draft. Final report due 23:59 Tue 17 Nov.
+file. Updated 11 Nov with the v3.1 fold evidence (`artifacts/folds/`, runs on commit
+`1042a3d`, all passing the provenance check), the overfitting checks
+(`analysis/overfitting_results/`) and the retrospective h_test diagnostic, consistent with
+`docs/submission_summary.md`. Earlier designs are diagnostics (`analysis/quarantine.json`)
+and are not quoted as results. Remaining `[TO CONFIRM]` / `[TEAM NOTE]` brackets are for the
+team, not the report. Final report due 23:59 Tue 17 Nov.
 
 ---
 
@@ -162,8 +156,12 @@ before the v3.1 re-run).
 - Both scoring codes, the fold runner's and `analysis/eval_utils.py`, give identical losses
   and intervals on the same prediction files (`analysis/FOLD_RUNNER_COMPARISON.md`).
 
-The rule is strict for folds of 377-379 races, so a null result is the expected outcome of an
-honest test, not a surprise; it was written down before the re-run for that reason.
+**How the rule changed.** Before the v3.1 re-run the protocol required every eligible fold
+(here 2 of 2) to show a positive gain with its 95% race-day interval entirely above zero. No
+configuration met that rule. After the fold results had been seen, the group relaxed it to
+the freeze rule above and froze the best pooled candidate. The relaxed rule and that choice
+are therefore operational decisions for this project, not pre-registered confirmatory
+evidence, and section 4.3 reports how much a best-of-N choice can gain by chance alone.
 
 Earlier designs are kept as **diagnostics, not evidence** (`analysis/quarantine.json`): the
 rolling validation (`analysis/rolling_validation.py`, three Kaggle folds with simplified
@@ -212,58 +210,94 @@ baseline.
 
 ### 4.3 Validation results
 
-All numbers in this section come from the v3.1 re-run (`artifacts/folds/`, made through the
-run-gate). Check `python analysis/provenance.py` passes on those runs before quoting them.
+All numbers in this section come from the v3.1 fold runs (`artifacts/folds/`), made on the
+published commit `1042a3d` from a clean tree through the run-gate; every run passes
+`analysis/provenance.py`. They reproduce an earlier ungated run of the same code exactly.
 
-**Primary comparison** (market + logit + LightGBM vs calibrated market, per-race log loss):
+**Primary comparison** (market + logit + LightGBM vs calibrated market, per-race log loss;
+`artifacts/folds/primary/fold_metrics.csv`; figure `analysis/overfitting_results/primary_gain_by_fold.png`):
 
 | Fold | Role | Validation window | Races | Race days | Gain | 95% race-day CI | Above zero? |
 |---|---|---|---:|---:|---:|---|---|
-| k1 | eligible | Sep 2019 - Jan 2020 | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
-| k2 | eligible | Feb - Jun 2020 | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] |
-| h1 | watch-only | Feb - Mar 2026 | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | [PROVISIONAL] | reported only |
+| k1 | eligible | Sep 2019 - Jan 2020 | 379 | 40 | −0.00041 | −0.00274 to +0.00171 | no |
+| k2 | eligible | Feb - Jun 2020 | 377 | 40 | +0.00065 | −0.00104 to +0.00230 | no |
+| h1 | watch-only | Feb - Mar 2026 | 171 | 17 | +0.00506 | −0.00581 to +0.01464 | reported only |
+| pooled | descriptive | | 927 | 97 | +0.00103 | −0.00126 to +0.00331 | descriptive |
 
-Repeat rule (2 of 2 eligible folds positive with intervals above zero): [PROVISIONAL: passed /
-not passed, from `artifacts/folds/evidence_summary.csv`]. [PROVISIONAL: one sentence on what
-this means for the freeze.]
+The original rule (2 of 2 eligible folds positive with intervals above zero) is not met: k1 is
+negative and neither eligible interval excludes zero. Under the relaxed freeze rule (a
+positive point estimate in one eligible fold), 18 candidates qualify, including the raw market
+itself with no model, which shows that the relaxed rule does not separate a model from noise.
 
-**Baseline ladder** (exploratory; pooled over the folds): uniform, draw-only, original
-conditional logit, raw market, calibrated market, logit alone, LightGBM alone, market + logit,
-market + LightGBM, market + both. [PROVISIONAL: table from `artifacts/folds/<config>/ladder.csv`.
-The aggregation stops with an error if any rung is missing (`model_logic/aggregate_folds.py`
-`ladder_frame`), so a finished ladder has all ten rows on the same races. If a rung cannot be
-produced, the protocol treats it as incomplete evidence, not a negative result.]
+**Baseline ladder** (`artifacts/folds/primary/ladder.csv`, pooled, 927 races; gain vs
+calibrated market in per-race log loss): uniform −0.510, draw-only −0.484, original
+conditional logit −0.208, raw market −0.0004, calibrated market 0, logit alone −0.205,
+LightGBM alone −0.204, market + logit +0.0011, market + LightGBM +0.0008, market + both
++0.0010. On their own, the models are far behind the market (about −0.20 per race); blended
+with the market they move it by about one thousandth, inside the noise.
 
-**Feature-group ablations** (exploratory): without the trainer rate, without the
-track/distance group, and without both. [PROVISIONAL: change in the primary gain per
-ablation, from `artifacts/folds/ablation_metrics.csv`.]
+**Feature-group ablations** (`artifacts/folds/ablation_metrics.csv`; market + both vs
+calibrated market):
 
-**Stage 2 weights out of sample.** The weights on the market (β) and on each model (α) come
-from each fold's Stage 2 window and are scored on the later validation window, so the
-weights are tested on data they were not fitted on. [PROVISIONAL: β and α per fold, from each
-fold's `blend.json`, with a sentence on their sign.] An earlier in-sample refit (now a
-diagnostic) gave the logit a negative weight on HKJC Stage 2 and about zero on Kaggle; if the
-out-of-sample weights show the same pattern, the blend's gains on HKJC come from leaning
-against the model, an extra favourite-longshot correction, not from the model's own
-information.
+| Configuration | k1 | k2 | h1 | Pooled (95% CI) |
+|---|---:|---:|---:|---|
+| primary (all v3.1 features) | −0.00041 | +0.00065 | +0.00506 | +0.00103 (−0.00126 to +0.00331) |
+| without trainer rate | −0.00067 | +0.00037 | +0.00446 | +0.00070 (−0.00137 to +0.00281) |
+| without track/distance | −0.00023 | +0.00094 | +0.00598 | +0.00139 (−0.00104 to +0.00387) |
+| without both | −0.00054 | +0.00076 | +0.00656 | +0.00130 (−0.00088 to +0.00358) |
 
-Two design points do not depend on the re-run. First, h1 has 171 races on 17 race days, so
-its intervals are wide; in the 6 November runs its market + logit gain looked significant
-with single-race resampling and was not with race-day resampling. Second, h1's window lies
-inside h_s2, so it is not independent of the main Stage 2 blend.
+Every configuration is negative in k1 and every interval contains zero. Removing a feature
+group changes the pooled gain by less than 0.0004 per race, so no group is shown to help or hurt.
 
-### 4.4 Test window (one shot)
+**Stage 2 weights out of sample** (each fold's `blend.json`; weights fitted on the fold's
+Stage 2 window, scored on its later validation window). The blend chose the strongest penalty
+(λ = 0.1) in every fold. The calibrated-market weight β is 1.106 (k1), 1.060 (k2) and 1.005 (h1).
+The model weights are small and change sign: in market + logit, α_cl = +0.034, −0.006 and
+−0.119; in market + both, (α_cl, α_lgbm) = (+0.028, +0.011), (+0.005, −0.020) and
+(−0.080, −0.073). On HKJC (h1) both model weights are negative, so h1's gain comes from
+re-weighting the market, an extra favourite-longshot correction, not from the models' own
+information. This matches the earlier in-sample diagnostic.
 
-[FINAL: `analysis/final_scoring_results/h_test/report.md`. Per model: log loss, pseudo-R²,
-Brier, top-1, and gain over the market refit and the raw market with 95% race-day
-intervals; races and race days scored; calibration table. State the headline model chosen
-before scoring.]
+**Overfitting and selection checks** (`analysis/overfitting_check.py`,
+`analysis/overfitting_results/report.md`; folds only, no model refitted):
 
-**Headline:** [PROVISIONAL: from the v3.1 primary comparison and, if a model is frozen, the
-test score; not before]. For orientation only: none of the earlier designs, all now
-diagnostics, showed a gain over the bias-corrected market with an interval above zero, and
-the only pattern that held in every split was the longshot bias. That is not evidence and is
-not quoted as a result.
+1. *In-sample vs out-of-sample.* Over 36 config × blend × fold cases the mean gain is +0.0017
+   on the Stage 2 window where the blend is fitted and +0.0018 on the later validation window;
+   in-sample is larger in only 15 of 36. The blend is not overfitting.
+2. *Stability.* Of 16 conditional-logit features ever selected, only 6 are selected in all
+   three folds (draw, draw × Happy Valley, carried weight, recent form, days since the last
+   run, jockey win rate); fold overlap (Jaccard) 0.40-0.64. LightGBM's best iteration ranges
+   from 310 to 508. The stable features are the ones the market already prices.
+3. *Best of N vs chance.* We compared 12 candidates (4 feature configurations × 3 blends). A
+   race-day bootstrap with every candidate centred at zero gives the size of the best gain
+   under no real edge. The best observed candidate is within that range: on the eligible
+   folds, no-track-distance market + LightGBM +0.00065 against a chance 95th percentile of
+   +0.00144 (selection-adjusted p = 0.31); on all three folds, no-track-distance market +
+   logit +0.00142 against +0.00203 (p = 0.17). Figure
+   `analysis/overfitting_results/best_of_n_vs_chance.png`.
+
+In short: the models do not overfit, but they add almost no information beyond the
+calibrated market, and the best configuration is what picking the winner of 12 produces by
+chance.
+
+Two design points. First, h1 has 171 races on 17 race days, so its intervals are wide.
+Second, h1's validation window lies inside h_s2, so it is not independent of the HKJC Stage 2
+fit.
+
+### 4.4 Retrospective h_test diagnostic
+
+After the fold results were seen, the group froze the best pooled candidate,
+no-track-distance market + logit (pooled fold gain +0.0014, 95% CI −0.0007 to +0.0036; k1
+−0.0004, k2 +0.0008), and scored it once on h_test (1 Apr-11 Oct 2026). Its gain against the
+calibrated market there is −0.0027 (95% CI −0.0102 to +0.0051): no edge
+(`docs/submission_summary.md`, `analysis/final_scoring_results/h_test/report.md`). Because the
+test races were seen during exploration and the model was chosen after the fold results, this
+is a retrospective diagnostic, not prospective evidence.
+
+**Headline:** no model or blend shows a reliable gain over the bias-corrected market. The
+pre-registered comparison fails, the best of 12 configurations is within chance, and the
+retrospective test window is negative. The pattern that held in every split is the
+favourite-longshot bias, which the calibrated market already corrects.
 
 ## 5. Limitations
 

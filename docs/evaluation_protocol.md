@@ -64,7 +64,10 @@ exploratory.
 selection, hyperparameter selection, early stopping, tree-round selection,
 blend fitting, calibration fitting, threshold selection, or freeze decisions.
 It may be scored once only after a valid freeze. A prospective score may contain
-only races dated after the recorded freeze timestamp.
+only races dated after the recorded freeze timestamp. The currently available
+`h_test` races predate the freeze, so their one-shot score is a retrospective
+holdout diagnostic, not prospective evidence; a prospective claim requires
+newly collected post-freeze races.
 
 ## Freeze criteria
 
@@ -80,5 +83,6 @@ A final configuration may be frozen only when all of the following hold:
    registry hash; data hash; config hash; git commit; and freeze timestamp.
 
 Before one-shot scoring, the prediction file's SHA-256 must be stored with the
-freeze record. Any mismatch, missing provenance, or pre-freeze race in a
-prospective score blocks final scoring.
+freeze record. Any mismatch or missing provenance blocks final scoring. A
+pre-freeze race may be included only in the explicitly labelled retrospective
+holdout diagnostic above; it cannot support a prospective claim.

@@ -27,6 +27,7 @@ Design notes
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
 from dataclasses import dataclass, field, replace
@@ -36,6 +37,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
+from analysis import provenance as prov
 try:
     from model_logic.feature_builder import build_features
     from model_logic.feature_registry import get_features, without_trainer_rates
@@ -431,14 +433,23 @@ def main() -> int:
         action="store_true",
         help="Ablate trainer win-rate features because their cross-era stability is under review.",
     )
+    parser.add_argument(
+        "--without-track-distance",
+        action="store_true",
+        help="Ablate all registered track-distance feature-group inputs.",
+    )
     args = parser.parse_args()
+    run_record = prov.require_evidence_run(Path.cwd(), args.data)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
 
     data = build_features(pd.read_parquet(args.data))
     train = data.loc[data["split"].eq("k_train")]
     tune = data.loc[data["split"].eq("k_tune")]
-    features = list(ALL_FEATURES)
+    features = get_features(
+        "conditional_logit",
+        exclude_groups=("track_distance",) if args.without_track_distance else (),
+    )
     if args.without_trainer_rates:
         features = without_trainer_rates(features)
     base_features = [feature for feature in BASE_FEATURES if feature in features]
@@ -491,6 +502,23 @@ def main() -> int:
     (args.output_dir / "hyperparameters.json").write_text(
         json.dumps({**hp, "stage_weights": args.stage_weights}, indent=2) + "\n",
         encoding="utf-8")
+    config = {
+        "minimum_gain": args.minimum_gain,
+        "stage_weights": args.stage_weights,
+        "lambdas": args.lambdas,
+        "mkt_lambdas": args.mkt_lambdas,
+        "l1_ratio": args.l1_ratio,
+        "without_trainer_rates": args.without_trainer_rates,
+        "without_track_distance": args.without_track_distance,
+        "selected_features": selected,
+    }
+    config_hash = hashlib.sha256(
+        json.dumps(config, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    (args.output_dir / "meta.json").write_text(
+        json.dumps({**run_record, "config_hash": config_hash, "config": config}, indent=2) + "\n",
+        encoding="utf-8",
+    )
     write_report(args.output_dir, summary, selected, trace, grid,
                  train[selected].astype(float).corr(method="spearman"), coefs)
 

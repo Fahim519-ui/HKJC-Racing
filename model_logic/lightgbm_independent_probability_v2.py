@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
+from analysis import provenance as prov
 try:
     from model_logic.feature_builder import build_features
     from model_logic.feature_registry import get_features, without_trainer_rates
@@ -234,16 +236,32 @@ def main() -> int:
         action="store_true",
         help="Ablate trainer win-rate features because their cross-era stability is under review.",
     )
+    parser.add_argument(
+        "--without-track-distance",
+        action="store_true",
+        help="Ablate all registered track-distance feature-group inputs.",
+    )
     parser.add_argument("--max-rounds", type=int, default=4000)
     parser.add_argument("--no-monotone", action="store_true")
     parser.add_argument(
         "--blend-lambdas", type=float, nargs="+", default=[0.0, 0.003, 0.01, 0.03, 0.1]
     )
     args = parser.parse_args()
+    run_record = prov.require_evidence_run(root, args.data)
+    source_meta = args.conditional_logit_predictions.parent / "meta.json"
+    if not source_meta.exists():
+        raise SystemExit(f"Refusing evidence run: conditional-logit source has no {source_meta.name}")
+    prov.require(
+        prov.check_meta(json.loads(source_meta.read_text()), str(args.conditional_logit_predictions), root),
+        "LightGBM evidence run",
+    )
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     data = build_features(pd.read_parquet(args.data))
-    features = list(ALL_FEATURES)
+    features = get_features(
+        "conditional_logit",
+        exclude_groups=("track_distance",) if args.without_track_distance else (),
+    )
     if args.without_trainer_rates:
         features = without_trainer_rates(features)
     features = add_context_features(
@@ -380,6 +398,28 @@ def main() -> int:
         }
     ).sort_values("gain", ascending=False).to_csv(args.output_dir / "feature_importance.csv", index=False)
     (args.output_dir / "stage1_features.json").write_text(json.dumps(features, indent=2) + "\n")
+    config = {
+        "seeds": args.seeds,
+        "max_rounds": args.max_rounds,
+        "no_monotone": args.no_monotone,
+        "blend_lambdas": args.blend_lambdas,
+        "without_trainer_rates": args.without_trainer_rates,
+        "without_track_distance": args.without_track_distance,
+        "features": features,
+    }
+    config_hash = hashlib.sha256(
+        json.dumps(config, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    meta = {
+        **run_record,
+        "config_hash": config_hash,
+        "config": config,
+        "conditional_logit_predictions": str(args.conditional_logit_predictions),
+        "conditional_logit_meta": json.loads(source_meta.read_text()),
+    }
+    (args.output_dir / "meta.json").write_text(
+        json.dumps(meta, indent=2) + "\n", encoding="utf-8"
+    )
 
     report = [
         "# Odds-free listwise LightGBM",

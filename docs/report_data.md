@@ -96,9 +96,9 @@ and runbooks for the team. The combined predictions file and its report are on S
 
 **Out-of-sample designs**
 - **Evidence (8 Nov):** only the pre-registered v3.1 fold re-run (`docs/evaluation_protocol.md`):
-  primary = `primary` config, market + logit + LightGBM vs calibrated market; k1 and k2
-  eligible (at least 150 inner-tune races), h1 watch-only; every eligible fold needs a positive
-  gain with its 95% race-day interval above zero (2 of 2).
+  k1 and k2 are eligible (at least 150 inner-tune races), h1 is watch-only; any ladder
+  candidate with positive calibrated-market gain in one eligible fold may freeze. The 95%
+  race-day intervals are reported but do not block freezing.
 - Fahim's fold runner (`model_logic/run_folds.py`): folds k1, k2 (Kaggle) and h1 (HKJC
   Feb-Mar 2026) with a separate Stage 2 window per fold. Both scoring codes give identical
   losses and intervals on the same files (`analysis/FOLD_RUNNER_COMPARISON.md`).

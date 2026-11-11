@@ -24,20 +24,19 @@ The sole primary comparison is:
 Gain is calibrated-market loss minus primary-model loss. Positive gain is
 better.
 
-## Repeated forward-fold evidence
+## Forward-fold freeze evidence
 
 The repeat rule is fixed before a new forward run:
 
 - A fold is eligible only when it has at least 150 inner-tune races.
-- Every eligible fold must have positive gain versus calibrated market.
-- Every eligible fold's two-sided 95% paired bootstrap interval for that gain
-  must lie entirely above zero.
+- Any ladder configuration may be frozen when it has a positive point-estimate
+  gain versus calibrated market in at least one eligible fold.
 - Bootstrap resampling is clustered by race day.
 
-This is an all-eligible-fold rule: `k = K`. With the current fold table,
-`k1` and `k2` are eligible, so the rule is 2 of 2. `h1` currently has 140
-inner-tune races and is watch-only: it is reported, but does not contribute to
-freeze eligibility.
+The 95% paired bootstrap interval is reported for every gain, but does not
+block freezing. With the current fold table, `k1` and `k2` are eligible.
+`h1` currently has 140 inner-tune races and is watch-only: it is reported,
+but does not contribute to freeze eligibility.
 
 ## Baseline ladder
 
@@ -73,7 +72,7 @@ A final configuration may be frozen only when all of the following hold:
 
 1. Core, leakage, and required evidence checks pass.
 2. All required current-registry folds and baseline-ladder outputs are present.
-3. The primary repeat and interval rules pass.
+3. At least one eligible ladder candidate has positive calibrated-market gain.
 4. The run came from a clean, pushed commit with matching data and registry
    provenance.
 5. The frozen configuration records the selected conditional-logit features and

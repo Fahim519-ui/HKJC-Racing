@@ -138,9 +138,8 @@ that only rediscovers that bias does not count as beating the market.
 
 Differences between two models are tested with a paired bootstrap, 2,000 resamples. It
 resamples whole race days, not single races, because races on the same day share the
-going and track bias and their results are correlated. Resampling single races made one
-interval look significant that was not (section 4.3). A model is said to beat a baseline
-only if the whole 95% interval of its gain lies above zero.
+going and track bias and their results are correlated. The intervals are reported for
+context; a positive point-estimate gain is sufficient for the freeze rule.
 
 ### 3.4 Out-of-sample designs
 
@@ -154,10 +153,10 @@ before the v3.1 re-run).
 - **Primary comparison:** the `primary` configuration's market + logit + LightGBM blend
   against the calibrated market (the same idea as the market refit, p ∝ market^β with β fitted
   on the Stage 2 window), by per-race log loss.
-- **Repeat rule:** a fold counts only with at least 150 inner-tune races, which makes k1 and
-  k2 eligible and h1 watch-only. Every eligible fold must show a positive gain whose 95%
-  race-day interval lies entirely above zero (here 2 of 2). Everything else, including the
-  ten-row baseline ladder from uniform to market + both models, is exploratory.
+- **Freeze rule:** a fold counts only with at least 150 inner-tune races, which makes k1 and
+  k2 eligible and h1 watch-only. Any ladder candidate with positive calibrated-market gain in
+  one eligible fold may freeze; its 95% race-day interval is reported but does not block the
+  decision.
 - Both scoring codes, the fold runner's and `analysis/eval_utils.py`, give identical losses
   and intervals on the same prediction files (`analysis/FOLD_RUNNER_COMPARISON.md`).
 

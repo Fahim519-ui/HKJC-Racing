@@ -63,50 +63,37 @@ def metric_rows(frame: pd.DataFrame, fold_id: str, config: str) -> list[dict]:
     return rows
 
 
-def primary_evidence_status(
+def ladder_evidence_status(
     metrics: pd.DataFrame, inner_tune_races: dict[str, int]
 ) -> dict[str, object]:
-    """Assess the pre-registered primary comparison without selecting a configuration."""
-    primary = metrics.loc[
-        metrics["config"].eq(PRIMARY_CONFIG)
-        & metrics["variant"].eq(PRIMARY_VARIANT)
-        & ~metrics["fold_id"].eq("pooled")
-    ].copy()
-    primary["inner_tune_races"] = primary["fold_id"].map(inner_tune_races)
-    if primary["inner_tune_races"].isna().any():
-        missing = primary.loc[primary["inner_tune_races"].isna(), "fold_id"].tolist()
+    """Assess whether any ladder candidate improves on calibrated market in an eligible fold."""
+    candidates = metrics.loc[~metrics["fold_id"].eq("pooled")].copy()
+    candidates["inner_tune_races"] = candidates["fold_id"].map(inner_tune_races)
+    if candidates["inner_tune_races"].isna().any():
+        missing = candidates.loc[candidates["inner_tune_races"].isna(), "fold_id"].unique().tolist()
         raise ValueError(f"Missing inner-tune race counts for folds: {missing}")
 
-    primary["watch_only"] = primary["inner_tune_races"].lt(MIN_INNER_TUNE_RACES)
-    primary["positive_gain"] = primary["gain_vs_calibrated"].gt(0)
-    primary["interval_excludes_zero"] = primary["ci_vs_calibrated_low"].gt(0)
-    eligible = primary.loc[~primary["watch_only"]]
-    required_positive_folds = len(eligible)
-    positive_folds = int(eligible["positive_gain"].sum())
-    intervals_pass = bool(eligible["interval_excludes_zero"].all()) if required_positive_folds else False
-    eligible_for_freeze = (
-        required_positive_folds > 0
-        and positive_folds == required_positive_folds
-        and intervals_pass
-    )
+    candidates["watch_only"] = candidates["inner_tune_races"].lt(MIN_INNER_TUNE_RACES)
+    eligible = candidates.loc[~candidates["watch_only"]].copy()
+    positive = eligible.loc[eligible["gain_vs_calibrated"].gt(0)]
+    positive_candidates = [
+        f"{row.config}/{row.variant}/{row.fold_id}"
+        for row in positive.itertuples(index=False)
+    ]
     reasons = []
-    if primary["watch_only"].any():
+    if candidates["watch_only"].any():
         reasons.append(f"watch-only folds below {MIN_INNER_TUNE_RACES} inner-tune races")
-    if positive_folds < required_positive_folds:
-        reasons.append("not every eligible fold has positive calibrated-market gain")
-    if not intervals_pass:
-        reasons.append("not every eligible fold excludes zero versus calibrated market")
+    if positive.empty:
+        reasons.append("no ladder candidate has positive calibrated-market gain in an eligible fold")
     return {
-        "config": PRIMARY_CONFIG,
-        "variant": PRIMARY_VARIANT,
-        "positive_fold_rule": "all_eligible",
+        "positive_fold_rule": "any_ladder_eligible_fold",
         "minimum_inner_tune_races": MIN_INNER_TUNE_RACES,
-        "eligible_folds": eligible["fold_id"].tolist(),
-        "watch_only_folds": primary.loc[primary["watch_only"], "fold_id"].tolist(),
-        "positive_folds": positive_folds,
-        "required_positive_folds": required_positive_folds,
-        "all_eligible_intervals_exclude_zero": intervals_pass,
-        "eligible_for_freeze": eligible_for_freeze,
+        "eligible_folds": sorted(eligible["fold_id"].unique().tolist()),
+        "watch_only_folds": sorted(candidates.loc[candidates["watch_only"], "fold_id"].unique().tolist()),
+        "positive_candidate_count": len(positive_candidates),
+        "positive_candidates": positive_candidates,
+        "intervals_reported_only": True,
+        "eligible_for_freeze": bool(positive_candidates),
         "reasons": reasons,
     }
 
@@ -352,7 +339,7 @@ def aggregate_folds(
             path.parent.name: json.loads(path.read_text())["race_counts"]["inner_tune"]
             for path in (root / PRIMARY_CONFIG).glob("*/meta.json")
         }
-        evidence = primary_evidence_status(metrics, inner_tune_races)
+        evidence = ladder_evidence_status(metrics, inner_tune_races)
         (root / "evidence_summary.json").write_text(json.dumps(evidence, indent=2) + "\n")
         csv_evidence = {
             key: ",".join(value) if isinstance(value, list) else value

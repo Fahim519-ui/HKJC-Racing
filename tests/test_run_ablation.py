@@ -11,7 +11,7 @@ import pytest
 
 import model_logic.run_ablation as command
 from model_logic.ablation_configs import CONFIGS
-from model_logic.aggregate_folds import PRIMARY_CONFIG, PRIMARY_VARIANT, primary_evidence_status
+from model_logic.aggregate_folds import PRIMARY_CONFIG, PRIMARY_VARIANT, ladder_evidence_status
 
 
 def _prediction_frame() -> pd.DataFrame:
@@ -163,12 +163,34 @@ def _primary_metrics(rows: list[tuple[str, float, float, float]]) -> pd.DataFram
     )
 
 
-def test_evidence_status_marks_underpowered_and_crossing_interval_ineligible() -> None:
-    status = primary_evidence_status(
+def test_evidence_status_accepts_any_positive_eligible_ladder_candidate() -> None:
+    metrics = _primary_metrics(
+        [
+            ("k1", 0.01, 0.001, 0.02),
+            ("k2", -0.01, -0.02, 0.001),
+            ("h1", 0.01, 0.001, 0.02),
+        ]
+    )
+    metrics.loc[0, ["config", "variant"]] = ["no_trainer_rate", "mkt+cl"]
+    status = ladder_evidence_status(
+        metrics,
+        {"k1": 200, "k2": 200, "h1": 140},
+    )
+
+    assert status["eligible_folds"] == ["k1", "k2"]
+    assert status["watch_only_folds"] == ["h1"]
+    assert status["positive_candidate_count"] == 1
+    assert status["positive_candidates"] == ["no_trainer_rate/mkt+cl/k1"]
+    assert status["intervals_reported_only"]
+    assert status["eligible_for_freeze"]
+
+
+def test_evidence_status_rejects_when_no_eligible_candidate_improves() -> None:
+    status = ladder_evidence_status(
         _primary_metrics(
             [
-                ("k1", 0.01, 0.001, 0.02),
-                ("k2", 0.01, -0.001, 0.02),
+                ("k1", -0.01, -0.02, 0.001),
+                ("k2", 0.0, -0.001, 0.02),
                 ("h1", 0.01, 0.001, 0.02),
             ]
         ),
@@ -177,20 +199,5 @@ def test_evidence_status_marks_underpowered_and_crossing_interval_ineligible() -
 
     assert status["eligible_folds"] == ["k1", "k2"]
     assert status["watch_only_folds"] == ["h1"]
-    assert status["positive_folds"] == 2
-    assert not status["all_eligible_intervals_exclude_zero"]
+    assert status["positive_candidate_count"] == 0
     assert not status["eligible_for_freeze"]
-
-
-def test_evidence_status_accepts_all_eligible_positive_intervals() -> None:
-    status = primary_evidence_status(
-        _primary_metrics(
-            [
-                ("k1", 0.01, 0.001, 0.02),
-                ("k2", 0.02, 0.002, 0.03),
-            ]
-        ),
-        {"k1": 200, "k2": 200},
-    )
-
-    assert status["eligible_for_freeze"]

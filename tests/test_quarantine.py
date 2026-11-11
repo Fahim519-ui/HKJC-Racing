@@ -22,10 +22,12 @@ def test_every_quarantined_folder_exists_and_is_marked():
         assert entry["reason"].strip(), entry["path"]
 
 
-def test_stale_fold_runs_moved_out_of_the_evidence_folder():
+def test_stale_fold_runs_are_quarantined_while_current_runs_are_evidence():
     tracked = subprocess.run(["git", "-C", str(REPO), "ls-files", "artifacts/folds"],
                              capture_output=True, text=True, check=True).stdout.split()
-    assert tracked == [], f"tracked files still under artifacts/folds: {tracked[:5]}"
+    assert "artifacts/folds/primary/k1/meta.json" in tracked
+    current = REPO / "artifacts" / "folds" / "primary" / "k1"
+    assert prov.check_run_dir(current).ok
     moved = REPO / "artifacts" / "quarantine" / "folds_v3.0_fc759fe" / "primary" / "k1"
     assert (moved / "meta.json").exists()
 
@@ -45,7 +47,7 @@ def test_quarantine_match_uses_path_parts_not_prefixes(tmp_path):
     assert prov.quarantine_reason(lookalike, tmp_path, qfile) is None
 
 
-def test_combined_file_built_from_quarantined_source_is_refused():
+def test_current_combined_file_has_an_evidence_source():
     report = prov.check_predictions_file(REPO / "artifacts" / "combined" /
                                          "combined_predictions.parquet")
-    assert not report.ok
+    assert report.ok

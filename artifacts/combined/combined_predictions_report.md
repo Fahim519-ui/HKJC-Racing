@@ -1,6 +1,6 @@
 # Combined predictions
 
-Source predictions: `artifacts\lightgbm_independent_probability_v2\joint_predictions.parquet`.
+Source predictions: `artifacts/lightgbm_independent_probability_v2_no_track_distance_evidence/joint_predictions.parquet`.
 Rows: 10265 ({'h_s2': 5287, 'h_test': 4978}).
 Market-only refit beta (fitted on h_s2): 1.0537.
 
@@ -20,5 +20,10 @@ Market-only refit beta (fitted on h_s2): 1.0537.
 | `p_b_rating` | NO (Track B not built yet) | - |
 | `p_b_running` | NO (Track B not built yet) | - |
 | `p_b_all` | NO (Track B not built yet) | - |
+
+## Provenance
+
+Sidecar: `combined_predictions.provenance.json`. Passed: the source run used the live registry and published code.
+- WARNING: combined_predictions.parquet: built from a working tree with uncommitted changes: [' M artifacts/combined/combined_predictions.parquet']
 
 Track B columns are absent because Track B has not been built. Add them to this file once it exists. The file holds predictions for h_s2 and h_test; h_test is for Week 5 one-shot scoring only and is not scored here.

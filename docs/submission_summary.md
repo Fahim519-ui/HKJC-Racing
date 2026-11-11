@@ -72,16 +72,26 @@ construction, source-isolated history, chronological folds, race-day clustered
 intervals, a baseline ladder, provenance gates, and quarantine rules make the
 result auditable. The modelling claim did not generalise convincingly: the
 small pooled fold advantage is uncertain and the retrospective holdout is
-negative. The defensible conclusion is that this project built and tested a
+negative. No configuration met the original rule (every eligible fold positive
+with its 95% interval above zero). The accepted configuration was the best of 12
+configuration x blend candidates, and a race-day bootstrap of the best of 12
+shows that gain is within what choosing the best by chance produces
+(selection-adjusted p = 0.17 on all folds, 0.31 on k1 and k2). The blend does
+not overfit (mean in-sample gain +0.0017, out-of-sample +0.0018), but the model
+weights stay near zero and change sign between folds
+(`analysis/overfitting_results/report.md`). The defensible conclusion is that this project built and tested a
 rigorous probability-forecasting pipeline, but it has not established a
 repeatable improvement over market odds or profitable wagering after takeout.
 
 ## Evidence locations
 
-- Fold evidence: regenerate `artifacts/folds/` with
-  `python -m model_logic.run_ablation --folds model_logic/validation/folds.csv --out artifacts/folds`;
-  current local outputs include `ablation_metrics.csv` and each configuration's
-  `fold_metrics.csv` and `ladder.md`.
+- Fold evidence: committed under `artifacts/folds/` (run on commit `1042a3d`,
+  every run passing `analysis/provenance.py`): `ablation_metrics.csv`,
+  `evidence_summary.json` and each configuration's `fold_metrics.csv` and
+  `ladder.md`. Regenerate with
+  `python -m model_logic.run_ablation --folds model_logic/validation/folds.csv --out artifacts/folds`.
+- Overfitting and best-of-N checks: `analysis/overfitting_results/report.md`
+  (`python analysis/overfitting_check.py`).
 - Frozen prediction provenance:
   `artifacts/combined/combined_predictions.provenance.json`.
 - One-shot retrospective score:

@@ -95,7 +95,7 @@ and runbooks for the team. The combined predictions file and its report are on S
   although the registry was v3.1; the scores themselves showed no sign of this.
 
 **Out-of-sample designs**
-- **Evidence (8 Nov):** only the pre-registered v3.1 fold re-run (`docs/evaluation_protocol.md`):
+- **Evidence:** only the v3.1 fold re-run (`docs/evaluation_protocol.md`; freeze rule relaxed on 11 Nov after the results):
   k1 and k2 are eligible (at least 150 inner-tune races), h1 is watch-only; any ladder
   candidate with positive calibrated-market gain in one eligible fold may freeze. The 95%
   race-day intervals are reported but do not block freezing.
@@ -108,10 +108,12 @@ and runbooks for the team. The combined predictions file and its report are on S
 
 ## 3. Results so far (no h_test)
 
-**Status (8 Nov):** every result in this section comes from a run that is now quarantined as
-non-evidence (`analysis/quarantine.json`), except the longshot-bias table. They are kept as
-diagnostics and for orientation; the report quotes only the v3.1 re-run. See
-`docs/report_inns_sections.md` section 4.3 for the evidence placeholders.
+**Status (8 Nov, updated 11 Nov):** every result in this section comes from a run that is now
+quarantined as non-evidence (`analysis/quarantine.json`), except the longshot-bias table. They
+are kept as diagnostics and for orientation. The v3.1 evidence (`artifacts/folds/`, commit
+`1042a3d`) is in `docs/report_inns_sections.md` section 4.3 and
+`analysis/overfitting_results/report.md`: primary `mkt+cl+lgbm` vs calibrated market k1
+−0.00041, k2 +0.00065, pooled +0.00103 (−0.00126 to +0.00331); no interval excludes zero.
 
 **Earlier "residual edge" claim not supported** (diagnostic; `leakage test/result.md` §3): +0.0013
 log-loss gain over the market when the scored period also chose the tree count; +0.00005
@@ -138,7 +140,7 @@ keeps `int_jt_strength_x_field_size`, which also uses the trainer rate
 
 **Fahim's fold runner** (stale v3.0 runs, now `legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/`), pooled k1+k2+h1, 927 races, gain vs calibrated
 market: market + logit +0.0016 (−0.0005 to +0.0037); market + both +0.0015 (−0.0007 to
-+0.0038). *Stale: registry v3.0, unpushed code. Re-run on v3.1 before quoting.*
++0.0038). *Stale: registry v3.0, unpushed code; superseded by the 11 Nov v3.1 run above.*
 
 **Stage 2 weights** (`legacy_code/analysis/stage2_results/report.md`, in-sample) *diagnostic, not evidence
 (quarantined); the report uses the weights in each fold's `blend.json` from the v3.1 re-run
@@ -202,7 +204,8 @@ Other limitations:
   no v3.1 features) and the rolling validation (stand-in models) are quarantined; only the
   v3.1 re-run is evidence. The provenance check blocks quarantined runs from freeze and scoring.
 - **Few folds, strict rule:** two eligible folds of about 380 races give wide intervals; the
-  pre-registered repeat rule can fail even if a small real edge exists.
+  original repeat rule (every eligible fold positive with its interval above zero) failed,
+  which can happen even if a small real edge exists. The rule was relaxed afterwards.
 - **Code provenance:** until 8 Nov the fold runner recorded the commit even with uncommitted
   edits. The run-gate now refuses a dirty tree or an unpushed commit, so only runs made through
   it prove their code.
@@ -210,8 +213,8 @@ Other limitations:
   correlated, so true uncertainty is larger.
 - **Non-random missing data** in HKJC horse profiles (handled by never using missingness).
 - **Better probabilities ≠ profit:** the HKJC takeout is not modelled.
-- **Track B** (running-style models) not built; sub-question 1 must be answered from the
-  feature-family ablations instead, or Track B dropped explicitly.
+- **Track B** (running-style models) was not built; sub-question 1 is answered from the
+  feature-group ablations (`docs/report_inns_sections.md` section 4.3).
 
 ## 5. References
 

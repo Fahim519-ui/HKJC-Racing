@@ -3,7 +3,7 @@
 | Document | Description |
 |---|---|
 | [DATA_RULES.md](DATA_RULES.md) | Data handling, leakage, and modelling rules. |
-| [evaluation_protocol.md](evaluation_protocol.md) | Pre-registered forward-evaluation and freeze criteria. |
+| [evaluation_protocol.md](evaluation_protocol.md) | Forward-evaluation and freeze criteria (freeze rule relaxed on 11 Nov after the fold results; see submission_summary.md). |
 | [WEEK3-4_PLAN.md](WEEK3-4_PLAN.md) | Historical modelling plan and split definitions. |
 | [conditional-logit-runbook.md](conditional-logit-runbook.md) | Conditional-logit workflow notes. |
 | [features_v3_track_distance.md](features_v3_track_distance.md) | Track/distance feature design and validation notes. |

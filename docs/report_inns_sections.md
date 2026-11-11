@@ -139,8 +139,9 @@ context; a positive point-estimate gain is sufficient for the freeze rule.
 
 ### 3.4 Out-of-sample designs
 
-The evidence comes from one pre-registered design (`docs/evaluation_protocol.md`, committed
-before the v3.1 re-run).
+The evidence comes from one forward-fold design (`docs/evaluation_protocol.md`). Its fold
+table and primary comparison were fixed before the v3.1 re-run; its freeze rule was relaxed
+afterwards (see "How the rule changed" below).
 
 - **Fold runner** (`model_logic/run_folds.py`, run through `model_logic/run_ablation.py`):
   folds k1 and k2 on Kaggle and h1 on HKJC (Feb-Mar 2026), each with its own Stage 1
@@ -338,13 +339,16 @@ Other limitations:
 - **Code provenance.** Until 8 November the fold runner recorded the commit even if the
   working tree had uncommitted edits. The run-gate now refuses such runs; earlier runs cannot
   prove their code.
-- **Stage 2 standard errors** treat races as independent; same-day races are correlated,
-  so the true uncertainty is larger.
+- **Rule changed after the results.** The freeze rule was relaxed after the fold results were
+  seen, and the frozen model is the best of 12 candidates; its selection-adjusted p is 0.17
+  (0.31 on k1 and k2 only).
+- **Two seeds.** LightGBM was bagged over 2 seeds per fold, so part of the fold-to-fold
+  variation may be seed noise.
 - **Non-random missing data** in HKJC horse profiles, handled by never using missingness.
 - **Probability is not profit.** Better log loss than the market does not imply a profit
   after the HKJC's 17.5% deduction, which we do not model.
-- **Track B** (running-style models): [DECIDE: built, or dropped explicitly; if dropped,
-  sub-question 1 is answered from the feature-family ablations.]
+- **Track B** (HKJC-only running-style and rating models) was not built. Sub-question 1 (which
+  feature groups matter) is answered from the feature-group ablations in section 4.3.
 
 ## References
 

@@ -14,6 +14,7 @@ forward-fold evidence, freezing, and final scoring are fixed in
 | `final_scoring.py` | Dry run on h_s2, freeze record, then the one-shot h_test scoring | Only in `--final` |
 | `build_combined_predictions.py` | One predictions file with every model and baseline | Writes predictions only, scores nothing |
 | `provenance.py` | Refuses predictions not made by the live registry and published code | No (reads `meta.json` files only) |
+| `overfitting_check.py` | In-sample vs out-of-sample gain, Stage 2 weight stability across folds, best-of-N selection test | No (fold files only) |
 
 Run everything from the repo root with the project venv active.
 
@@ -192,8 +193,13 @@ python analysis/final_scoring.py --final --confirm "score h_test once"     # 3. 
    their h_s2 fits), and writes `scoreboard.csv`, `calibration.csv` and `report.md`. A second
    run is refused.
 
-Order for Week 5: Track B columns added to the combined file, rebuild, upload to S3, dry run,
-freeze, commit, then the final run.
+Status (11 Nov): done. Track B was not built. The freeze record
+(`final_scoring_results/freeze_record.json`, freeze 2026-11-11T09:06:43Z, git `403aac4`,
+0 dirty files) and the one-shot h_test outputs (`final_scoring_results/h_test/`) are committed.
+The freeze rule was relaxed on 11 Nov after the fold results were seen (no configuration met
+the original rule: every eligible fold positive with its interval above zero), so the h_test
+score is a retrospective diagnostic, not a pre-registered test. See
+`docs/submission_summary.md` and `overfitting_results/report.md`.
 
 ## Tests
 

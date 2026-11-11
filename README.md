@@ -305,8 +305,9 @@ provenance. Aggregation writes no `meta.json` of its own.
 
 With all configurations, aggregation also writes `ablation_metrics.csv`,
 `ablation_feature_selection_frequency.csv`, `evidence_summary.json`, and
-`evidence_summary.csv` under `artifacts/folds/`. These files are ignored for new paths and
-must be regenerated before they are cited.
+`evidence_summary.csv` under `artifacts/folds/`. The v3.1 evidence run of 11 Nov (commit
+`1042a3d`, every run passing `analysis/provenance.py`) is committed there with
+`git add -f`, because `artifacts/` is git-ignored for new paths.
 
 The interval helper
 [`model_logic/validation/evaluation.py`](model_logic/validation/evaluation.py) uses a paired
@@ -399,8 +400,12 @@ one-shot holdout report are complete. The concise, submission-ready account is
 [`docs/submission_summary.md`](docs/submission_summary.md). In brief, the selected
 no-track-distance market-plus-logit blend has a small pooled validation gain
 (+0.001423 against calibrated market) whose interval crosses zero; its retrospective
-holdout score is worse than market. The fold artifacts under `artifacts/folds/` are
-generated and ignored for new paths, so rerun the documented command before citing them.
+holdout score is worse than market. No configuration met the original rule (every eligible
+fold positive with its interval above zero), and the best of the 12 configuration x blend
+candidates is within what choosing the best by chance produces
+([`analysis/overfitting_results/report.md`](analysis/overfitting_results/report.md)).
+The v3.1 fold artifacts are committed under `artifacts/folds/` (commit `1042a3d`, provenance
+passed).
 
 The earlier tracked fold runs record registry `v3.0` and commit `fc759fe`; on 8 Nov they were
 moved to `legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/` and listed in
@@ -418,11 +423,10 @@ point estimate is compatible with no gain because the interval crosses zero. The
 Kaggle folds did not agree (`k1`: `-0.000311`; `k2`: `0.000661`), and the positive HKJC `h1`
 estimate (`0.007414`) is watch-only because its tuning period has fewer than 150 races.
 
-An earlier version of this section quoted a ladder (`artifacts/folds/primary/ladder.md`) with
-different values (pooled `0.001030`). That file is not in the repository or in the quarantined
-runs, which have no baseline rungs, so those values, and the draw-only and original-logit
-ladder steps quoted with them, cannot be checked and were removed on 11 Nov. The ladder will
-first exist in the v3.1 rerun.
+An earlier version of this section quoted a ladder with pooled `0.001030`. The v3.1 rerun
+confirms it: [`artifacts/folds/primary/ladder.md`](artifacts/folds/primary/ladder.md) gives the
+primary `mkt+cl+lgbm` pooled gain `+0.001030` (k1 `-0.000414`, k2 `+0.000653`, h1 `+0.005061`),
+with every eligible-fold interval crossing zero.
 
 ### General limitations
 

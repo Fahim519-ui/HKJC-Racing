@@ -159,6 +159,11 @@ python analysis/final_scoring.py --final --confirm "score h_test once"     # 3. 
    predictions file, git commit and any uncommitted files, rows and races per split, columns,
    which models will be scored, and (with `--s3-uri`) the S3 VersionId and ETag of the uploaded
    copy (uses AWS profile `cloudpc`, region `ap-southeast-1`). It reads no h_test outcome.
+   Since 8 Nov it also records `freeze_timestamp_utc`, each split's race-date range and the
+   number of races dated after the freeze day (ids, splits and dates only). This is recorded,
+   not enforced: whether the final score may use only post-freeze races
+   (`docs/evaluation_protocol.md`) is still a group decision, and every h_test race
+   (Apr-Oct 2026) is dated before a 12 Nov freeze. The final report repeats these numbers.
    Commit the record before the final run.
 3. **Final** refuses unless the confirmation phrase is given, the freeze record exists, the
    predictions file still has the frozen SHA-256, and `final_scoring_results/h_test/` does not
@@ -174,7 +179,8 @@ freeze, commit, then the final run.
 `tests/test_eval_and_final_scoring.py` uses only synthetic data. It checks the h_test guard
 (by split and by date), the dead-heat rule, the day bootstrap (against a manual resample and
 against Fahim's `paired_bootstrap_gain`), and every refusal path of `final_scoring.py`
-(no confirmation, no freeze record, changed file, second run).
+(no confirmation, no freeze record, changed file, second run), and that the freeze record
+stores the freeze timestamp and race-date summary.
 
 ```
 python -m pytest "leakage test/test_leakage.py" tests -q -p no:cacheprovider

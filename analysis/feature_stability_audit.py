@@ -83,6 +83,9 @@ def build(data_path: Path, all_registry: bool = False) -> tuple[pd.DataFrame, li
     wanted = scripts | registry_models | (registry_all if all_registry else set())
     # a feature the builder does not produce cannot be audited; report it instead of crashing
     feats = {f for f in wanted if f in data.columns}
+    # SMD/PSI/effects need numbers; a text column (td_distance_band, v3.1) is reported, not audited
+    not_numeric = sorted(f for f in feats if not pd.api.types.is_numeric_dtype(data[f]))
+    feats -= set(not_numeric)
     order = {"rc": 0, "hf": 1, "jt": 2, "jtp": 3, "td": 4, "w3": 5}
     feats = sorted(feats, key=lambda f: (order.get(f.split("_")[0], 9), f))
     coverage = {
@@ -90,7 +93,8 @@ def build(data_path: Path, all_registry: bool = False) -> tuple[pd.DataFrame, li
         "registry_hash": registry_hash(),
         "registry_implemented": len(registry_all),
         "registry_implemented_not_audited": sorted(registry_all - set(feats)),
-        "wanted_but_not_built": sorted(wanted - set(feats)),
+        "wanted_but_not_built": sorted(wanted - set(feats) - set(not_numeric)),
+        "not_numeric_skipped": not_numeric,
         "all_registry": all_registry,
     }
     return data, feats, coverage
@@ -321,7 +325,10 @@ def report(summary: pd.DataFrame, meta: dict, path: Path) -> None:
               f"Registry `{cov.get('registry_version', '?')}` (hash `{str(cov.get('registry_hash', ''))[:12]}...`). "
               f"{cov.get('registry_implemented', '?')} implemented features; "
               f"{len(cov.get('registry_implemented_not_audited', []))} not audited in this run "
-              f"({'all registry features' if cov.get('all_registry') else 'default: model inputs only; use --all-registry for helper columns'}).", ""]
+              f"({'all registry features' if cov.get('all_registry') else 'default: model inputs only; use --all-registry for helper columns'})."
+              + (f" Text columns reported but not audited (no SMD/PSI for categories): "
+                 f"{', '.join('`' + f + '`' for f in cov['not_numeric_skipped'])}."
+                 if cov.get("not_numeric_skipped") else ""), ""]
     if "status_agrees" in summary.columns:
         bad = summary.loc[~summary["status_agrees"]]
         if bad.empty:

@@ -87,21 +87,31 @@ and runbooks for the team. The combined predictions file and its report are on S
   although the registry was v3.1; the scores themselves showed no sign of this.
 
 **Out-of-sample designs**
-- Rolling validation (`analysis/rolling_validation.py`): 3 chronological Kaggle folds; tree
-  count chosen inside training; blend weights fitted on an out-of-fold inner split.
+- **Evidence (8 Nov):** only the pre-registered v3.1 fold re-run (`docs/evaluation_protocol.md`):
+  primary = `primary` config, market + logit + LightGBM vs calibrated market; k1 and k2
+  eligible (at least 150 inner-tune races), h1 watch-only; every eligible fold needs a positive
+  gain with its 95% race-day interval above zero (2 of 2).
 - Fahim's fold runner (`model_logic/run_folds.py`): folds k1, k2 (Kaggle) and h1 (HKJC
   Feb-Mar 2026) with a separate Stage 2 window per fold. Both scoring codes give identical
   losses and intervals on the same files (`analysis/FOLD_RUNNER_COMPARISON.md`).
+- Rolling validation (`analysis/rolling_validation.py`): 3 chronological Kaggle folds; tree
+  count chosen inside training; blend weights fitted on an out-of-fold inner split.
+  **Diagnostic, not evidence** (`analysis/quarantine.json`): stand-in models, no run record.
 
 ## 3. Results so far (no h_test)
 
-**Earlier "residual edge" claim not supported** (`leakage test/result.md` §3): +0.0013
+**Status (8 Nov):** every result in this section comes from a run that is now quarantined as
+non-evidence (`analysis/quarantine.json`), except the longshot-bias table. They are kept as
+diagnostics and for orientation; the report quotes only the v3.1 re-run. See
+`docs/report_inns_sections.md` section 4.3 for the evidence placeholders.
+
+**Earlier "residual edge" claim not supported** (diagnostic; `leakage test/result.md` §3): +0.0013
 log-loss gain over the market when the scored period also chose the tree count; +0.00005
 (−0.0008 to +0.0009) when chosen on training data only; −0.0009 (−0.0036 to +0.0018)
 against the bias-corrected market.
 
 **Rolling validation, registry v3.1 features, Kaggle only** (`analysis/rolling_validation_results/report.md`)
-*provisional (stand-in models, see Limitations)*
+*diagnostic, not evidence (stand-in models, no run record; quarantined)*
 
 | Model | Pooled log loss | Gain vs market refit | 95% CI |
 |---|---:|---:|---|
@@ -119,7 +129,9 @@ Removing the trainer features changes nothing measurable (market + logit −0.00
 market: market + logit +0.0016 (−0.0005 to +0.0037); market + both +0.0015 (−0.0007 to
 +0.0038). *Stale: registry v3.0, unpushed code. Re-run on v3.1 before quoting.*
 
-**Stage 2 weights** (`analysis/stage2_results/report.md`, in-sample) *provisional*. The whole
+**Stage 2 weights** (`analysis/stage2_results/report.md`, in-sample) *diagnostic, not evidence
+(quarantined); the report uses the out-of-sample weights from each fold's `blend.json` in the
+v3.1 re-run instead*. The whole
 table is stamped UNVERIFIED: no window passes the provenance check yet. The fold windows come
 from the stale v3.0 runs, and the h_s2 window comes from the 5 Nov LightGBM v2 predictions in
 the combined file, which have no `meta.json`. Re-run on v3.1 before quoting. As it stands: on
@@ -133,8 +145,9 @@ longshots (market deciles 1-2) win less often than the odds imply in every non-t
 (observed/predicted 0.889 Kaggle train, 0.657 Kaggle tune, 0.717 HKJC Stage 2). Favourites:
 1.058, 0.978, 1.050. Consistent with the literature (Snowberg & Wolfers 2010).
 
-**Headline so far:** no model or blend shows a gain over the bias-corrected market whose 95%
-interval excludes zero, in any design. The only stable pattern is the longshot bias.
+**Orientation only, not a headline:** none of these diagnostics showed a gain over the
+bias-corrected market whose 95% interval excludes zero, and the only pattern that held in every
+split is the longshot bias. The headline waits for the v3.1 primary comparison.
 
 ## 4. Limitations (paste-ready)
 
@@ -166,12 +179,14 @@ Other limitations:
   evidence for the main blend.
 - **Five-year gap** between Kaggle (to 2020) and HKJC (from Sep 2025); short HKJC histories
   shift several features. The trainer rate behaves differently across eras.
-- **Fold runs are stale** until re-run: registry v3.0, unpushed commit, so they exclude the
-  v3.1 features. The provenance check now blocks such runs from freeze and final scoring.
-- **Stand-in models** in the rolling validation (binary LightGBM, unpenalised logit), not the
-  tuned production models.
-- **Code provenance:** the fold runner records the commit even if the working tree had
-  uncommitted edits; only a run from a clean checkout proves the code.
+- **Earlier runs are diagnostics only:** the 6 Nov fold runs (registry v3.0, unpushed commit,
+  no v3.1 features) and the rolling validation (stand-in models) are quarantined; only the
+  v3.1 re-run is evidence. The provenance check blocks quarantined runs from freeze and scoring.
+- **Few folds, strict rule:** two eligible folds of about 380 races give wide intervals; the
+  pre-registered repeat rule can fail even if a small real edge exists.
+- **Code provenance:** until 8 Nov the fold runner recorded the commit even with uncommitted
+  edits. The run-gate now refuses a dirty tree or an unpushed commit, so only runs made through
+  it prove their code.
 - **Standard errors** in the Stage 2 table treat races as independent; same-day races are
   correlated, so true uncertainty is larger.
 - **Non-random missing data** in HKJC horse profiles (handled by never using missingness).

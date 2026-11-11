@@ -1,8 +1,8 @@
 {
-  "generated": "2026-11-07 13:51",
+  "generated": "2026-11-08 19:27",
   "data": "runners_merged.parquet",
   "data_sha256": "d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0",
-  "repo_commit": "388aa09",
+  "repo_commit": "fdb8198",
   "n_features": 42,
   "features": [
     "rc_draw_pct",
@@ -94,6 +94,7 @@
       "td_track_starts"
     ],
     "wanted_but_not_built": [],
+    "not_numeric_skipped": [],
     "all_registry": false
   }
 }

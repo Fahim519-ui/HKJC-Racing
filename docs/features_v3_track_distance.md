@@ -155,7 +155,10 @@ to v2. Every v2 column produced by `build_features()` is bit-for-bit unchanged
 Status comes from the stability audit (`analysis/feature_stability_results/stability_report.md`,
 6 Nov): 13 of the 15 audited v3.1 model features are `keep`; `tr_days_since_bucket` and
 `tr_fin_pct_slope3_rel` are `watch`. The `td_*_starts` history-depth columns and
-`td_distance_band` are not model inputs and stay `unaudited`.
+`td_distance_band` are not model inputs. The 8 Nov `--all-registry` audit
+(`analysis/feature_stability_results/STABILITY_V3_1.md`) finds the three `td_*_starts`
+columns `watch` (shorter HKJC history); `td_distance_band` is a text label and is not audited.
+Their registry label stays `unaudited` until Fahim decides whether to update it.
 
 ## Exploratory check (not used for any decision)
 

@@ -118,7 +118,7 @@ log-loss gain over the market when the scored period also chose the tree count; 
 (−0.0008 to +0.0009) when chosen on training data only; −0.0009 (−0.0036 to +0.0018)
 against the bias-corrected market.
 
-**Rolling validation, registry v3.1 features, Kaggle only** (`analysis/rolling_validation_results/report.md`)
+**Rolling validation, registry v3.1 features, Kaggle only** (`legacy_code/analysis/rolling_validation_results/report.md`)
 *diagnostic, not evidence (stand-in models, no run record; quarantined)*
 
 | Model | Pooled log loss | Gain vs market refit | 95% CI |
@@ -136,11 +136,11 @@ keeps `int_jt_strength_x_field_size`, which also uses the trainer rate
 (`analysis/rolling_validation.py` `main`), so it is not the same ablation as the fold runner's
 `no_trainer_rate` (`model_logic/ablation_configs.py`, `TRAINER_RATE_FEATURES`).
 
-**Fahim's fold runner** (stale v3.0 runs, now `artifacts/quarantine/folds_v3.0_fc759fe/`), pooled k1+k2+h1, 927 races, gain vs calibrated
+**Fahim's fold runner** (stale v3.0 runs, now `legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/`), pooled k1+k2+h1, 927 races, gain vs calibrated
 market: market + logit +0.0016 (−0.0005 to +0.0037); market + both +0.0015 (−0.0007 to
 +0.0038). *Stale: registry v3.0, unpushed code. Re-run on v3.1 before quoting.*
 
-**Stage 2 weights** (`analysis/stage2_results/report.md`, in-sample) *diagnostic, not evidence
+**Stage 2 weights** (`legacy_code/analysis/stage2_results/report.md`, in-sample) *diagnostic, not evidence
 (quarantined); the report uses the weights in each fold's `blend.json` from the v3.1 re-run
 instead. Those are also fitted on the fold's Stage 2 window (`model_logic/run_folds.py`
 `add_stage2_variants`), but they are scored on the later validation window, so the blend's
@@ -153,7 +153,7 @@ SE 0.106) with β = 1.237 on the market; on Kaggle windows α is near 0 (k1 +0.0
 SE ≈ 0.10). Read: on HKJC the blend gains by leaning against the model, acting as an extra
 favourite-longshot correction rather than adding the model's information.
 
-**Favourite-longshot bias** (`artifacts/market_diagnostics/longshot_bias_evidence.md`):
+**Favourite-longshot bias** (`legacy_code/artifacts/market_diagnostics/longshot_bias_evidence.md`):
 longshots (market deciles 1-2) win less often than the odds imply in every non-test split
 (observed/predicted 0.889 Kaggle train, 0.657 Kaggle tune, 0.717 HKJC Stage 2). Favourites:
 1.058, 0.978, 1.050. Consistent with the literature (Snowberg & Wolfers 2010).

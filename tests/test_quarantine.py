@@ -28,12 +28,12 @@ def test_stale_fold_runs_are_quarantined_while_current_runs_are_evidence():
     assert "artifacts/folds/primary/k1/meta.json" in tracked
     current = REPO / "artifacts" / "folds" / "primary" / "k1"
     assert prov.check_run_dir(current).ok
-    moved = REPO / "artifacts" / "quarantine" / "folds_v3.0_fc759fe" / "primary" / "k1"
+    moved = REPO / "legacy_code" / "artifacts" / "quarantine" / "folds_v3.0_fc759fe" / "primary" / "k1"
     assert (moved / "meta.json").exists()
 
 
 def test_provenance_refuses_runs_inside_quarantine():
-    run = REPO / "artifacts" / "quarantine" / "folds_v3.0_fc759fe" / "primary" / "k1"
+    run = REPO / "legacy_code" / "artifacts" / "quarantine" / "folds_v3.0_fc759fe" / "primary" / "k1"
     report = prov.check_run_dir(run)
     assert any("quarantined" in problem for problem in report.problems)
 

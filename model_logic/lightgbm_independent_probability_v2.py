@@ -223,12 +223,12 @@ def main() -> int:
     parser.add_argument(
         "--conditional-logit-predictions",
         type=Path,
-        default=root / "artifacts/conditional_logit_tuning_v2/predictions.parquet",
+        default=root / "artifacts/conditional_logit_tuning_v2_evidence/predictions.parquet",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=root / "artifacts/lightgbm_independent_probability_v2",
+        default=root / "artifacts/lightgbm_independent_probability_v2_evidence",
     )
     parser.add_argument("--seeds", type=int, default=5)
     parser.add_argument(

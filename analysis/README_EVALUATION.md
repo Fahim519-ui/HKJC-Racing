@@ -19,7 +19,7 @@ Run everything from the repo root with the project venv active.
 
 ## Provenance check (added 7 Nov)
 
-Every fold run then in `artifacts/folds/` (6 Nov; moved to `artifacts/quarantine/folds_v3.0_fc759fe/` on 8 Nov) recorded `registry_version: v3.0` and commit
+Every fold run then in `artifacts/folds/` (6 Nov; moved to `legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/` on 8 Nov) recorded `registry_version: v3.0` and commit
 `fc759fe`, which is not on GitHub. The registry was already v3.1, so those runs never used
 the track/distance, trajectory or interaction features, and the scores gave no sign of it.
 `provenance.py` now checks each run's `meta.json`:
@@ -58,7 +58,7 @@ full commit, `git_dirty: false`, `evidence: true`, the data, registry and config
 `analysis/quarantine.json` lists folders that are not evidence; each has a `NOT_EVIDENCE.md`
 saying why and what replaces it. `provenance.check_run_dir` and `check_predictions_file` refuse
 anything inside them (matched by resolved path parts). The 6 Nov v3.0 fold runs were moved to
-`artifacts/quarantine/folds_v3.0_fc759fe/`, so the v3.1 re-run writes into an empty `artifacts/folds/`.
+`legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/`; current v3.1 evidence is in `artifacts/folds/`.
 Quarantined: the v3.0 folds, the rolling validation, both market-offset folders, the Stage 2
 table, and the 3-5 Nov LightGBM / partnership result folders (the current combined predictions
 file is built from one of them, so it cannot be frozen until rebuilt from a v3.1 run).
@@ -68,12 +68,8 @@ git fetch origin
 python analysis/provenance.py        # checks the combined file and artifacts/folds/primary
 ```
 
-Today this fails on purpose: the combined file was built from the 5 Nov LightGBM v2 output,
-which has no `meta.json`, and the fold runs are v3.0 from an unpushed commit. To pass, the
-model scripts must write a `meta.json` (as `run_folds.py` does) from a clean checkout of a
-pushed commit on registry v3.1, and the combined file must be rebuilt from that run.
-Limitation: `run_folds.py` records `git rev-parse HEAD` even if the tree had uncommitted
-edits, so only a run from a clean checkout really proves the code.
+The current combined file and v3.1 fold runs pass this check. Earlier non-evidence outputs are
+retained under `legacy_code/` and refused by the quarantine list.
 
 ## Frozen odds-free baseline ladder
 
@@ -152,7 +148,7 @@ logit here is unpenalised, so on each fold's training window it drops a feature 
 |Spearman| > 0.9 with an earlier kept one, or that is an exact linear combination of kept ones
 (e.g. `tr_last_minus_avg3_fin_pct_rel`). The dropped list is printed in the report.
 
-Outputs: `analysis/rolling_validation_results/{fold_metrics,pooled_summary,ablation_no_trainer}.csv`
+Historical outputs: `legacy_code/analysis/rolling_validation_results/{fold_metrics,pooled_summary,ablation_no_trainer}.csv`
 and `report.md`. Current result (6 Nov): no blend beats the refit; the best is
 `mkt_cl` at +0.0003 (95% CI -0.0013 to +0.0020). Removing trainer features does not help.
 
@@ -166,7 +162,7 @@ Refits `score = beta * log p_market + alpha * log p_model` as a plain conditiona
 Stage 2 window (HKJC `h_s2` from the combined file, and the `s2` rows of Fahim's folds k1, k2,
 h1), so each weight has a standard error, and tests each blend against market only
 (likelihood ratio). The ridge-penalised weights the team's scripts used are listed next to it.
-All of it is in-sample. Outputs in `analysis/stage2_results/`. See its `report.md` for how to
+All of it is in-sample. Historical outputs are in `legacy_code/analysis/stage2_results/`. See its `report.md` for how to
 read it.
 
 ## final_scoring.py

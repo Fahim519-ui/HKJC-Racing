@@ -46,7 +46,7 @@ TRACK_B = ["p_b_base", "p_b_rating", "p_b_running", "p_b_all"]
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--predictions", type=Path,
-                        default=REPO / "artifacts/lightgbm_independent_probability_v2/joint_predictions.parquet")
+                        default=REPO / "artifacts/lightgbm_independent_probability_v2_no_track_distance_evidence/joint_predictions.parquet")
     parser.add_argument("--clean", type=Path, default=REPO / "data/clean data/runners_merged.parquet")
     parser.add_argument("--output", type=Path, default=REPO / "artifacts/combined/combined_predictions.parquet")
     parser.add_argument("--source-meta", type=Path, default=None,

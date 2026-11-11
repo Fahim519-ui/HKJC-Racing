@@ -421,7 +421,7 @@ def main() -> int:
                         default=local_feat if local_feat.exists()
                         else local if local.exists() else sage)
     parser.add_argument("--output-dir", type=Path,
-                        default=Path("artifacts/conditional_logit_tuning"))
+                        default=Path("artifacts/conditional_logit_tuning_v2_evidence"))
     parser.add_argument("--minimum-gain", type=float, default=0.001)
     parser.add_argument("--stage-weights", type=float, nargs="+", default=[1.0],
                         help="Exploded-logit weights for win/2nd/3rd...; e.g. 1 0.4 0.2.")

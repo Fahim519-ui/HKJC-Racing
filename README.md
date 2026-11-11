@@ -403,7 +403,7 @@ holdout score is worse than market. The fold artifacts under `artifacts/folds/` 
 generated and ignored for new paths, so rerun the documented command before citing them.
 
 The earlier tracked fold runs record registry `v3.0` and commit `fc759fe`; on 8 Nov they were
-moved to `artifacts/quarantine/folds_v3.0_fc759fe/` and listed in
+moved to `legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/` and listed in
 `analysis/quarantine.json`. They remain stale diagnostics, not evidence.
 
 ### Preliminary diagnostic (not current evidence)
@@ -411,7 +411,7 @@ moved to `artifacts/quarantine/folds_v3.0_fc759fe/` and listed in
 The stale v3.0 primary runs contain a useful, but non-decisive, diagnostic. Across their pooled
 927 validation races, `mkt+cl+lgbm` reduced loss by `0.001510` relative to the calibrated market;
 the paired 95% race-day bootstrap interval was `[-0.000715, 0.003848]`
-([`artifacts/quarantine/folds_v3.0_fc759fe/primary/fold_metrics.csv`](artifacts/quarantine/folds_v3.0_fc759fe/primary/fold_metrics.csv),
+([`legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/primary/fold_metrics.csv`](legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/primary/fold_metrics.csv),
 the same numbers as [`docs/report_data.md`](docs/report_data.md) and
 [`analysis/FOLD_RUNNER_COMPARISON.md`](analysis/FOLD_RUNNER_COMPARISON.md)). This small positive
 point estimate is compatible with no gain because the interval crosses zero. The two eligible

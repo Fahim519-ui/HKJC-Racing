@@ -1,6 +1,6 @@
 # Fahim's fold runner vs eval_utils / rolling_validation (checked 6 Nov)
 
-> **Update 8 Nov:** the stale runs below were moved to `artifacts/quarantine/folds_v3.0_fc759fe/` and quarantined
+> **Update 8 Nov:** the stale runs below were moved to `legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/` and quarantined
 > (`analysis/quarantine.json`); `artifacts/folds/` now holds only fresh v3.1 runs.
 >
 > **Update 7 Nov: these fold runs are stale.** Every `meta.json` under `artifacts/folds/`
@@ -20,7 +20,7 @@ the same thing: no blend shows a clear gain over the calibrated market.
 ## 1. Same predictions, our scoring code
 
 `eval_utils` was run on Fahim's own prediction files,
-`artifacts/quarantine/folds_v3.0_fc759fe/primary/{k1,k2,h1}/predictions.parquet` (then under `artifacts/folds/`) (`role == "valid"` rows), against his
+`legacy_code/artifacts/quarantine/folds_v3.0_fc759fe/primary/{k1,k2,h1}/predictions.parquet` (then under `artifacts/folds/`) (`role == "valid"` rows), against his
 `fold_metrics.csv`. Gain is calibrated-market loss minus blend loss (positive means the blend
 is better). CI is the 95% race-day bootstrap, seed 0.
 

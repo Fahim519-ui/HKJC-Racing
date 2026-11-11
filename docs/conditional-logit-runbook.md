@@ -3,7 +3,7 @@
 Run this in SageMaker from the repository root:
 
 ```bash
-python modeling/conditional_logit_tuning.py
+python legacy_code/modeling/conditional_logit_tuning.py
 ```
 
 The script automatically prefers the latest pushed Week-3 feature table,
@@ -26,17 +26,17 @@ mkdir -p ~/dsfm/modeling
 aws s3 cp s3://inns-elec3544-dsfm-sagemaker/code/fahim/conditional_logit_tuning.py \
   ~/dsfm/modeling/
 cd ~/dsfm
-python modeling/conditional_logit_tuning.py
+python legacy_code/modeling/conditional_logit_tuning.py
 ```
 
-Upload `modeling/conditional_logit_tuning.py` to `code/fahim/` before this
+Upload `legacy_code/modeling/conditional_logit_tuning.py` to `code/fahim/` before this
 step; the existing lifecycle sync does not automatically copy tracked
 repository files into `~/dsfm`.
 
 It begins with six planned strong features and tries the other starter features
 one at a time. A feature is retained only when it reduces `k_tune` per-race log
 loss by at least 0.001. It writes the selection trace, selected coefficients,
-and Spearman correlations to `artifacts/conditional_logit_tuning/`.
+and Spearman correlations to `legacy_code/artifacts/conditional_logit_tuning/`.
 
 The market probability is a benchmark only, never a Stage-1 input. The job
 always saves the best selected conditional logit and its Stage-2/test
@@ -48,6 +48,6 @@ If accepted, upload the generated artefacts:
 
 ```bash
 B=inns-elec3544-dsfm-sagemaker
-aws s3 cp artifacts/conditional_logit_tuning \
+aws s3 cp legacy_code/artifacts/conditional_logit_tuning \
   s3://$B/models/conditional_logit_tuning/ --recursive
 ```

@@ -1,0 +1,78 @@
+{
+  "created_utc": "2026-11-11T09:06:43+00:00",
+  "freeze_timestamp_utc": "2026-11-11T09:06:43+00:00",
+  "predictions": "artifacts/combined/combined_predictions.parquet",
+  "sha256": "a1984fdaddac7fb95090044fc16b1d1a91bbb3dde7bf60c2603c259dcf40778d",
+  "md5": "751b1420d6d02944c9a9d6c4497ab9c6",
+  "rows_per_split": {
+    "h_s2": 5287,
+    "h_test": 4978
+  },
+  "races_per_split": {
+    "h_s2": 423,
+    "h_test": 400
+  },
+  "race_dates_per_split": {
+    "h_s2": [
+      "2025-11-02",
+      "2026-03-29"
+    ],
+    "h_test": [
+      "2026-04-01",
+      "2026-10-11"
+    ]
+  },
+  "races_after_freeze_per_split": {
+    "h_s2": 0,
+    "h_test": 0
+  },
+  "columns": [
+    "race_id",
+    "horse_id",
+    "split",
+    "is_winner",
+    "race_date",
+    "win_odds",
+    "market_complete",
+    "p_uniform",
+    "p_market",
+    "p_power",
+    "p_shin",
+    "p_market_refit",
+    "p_cl",
+    "p_lgbm",
+    "p_joint"
+  ],
+  "models_to_score": [
+    "p_uniform",
+    "p_market",
+    "p_power",
+    "p_shin",
+    "p_market_refit",
+    "p_cl",
+    "p_lgbm",
+    "p_joint"
+  ],
+  "baseline": "p_market_refit",
+  "git": {
+    "commit": "403aac4acbc86816a49e902fe4fae2c8b15956fa",
+    "dirty_files": []
+  },
+  "provenance": {
+    "registry": {
+      "version": "v3.1",
+      "hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac"
+    },
+    "remote_ref": "origin/main",
+    "sources": [
+      {
+        "label": "source artifacts/lightgbm_independent_probability_v2_no_track_distance_evidence/joint_predictions.parquet",
+        "registry_version": "v3.1",
+        "registry_hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac",
+        "git_commit": "14512867b4a449ecb6257ef92a0da871cd26f409",
+        "commit_published": true
+      }
+    ],
+    "warnings": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "predictions_sha256": "a1984fdaddac7fb95090044fc16b1d1a91bbb3dde7bf60c2603c259dcf40778d",
+  "built_utc": "2026-11-11T09:05:59+00:00",
+  "builder_git_commit": "b64e4ff4ee7f0e112d1f66c7f93c664b1c2eec3a",
+  "builder_dirty_files": [],
+  "sources": [
+    {
+      "path": "artifacts/lightgbm_independent_probability_v2_no_track_distance_evidence/joint_predictions.parquet",
+      "sha256": "f3a1c383ec51fb72fb7138b8ec4b2b72cd08b616bb5b8f7364eed564dc176838",
+      "meta_path": "artifacts/lightgbm_independent_probability_v2_no_track_distance_evidence/meta.json",
+      "meta": {
+        "registry_version": "v3.1",
+        "registry_hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac",
+        "git_commit": "14512867b4a449ecb6257ef92a0da871cd26f409",
+        "data_hash": "c15005c7158b148fd8c8c3a2be7efe2b90024235f43e864123ef887568c802b5",
+        "git_dirty": false,
+        "dirty_worktree": null,
+        "evidence": true
+      }
+    }
+  ]
+}

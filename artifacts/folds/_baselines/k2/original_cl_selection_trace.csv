@@ -1,0 +1,4 @@
+step,candidate,log_loss,improvement,accepted,note,selected_features
+0,(base),2.069034788713057,,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since"
+1,hf_last_fin_pct_rel,2.0592059469591653,0.009828841753891648,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel"
+2,w3_horse_past_top3_rate,2.0583626173302823,0.000843329628883005,False,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, hf_last_fin_pct_rel, w3_horse_past_top3_rate"

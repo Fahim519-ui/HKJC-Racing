@@ -1,0 +1,13 @@
+step,candidate,log_loss,improvement,accepted,note,selected_features
+0,(base),2.2341718855308197,,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since"
+1,tr_days_since_bucket,,,False,|spearman|>0.9,
+2,td_track_distance_fin_pct_rel,2.21336528306674,0.020806602464079837,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, td_track_distance_fin_pct_rel"
+3,td_track_fin_pct_rel,,,False,|spearman|>0.9,
+4,td_distance_band_fin_pct_rel,,,False,|spearman|>0.9,
+5,hf_last_fin_pct_rel,2.196178174924442,0.01718710814229807,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, td_track_distance_fin_pct_rel, hf_last_fin_pct_rel"
+6,jtp_pair_effect365_rel,2.1829436962936546,0.013234478630787194,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, td_track_distance_fin_pct_rel, hf_last_fin_pct_rel, jtp_pair_effect365_rel"
+7,jtp_pair_effect_last_50_rel,,,False,|spearman|>0.9,
+8,td_distance_band_win_rel,2.1811617826050744,0.0017819136885801612,True,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, td_track_distance_fin_pct_rel, hf_last_fin_pct_rel, jtp_pair_effect365_rel, td_distance_band_win_rel"
+9,td_track_win_rel,,,False,|spearman|>0.9,
+10,td_track_distance_win_rel,,,False,|spearman|>0.9,
+11,tr_fin_pct_slope3_rel,2.1805579223779388,0.0006038602271356552,False,,"jt_jockey_win365_rel, hf_avg3_fin_pct_rel, rc_draw_pct, rc_draw_x_hv, rc_weight_rel, hf_days_since, td_track_distance_fin_pct_rel, hf_last_fin_pct_rel, jtp_pair_effect365_rel, td_distance_band_win_rel, tr_fin_pct_slope3_rel"

@@ -1,0 +1,53 @@
+{
+  "git_commit": "1042a3d17d1cc8277bc4e95d984c4ec4959e830e",
+  "dirty_worktree": false,
+  "git_dirty": false,
+  "evidence": true,
+  "gate": "passed",
+  "registry_version": "v3.1",
+  "registry_hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac",
+  "data_hash": "d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0",
+  "baseline_feature_hash": "6e8f20bf4d21a4d82c038e2746c8cd0c9d54e9e0ee1679cd3a03460ba1855af3",
+  "packages": {
+    "python": "3.13.5",
+    "pandas": "3.1.1",
+    "numpy": "2.5.4"
+  },
+  "fold": {
+    "fold_id": "h1",
+    "era": "hkjc",
+    "s1_start": "2017-09-01 00:00:00",
+    "s1_end": "2025-10-31 00:00:00",
+    "s2_start": "2025-11-01 00:00:00",
+    "s2_end": "2026-01-31 00:00:00",
+    "valid_start": "2026-02-01 00:00:00",
+    "valid_end": "2026-03-31 00:00:00"
+  },
+  "draw_definition_deviation": {
+    "note": "Current rc_draw_pct ranks draw values among actual starters; the historical definition was (draw - 1) / (field_size - 1).",
+    "per_period": {
+      "s1": {
+        "runners_different": 1459,
+        "runner_count": 28677,
+        "fraction_different": 0.050877009450081945
+      },
+      "s2": {
+        "runners_different": 79,
+        "runner_count": 3175,
+        "fraction_different": 0.024881889763779527
+      },
+      "valid": {
+        "runners_different": 58,
+        "runner_count": 2112,
+        "fraction_different": 0.027462121212121212
+      }
+    }
+  },
+  "race_counts": {
+    "s1": 2356,
+    "s2": 252,
+    "valid": 171
+  },
+  "inner_tune_races": 140,
+  "runtime_seconds": 0.9398730839966447
+}

@@ -1,0 +1,43 @@
+{
+  "git_commit": "1042a3d17d1cc8277bc4e95d984c4ec4959e830e",
+  "git_dirty": false,
+  "evidence": true,
+  "gate": "passed",
+  "registry_version": "v3.1",
+  "registry_hash": "50ff25aaa1daef9b54bfb1439a41c2386987eb600f033f85abfeec3f07b008ac",
+  "data_hash": "d2f8418a5972bd0ede7d809ebf9f204014e7fb534081b53cd926b140794e09b0",
+  "packages": {
+    "python": "3.13.5",
+    "pandas": "3.1.1",
+    "numpy": "2.5.4"
+  },
+  "config_name": "primary",
+  "primary": true,
+  "config_hash": "8e92ccb94ecd215c9a329bbb5f2c96c14b2271406612988f919f907046bd01c0",
+  "fold": {
+    "fold_id": "k2",
+    "era": "kaggle",
+    "s1_start": "2017-09-01 00:00:00",
+    "s1_end": "2019-07-31 00:00:00",
+    "s2_start": "2019-09-01 00:00:00",
+    "s2_end": "2020-01-31 00:00:00",
+    "valid_start": "2020-02-01 00:00:00",
+    "valid_end": "2020-06-30 00:00:00"
+  },
+  "config": {
+    "name": "primary",
+    "exclude_names": [],
+    "exclude_groups": [],
+    "primary": true
+  },
+  "unavailable_exclusions": [],
+  "race_counts": {
+    "s1": 1460,
+    "s2": 379,
+    "valid": 377,
+    "s2_market_dropped": 0,
+    "valid_market_dropped": 0,
+    "inner_tune": 313
+  },
+  "runtime_seconds": 9.396816583001055
+}

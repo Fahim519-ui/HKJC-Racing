@@ -1,0 +1,81 @@
+# Unified baseline ladder
+
+All rows use valid-period races only. h1's s1 period mixes Kaggle and HKJC data.
+
+| config | fold_id | era | rung_order | variant | role | is_primary | n_races | loss | gain_vs_uniform | gain_vs_market | gain_vs_calibrated | delta_vs_previous_rung |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| no_trainer_no_track_distance | h1 | hkjc | 1 | uniform | baseline | False | 171 | 2.5030074381354748 | 0.0 | -0.538560016661725 | -0.5389509135751798 | nan |
+| no_trainer_no_track_distance | h1 | hkjc | 2 | draw_only | baseline | False | 171 | 2.493007268548429 | 0.01000016958704597 | -0.5285598470746791 | -0.5289507439881338 | 0.01000016958704597 |
+| no_trainer_no_track_distance | h1 | hkjc | 3 | original_cl | baseline | False | 171 | 2.2568809514521444 | 0.24612648668333037 | -0.29243352997839467 | -0.2928244268918494 | 0.2361263170962844 |
+| no_trainer_no_track_distance | h1 | hkjc | 4 | market | benchmark | False | 171 | 1.9644474214737497 | 0.538560016661725 | 0.0 | -0.0003908969134547302 | 0.29243352997839467 |
+| no_trainer_no_track_distance | h1 | hkjc | 5 | market_calibrated | benchmark | False | 171 | 1.964056524560295 | 0.5389509135751798 | 0.0003908969134547302 | 0.0 | 0.0003908969134547302 |
+| no_trainer_no_track_distance | h1 | hkjc | 6 | cl_only | model | False | 171 | 2.258195198284895 | 0.24481223985057987 | -0.29374777681114517 | -0.2941386737245999 | -0.2941386737245999 |
+| no_trainer_no_track_distance | h1 | hkjc | 7 | lgbm_only | model | False | 171 | 2.255515571833248 | 0.24749186630222697 | -0.29106815035949807 | -0.2914590472729528 | 0.002679626451647099 |
+| no_trainer_no_track_distance | h1 | hkjc | 8 | mkt+cl | blend | False | 171 | 1.9580056719078205 | 0.5450017662276543 | 0.0064417495659292445 | 0.006050852652474514 | 0.2975098999254273 |
+| no_trainer_no_track_distance | h1 | hkjc | 9 | mkt+lgbm | blend | False | 171 | 1.9595552145699626 | 0.5434522235655121 | 0.004892206903787111 | 0.0045013099903323806 | -0.0015495426621421338 |
+| no_trainer_no_track_distance | h1 | hkjc | 10 | mkt+cl+lgbm | blend | False | 171 | 1.9574969107326083 | 0.5455105274028664 | 0.006950510741141391 | 0.006559613827686661 | 0.0020583038373542806 |
+| no_trainer_no_track_distance | k1 | kaggle | 1 | uniform | baseline | False | 379 | 2.501515958471183 | 0.0 | -0.529908981076304 | -0.5305103401538345 | nan |
+| no_trainer_no_track_distance | k1 | kaggle | 2 | draw_only | baseline | False | 379 | 2.4785462813017607 | 0.02296967716942211 | -0.5069393039068819 | -0.5075406629844124 | 0.02296967716942211 |
+| no_trainer_no_track_distance | k1 | kaggle | 3 | original_cl | baseline | False | 379 | 2.187756726016637 | 0.31375923245454596 | -0.21614974862175806 | -0.21675110769928851 | 0.29078955528512385 |
+| no_trainer_no_track_distance | k1 | kaggle | 4 | market | benchmark | False | 379 | 1.9716069773948788 | 0.529908981076304 | 0.0 | -0.00060135907753045 | 0.21614974862175806 |
+| no_trainer_no_track_distance | k1 | kaggle | 5 | market_calibrated | benchmark | False | 379 | 1.9710056183173483 | 0.5305103401538345 | 0.00060135907753045 | 0.0 | 0.00060135907753045 |
+| no_trainer_no_track_distance | k1 | kaggle | 6 | cl_only | model | False | 379 | 2.191336520841429 | 0.310179437629754 | -0.21972954344655005 | -0.2203309025240805 | -0.2203309025240805 |
+| no_trainer_no_track_distance | k1 | kaggle | 7 | lgbm_only | model | False | 379 | 2.191567721979406 | 0.3099482364917767 | -0.2199607445845273 | -0.22056210366205775 | -0.00023120113797725494 |
+| no_trainer_no_track_distance | k1 | kaggle | 8 | mkt+cl | blend | False | 379 | 1.971576599887271 | 0.5299393585839118 | 3.037750760781499e-05 | -0.000570981569922635 | 0.21999112209213512 |
+| no_trainer_no_track_distance | k1 | kaggle | 9 | mkt+lgbm | blend | False | 379 | 1.9708739807782338 | 0.530641977692949 | 0.0007329966166449431 | 0.00013163753911449305 | 0.0007026191090371281 |
+| no_trainer_no_track_distance | k1 | kaggle | 10 | mkt+cl+lgbm | blend | False | 379 | 1.9715485770608436 | 0.5299673814103392 | 5.8400334035146884e-05 | -0.0005429587434953032 | -0.0006745962826097962 |
+| no_trainer_no_track_distance | k2 | kaggle | 1 | uniform | baseline | False | 377 | 2.495556493057179 | 0.0 | -0.47765412187569467 | -0.4758472257238937 | nan |
+| no_trainer_no_track_distance | k2 | kaggle | 2 | draw_only | baseline | False | 377 | 2.460794224496912 | 0.034762268560267096 | -0.4428918533154276 | -0.4410849571636266 | 0.034762268560267096 |
+| no_trainer_no_track_distance | k2 | kaggle | 3 | original_cl | baseline | False | 377 | 2.1808232899651423 | 0.3147332030920369 | -0.16292091878365778 | -0.1611140226318568 | 0.2799709345317698 |
+| no_trainer_no_track_distance | k2 | kaggle | 4 | market | benchmark | False | 377 | 2.0179023711814845 | 0.47765412187569467 | 0.0 | 0.001806896151800963 | 0.16292091878365778 |
+| no_trainer_no_track_distance | k2 | kaggle | 5 | market_calibrated | benchmark | False | 377 | 2.0197092673332855 | 0.4758472257238937 | -0.001806896151800963 | 0.0 | -0.001806896151800963 |
+| no_trainer_no_track_distance | k2 | kaggle | 6 | cl_only | model | False | 377 | 2.182143895590513 | 0.3134125974666664 | -0.16424152440902828 | -0.16243462825722732 | -0.16243462825722732 |
+| no_trainer_no_track_distance | k2 | kaggle | 7 | lgbm_only | model | False | 377 | 2.1907067003949208 | 0.3048497926622584 | -0.17280432921343625 | -0.17099743306163528 | -0.008562804804407964 |
+| no_trainer_no_track_distance | k2 | kaggle | 8 | mkt+cl | blend | False | 377 | 2.0189350675565105 | 0.47662142550066866 | -0.0010326963750260099 | 0.0007741997767749531 | 0.17177163283841024 |
+| no_trainer_no_track_distance | k2 | kaggle | 9 | mkt+lgbm | blend | False | 377 | 2.018969427811639 | 0.4765870652455404 | -0.0010670566301542728 | 0.0007398395216466902 | -3.4360255128262907e-05 |
+| no_trainer_no_track_distance | k2 | kaggle | 10 | mkt+cl+lgbm | blend | False | 377 | 2.018951340330278 | 0.47660515272690107 | -0.0010489691487935993 | 0.0007579270030073637 | 1.8087481360673507e-05 |
+| no_trainer_no_track_distance | pooled | pooled | 1 | uniform | baseline | False | 927 | 2.499367441277563 | 0.0 | -0.5102533663691595 | -0.5098364932444086 | nan |
+| no_trainer_no_track_distance | pooled | pooled | 2 | draw_only | baseline | False | 927 | 2.4739942892885485 | 0.025373151989014353 | -0.48488021438014517 | -0.48446334125539425 | 0.025373151989014353 |
+| no_trainer_no_track_distance | pooled | pooled | 3 | original_cl | baseline | False | 927 | 2.1976880498117377 | 0.3016793914658251 | -0.2085739749033344 | -0.2081571017785835 | 0.27630623947681077 |
+| no_trainer_no_track_distance | pooled | pooled | 4 | market | benchmark | False | 927 | 1.9891140749084033 | 0.5102533663691595 | 0.0 | 0.0004168731247509161 | 0.2085739749033344 |
+| no_trainer_no_track_distance | pooled | pooled | 5 | market_calibrated | benchmark | False | 927 | 1.9895309480331542 | 0.5098364932444086 | -0.0004168731247509161 | 0.0 | -0.0004168731247509161 |
+| no_trainer_no_track_distance | pooled | pooled | 6 | cl_only | model | False | 927 | 2.1999311423335945 | 0.2994362989439683 | -0.21081706742519124 | -0.21040019430044032 | -0.21040019430044032 |
+| no_trainer_no_track_distance | pooled | pooled | 7 | lgbm_only | model | False | 927 | 2.2030137599380426 | 0.2963536813395202 | -0.2138996850296393 | -0.21348281190488838 | -0.003082617604448057 |
+| no_trainer_no_track_distance | pooled | pooled | 8 | mkt+cl | blend | False | 927 | 1.9883333567662538 | 0.511034084511309 | 0.000780718142149528 | 0.001197591266900444 | 0.21468040317178883 |
+| no_trainer_no_track_distance | pooled | pooled | 9 | mkt+lgbm | blend | False | 927 | 1.988345905815968 | 0.5110215354615948 | 0.0007681690924352669 | 0.001185042217186183 | -1.2549049714261074e-05 |
+| no_trainer_no_track_distance | pooled | pooled | 10 | mkt+cl+lgbm | blend | False | 927 | 1.9882346685500005 | 0.5111327727275623 | 0.0008794063584027789 | 0.001296279483153695 | 0.00011123726596751204 |
+
+## Paired steps
+
+| config | fold_id | step | loss_a | loss_b | gain | ci_low | ci_high | n_races | n_folds_positive |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| no_trainer_no_track_distance | h1 | draw_only vs uniform | 2.5030074381354748 | 2.493007268548429 | 0.01000016958704597 | -0.027688020295636256 | 0.04642535609357178 | 171 | 3 |
+| no_trainer_no_track_distance | h1 | original_cl vs draw_only | 2.493007268548429 | 2.2568809514521444 | 0.2361263170962844 | 0.1263902270701896 | 0.3459062145906392 | 171 | 3 |
+| no_trainer_no_track_distance | h1 | market vs original_cl | 2.2568809514521444 | 1.9644474214737497 | 0.29243352997839467 | 0.20446540945919459 | 0.36471776125116584 | 171 | 3 |
+| no_trainer_no_track_distance | h1 | market_calibrated vs market | 1.9644474214737497 | 1.964056524560295 | 0.0003908969134547302 | -9.04215907688621e-05 | 0.0008420929200357732 | 171 | 2 |
+| no_trainer_no_track_distance | h1 | cl_only vs original_cl | 2.2568809514521444 | 2.258195198284895 | -0.0013142468327504986 | -0.017724301746931386 | 0.015340083256757795 | 171 | 0 |
+| no_trainer_no_track_distance | h1 | lgbm_only vs cl_only | 2.258195198284895 | 2.255515571833248 | 0.002679626451647099 | -0.03563498819312552 | 0.04135062764536511 | 171 | 1 |
+| no_trainer_no_track_distance | h1 | mkt+cl+lgbm vs market_calibrated | 1.964056524560295 | 1.9574969107326083 | 0.006559613827686661 | -0.003409385962360291 | 0.01575183647006178 | 171 | 2 |
+| no_trainer_no_track_distance | k1 | draw_only vs uniform | 2.501515958471183 | 2.4785462813017607 | 0.02296967716942211 | 0.005583817399297328 | 0.04053073486673133 | 379 | 3 |
+| no_trainer_no_track_distance | k1 | original_cl vs draw_only | 2.4785462813017607 | 2.187756726016637 | 0.29078955528512385 | 0.22152211472304806 | 0.3605274285543503 | 379 | 3 |
+| no_trainer_no_track_distance | k1 | market vs original_cl | 2.187756726016637 | 1.9716069773948788 | 0.21614974862175806 | 0.16189081269195707 | 0.27529563310286326 | 379 | 3 |
+| no_trainer_no_track_distance | k1 | market_calibrated vs market | 1.9716069773948788 | 1.9710056183173483 | 0.00060135907753045 | -0.008311875137767469 | 0.00987922769896521 | 379 | 2 |
+| no_trainer_no_track_distance | k1 | cl_only vs original_cl | 2.187756726016637 | 2.191336520841429 | -0.003579794824791982 | -0.026838764511593356 | 0.0180029872538215 | 379 | 0 |
+| no_trainer_no_track_distance | k1 | lgbm_only vs cl_only | 2.191336520841429 | 2.191567721979406 | -0.00023120113797725494 | -0.02967157916522912 | 0.030339931782132637 | 379 | 1 |
+| no_trainer_no_track_distance | k1 | mkt+cl+lgbm vs market_calibrated | 1.9710056183173483 | 1.9715485770608436 | -0.0005429587434953032 | -0.0029009921632620044 | 0.001657721683100593 | 379 | 2 |
+| no_trainer_no_track_distance | k2 | draw_only vs uniform | 2.495556493057179 | 2.460794224496912 | 0.034762268560267096 | 0.014748393178406977 | 0.05576723825448115 | 377 | 3 |
+| no_trainer_no_track_distance | k2 | original_cl vs draw_only | 2.460794224496912 | 2.1808232899651423 | 0.2799709345317698 | 0.18715731514580902 | 0.371171182649317 | 377 | 3 |
+| no_trainer_no_track_distance | k2 | market vs original_cl | 2.1808232899651423 | 2.0179023711814845 | 0.16292091878365778 | 0.1051073481409876 | 0.2188395196866132 | 377 | 3 |
+| no_trainer_no_track_distance | k2 | market_calibrated vs market | 2.0179023711814845 | 2.0197092673332855 | -0.001806896151800963 | -0.006461412569606175 | 0.002789066173773595 | 377 | 2 |
+| no_trainer_no_track_distance | k2 | cl_only vs original_cl | 2.1808232899651423 | 2.182143895590513 | -0.0013206056253705079 | -0.01086520741205227 | 0.008591834971464622 | 377 | 0 |
+| no_trainer_no_track_distance | k2 | lgbm_only vs cl_only | 2.182143895590513 | 2.1907067003949208 | -0.008562804804407964 | -0.03417696724521645 | 0.01718911070491635 | 377 | 1 |
+| no_trainer_no_track_distance | k2 | mkt+cl+lgbm vs market_calibrated | 2.0197092673332855 | 2.018951340330278 | 0.0007579270030073637 | -0.0007986490880449086 | 0.002368557898658517 | 377 | 2 |
+| no_trainer_no_track_distance | pooled | draw_only vs uniform | 2.499367441277563 | 2.4739942892885485 | 0.025373151989014353 | 0.012289697837194996 | 0.038530624980832186 | 927 | 3 |
+| no_trainer_no_track_distance | pooled | original_cl vs draw_only | 2.4739942892885485 | 2.1976880498117377 | 0.27630623947681077 | 0.22799047950564155 | 0.33007952261173523 | 927 | 3 |
+| no_trainer_no_track_distance | pooled | market vs original_cl | 2.1976880498117377 | 1.9891140749084033 | 0.2085739749033344 | 0.17305863857499273 | 0.24687419488168788 | 927 | 3 |
+| no_trainer_no_track_distance | pooled | market_calibrated vs market | 1.9891140749084033 | 1.9895309480331542 | -0.0004168731247509161 | -0.004491017700236045 | 0.00403862334615173 | 927 | 2 |
+| no_trainer_no_track_distance | pooled | cl_only vs original_cl | 2.1976880498117377 | 2.1999311423335945 | -0.0022430925218568376 | -0.012755181727918587 | 0.007783534166263292 | 927 | 0 |
+| no_trainer_no_track_distance | pooled | lgbm_only vs cl_only | 2.1999311423335945 | 2.2030137599380426 | -0.003082617604448057 | -0.020524960945405422 | 0.014389035502232089 | 927 | 1 |
+| no_trainer_no_track_distance | pooled | mkt+cl+lgbm vs market_calibrated | 1.9895309480331542 | 1.9882346685500005 | 0.001296279483153695 | -0.000947741503163246 | 0.003350154504519149 | 927 | 2 |
+
+Each positive gain means the second named rung has lower log loss than the first; intervals are paired race-day bootstrap intervals.

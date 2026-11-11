@@ -1,10 +1,10 @@
 # Report data: Inns's sections (data, validation, results so far, limitations)
 
-Prepared 7 Nov 2026 from `main` at `69ac1d5`; updated 8 Nov (quarantine, run-gate) and
-re-checked 11 Nov against `main` at `0594916`. Every number below names the file it comes from,
-so it can be re-checked before it goes into the report. **No h_test (Apr-Oct 2026) result
-appears here.** Numbers marked *provisional* will change when the models are re-run on
-registry v3.1 before the freeze (23:59 Thu 12 Nov). Final report due 23:59 Tue 17 Nov.
+Prepared 7 Nov 2026 as a working report-data document. Its pre-11-Nov result
+sections are historical diagnostics, not the current submission narrative.
+Use [`submission_summary.md`](submission_summary.md) and
+`analysis/final_scoring_results/h_test/report.md` for the current accepted
+fold result and retrospective holdout score.
 
 ---
 

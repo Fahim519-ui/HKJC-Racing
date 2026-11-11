@@ -1,7 +1,9 @@
 # Report draft: Inns's sections (data, validation, results, limitations)
 
 Draft of 7 Nov 2026, written from `docs/report_data.md`, where every number has a source
-file. Re-checked 11 Nov against `main` at `0594916`. Updated 8 Nov: the evidence is now the pre-registered v3.1 fold re-run
+file. **This is an archival drafting template:** its provisional placeholders and
+no-`h_test` statement are superseded by `docs/submission_summary.md` and
+`analysis/final_scoring_results/h_test/report.md`. Re-checked 11 Nov against `main` at `0594916`. Updated 8 Nov: the evidence is now the pre-registered v3.1 fold re-run
 (`docs/evaluation_protocol.md`); earlier designs are diagnostics (`analysis/quarantine.json`)
 and are not quoted as results. Two kinds of gap are left on purpose:
 

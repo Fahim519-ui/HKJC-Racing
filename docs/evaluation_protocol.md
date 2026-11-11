@@ -26,7 +26,7 @@ better.
 
 ## Forward-fold freeze evidence
 
-The repeat rule is fixed before a new forward run:
+The current freeze rule is:
 
 - A fold is eligible only when it has at least 150 inner-tune races.
 - Any ladder configuration may be frozen when it has a positive point-estimate
@@ -37,6 +37,9 @@ The 95% paired bootstrap interval is reported for every gain, but does not
 block freezing. With the current fold table, `k1` and `k2` are eligible.
 `h1` currently has 140 inner-tune races and is watch-only: it is reported,
 but does not contribute to freeze eligibility.
+
+The current rule was adopted after the v3.1 fold results were available. It
+governs the operational freeze, not a pre-registered confirmatory claim.
 
 ## Baseline ladder
 

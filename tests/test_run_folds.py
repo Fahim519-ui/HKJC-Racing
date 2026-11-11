@@ -140,8 +140,13 @@ def test_resume_requires_matching_config_registry_and_data_hashes(tmp_path, monk
     pd.DataFrame({"value": [1]}).to_parquet(data_path)
     target = tmp_path / "out" / "primary" / "f1"
     target.mkdir(parents=True)
-    provenance = {"config_name": "primary", "registry_hash": "registry", "data_hash": "data"}
+    provenance = {
+        "config_name": "primary", "config_hash": runner.get_config("primary").fingerprint(),
+        "registry_hash": "registry", "data_hash": "data", "git_commit": "commit",
+    }
     (target / "meta.json").write_text(json.dumps(provenance))
+    gate = {"git_commit": "commit", "git_dirty": False, "evidence": True, "gate": "passed"}
+    monkeypatch.setattr(runner, "require_evidence_run", lambda repo, data: dict(gate))
     monkeypatch.setattr(runner, "load_folds", lambda _: folds.assign(**{
         column: pd.to_datetime(folds[column]) for column in runner.REQUIRED_FOLD_COLUMNS[2:]
     }))
@@ -167,6 +172,14 @@ def test_resume_requires_matching_config_registry_and_data_hashes(tmp_path, monk
     (target / "meta.json").write_text(json.dumps(provenance | {"registry_hash": "old"}))
     assert runner.main() == 0
     assert len(calls) == 1
+    # Same hashes but output from a different commit must not be reused.
+    (target / "meta.json").write_text(json.dumps(provenance | {"git_commit": "other"}))
+    assert runner.main() == 0
+    assert len(calls) == 2
+    # Nor output from a different ablation config definition.
+    (target / "meta.json").write_text(json.dumps(provenance | {"config_hash": "old"}))
+    assert runner.main() == 0
+    assert len(calls) == 3
 
 
 def test_feature_selection_uses_only_inner_train_and_tune(monkeypatch) -> None:

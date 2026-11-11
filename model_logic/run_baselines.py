@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from analysis.provenance import require_evidence_run, smoke_record
 from model_logic.baselines import (
     BASELINE_FEATURES,
     DRAW_ONLY_FEATURES,
@@ -24,6 +25,7 @@ from model_logic.baselines import (
 )
 from model_logic.feature_builder import build_features
 from model_logic.feature_registry import REGISTRY_VERSION, registry_hash
+from model_logic.run_folds import REPO
 from model_logic.run_folds import (
     inner_split,
     load_folds,
@@ -161,22 +163,31 @@ def run_baselines(
     minimum_gain: float = 0.001,
     fold_ids: list[str] | None = None,
     resume: bool = False,
+    run_record: dict | None = None,
 ) -> list[dict]:
+    """run_record: provenance from the command-line run-gate. Direct calls without it record
+    evidence=false."""
     validate_baseline_features()
     folds = load_folds(folds_path)
     if fold_ids:
         folds = folds.loc[folds.fold_id.isin(fold_ids)]
     data_hash = sha256_file(data_path)
     data = load_featured_data(data_path, output, data_hash)
-    commit = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
-    ).stdout.strip()
-    dirty = dirty_worktree()
+    if run_record is None:
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+        dirty = dirty_worktree()
+        run_record = {"git_commit": commit, "git_dirty": dirty, "evidence": False, "gate": "none"}
+    dirty = bool(run_record["git_dirty"])
     if dirty:
         print("WARNING: worktree is dirty; baseline metadata records this run as dirty.", file=sys.stderr)
     provenance = {
-        "git_commit": commit,
+        "git_commit": run_record["git_commit"],
         "dirty_worktree": dirty,
+        "git_dirty": dirty,
+        "evidence": run_record["evidence"],
+        "gate": run_record.get("gate"),
         "registry_version": REGISTRY_VERSION,
         "registry_hash": registry_hash(),
         "data_hash": data_hash,
@@ -192,7 +203,7 @@ def run_baselines(
         target = output / "_baselines" / fold.fold_id
         if resume and (target / "meta.json").exists():
             prior = json.loads((target / "meta.json").read_text())
-            keys = ("registry_hash", "data_hash", "baseline_feature_hash")
+            keys = ("registry_hash", "data_hash", "baseline_feature_hash", "git_commit")
             if all(prior.get(key) == provenance[key] for key in keys):
                 print(f"Skipping baselines/{fold.fold_id}: matching completed output")
                 continue
@@ -213,7 +224,12 @@ def main() -> int:
     parser.add_argument("--min-gain", type=float, default=0.001)
     parser.add_argument("--fold-ids", nargs="*")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--smoke", action="store_true",
+                        help="non-evidence run: skips the run-gate, records evidence=false, "
+                             "and may not write to artifacts/folds")
     args = parser.parse_args()
+    run_record = (smoke_record(REPO, args.out) if args.smoke
+                  else require_evidence_run(REPO, args.data))
     reports = run_baselines(
         folds_path=args.folds,
         data_path=args.data,
@@ -222,6 +238,7 @@ def main() -> int:
         minimum_gain=args.min_gain,
         fold_ids=args.fold_ids,
         resume=args.resume,
+        run_record=run_record,
     )
     if reports:
         print(pd.DataFrame(reports).to_string(index=False))

@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from analysis.provenance import require_evidence_run, smoke_record
 from model_logic.ablation_configs import CONFIGS, get_config
 from model_logic.baselines import validate_baseline_features
 from model_logic.conditional_logit_tuning_v2 import (
@@ -50,6 +51,7 @@ from model_logic.lightgbm_independent_probability_v2 import (
 
 validate_baseline_features(REGISTRY)
 
+REPO = Path(__file__).resolve().parents[1]
 TEST_START = pd.Timestamp("2026-04-01")
 EPSILON = 1e-12
 PENALTIES = (0.0, 0.003, 0.01)
@@ -408,7 +410,10 @@ def run_folds(
     fold_ids: list[str] | None = None,
     all_configs: bool = False,
     resume: bool = False,
+    run_record: dict | None = None,
 ) -> list[dict]:
+    """run_record: provenance from the command-line run-gate (analysis.provenance.
+    require_evidence_run or smoke_record). Direct calls without it record evidence=false."""
     if seed_count < 1:
         raise ValueError("seed_count must be positive")
     folds = load_folds(folds_path)
@@ -424,10 +429,16 @@ def run_folds(
     else:
         data = build_features(pd.read_parquet(data_path))
         data.to_parquet(cache, index=False)
-    commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
-                            text=True, check=True).stdout.strip()
+    if run_record is None:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True,
+                                text=True, check=True).stdout.strip()
+        dirty = bool(subprocess.run(["git", "status", "--porcelain"], capture_output=True,
+                                    text=True, check=True).stdout.strip())
+        run_record = {"git_commit": commit, "git_dirty": dirty, "evidence": False, "gate": "none"}
     provenance = {
-        "git_commit": commit, "registry_version": REGISTRY_VERSION, "registry_hash": registry_hash(),
+        "git_commit": run_record["git_commit"], "git_dirty": run_record["git_dirty"],
+        "evidence": run_record["evidence"], "gate": run_record.get("gate"),
+        "registry_version": REGISTRY_VERSION, "registry_hash": registry_hash(),
         "data_hash": data_hash,
         "packages": {"python": sys.version.split()[0], "pandas": pd.__version__, "numpy": np.__version__},
     }
@@ -438,6 +449,7 @@ def run_folds(
         config = get_config(selected_config)
         run_provenance = {
             **provenance, "config_name": selected_config, "primary": config.primary,
+            "config_hash": config.fingerprint(),
         }
         for _, fold in folds.iterrows():
             target = output / selected_config / fold.fold_id
@@ -445,7 +457,8 @@ def run_folds(
                 prior = json.loads((target / "meta.json").read_text())
                 if all(
                     prior.get(key) == run_provenance[key]
-                    for key in ("config_name", "registry_hash", "data_hash")
+                    for key in ("config_name", "config_hash", "registry_hash", "data_hash",
+                                "git_commit")
                 ):
                     print(f"Skipping {selected_config}/{fold.fold_id}: matching completed output")
                     continue
@@ -468,7 +481,12 @@ def main() -> int:
     parser.add_argument("--fold-ids", nargs="*")
     parser.add_argument("--all-configs", action="store_true")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--smoke", action="store_true",
+                        help="non-evidence run: skips the run-gate, records evidence=false, "
+                             "and may not write to artifacts/folds")
     args = parser.parse_args()
+    run_record = (smoke_record(REPO, args.out) if args.smoke
+                  else require_evidence_run(REPO, args.data))
     reports = run_folds(
         folds_path=args.folds,
         config_name=args.config,
@@ -480,6 +498,7 @@ def main() -> int:
         fold_ids=args.fold_ids,
         all_configs=args.all_configs,
         resume=args.resume,
+        run_record=run_record,
     )
     if reports:
         print(pd.DataFrame(reports).to_string(index=False))

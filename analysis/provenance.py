@@ -44,6 +44,8 @@ REPO = Path(__file__).resolve().parents[1]
 REGISTRY_FILE = REPO / "model_logic" / "feature_registry.py"
 REMOTE_REF = "origin/main"
 SIDECAR_SUFFIX = ".provenance.json"
+QUARANTINE_FILE = Path(__file__).resolve().parent / "quarantine.json"
+EVIDENCE_OUTPUT = Path("artifacts") / "folds"
 
 
 # --------------------------------------------------------------------------- helpers
@@ -108,6 +110,9 @@ class Report:
     problems: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     checked: list[dict] = field(default_factory=list)
+    # One entry per fold from check_fold_root: {"fold", "path", "ok", "problems"}. Lets callers
+    # and tests identify folds by path parts instead of matching message text.
+    folds: list[dict] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -117,6 +122,7 @@ class Report:
         self.problems += other.problems
         self.warnings += other.warnings
         self.checked += other.checked
+        self.folds += other.folds
 
     def lines(self) -> list[str]:
         out = [f"PROBLEM: {p}" for p in self.problems]
@@ -138,6 +144,13 @@ def check_meta(meta: dict, label: str, repo: Path = REPO, remote_ref: str = REMO
     published, why = commit_on_remote(commit, repo, remote_ref)
     if not published:
         report.problems.append(f"{label}: {why}")
+    if meta.get("git_dirty") is True or meta.get("dirty_worktree") is True:
+        report.problems.append(
+            f"{label}: the run was made from a working tree with uncommitted changes "
+            f"(git_dirty), so its commit does not identify the code; re-run from a clean checkout")
+    if meta.get("evidence") is False:
+        report.problems.append(
+            f"{label}: marked evidence=false (a --smoke or unchecked run); it cannot be frozen")
     recorded_hash = meta.get("registry_hash")
     if (version == registry["version"] and recorded_hash and registry["hash"]
             and recorded_hash != registry["hash"]):
@@ -157,18 +170,44 @@ def _label(path: Path, repo: Path = REPO) -> str:
         return str(path)
 
 
+# ------------------------------------------------------------------------ quarantine
+def load_quarantine(repo: Path = REPO, quarantine_file: Path | None = None) -> list[dict]:
+    """Folders declared non-evidence (analysis/quarantine.json): [{"path", "reason"}]."""
+    path = quarantine_file or Path(repo) / "analysis" / "quarantine.json"
+    if not path.exists():
+        return []
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def quarantine_reason(target: Path, repo: Path = REPO,
+                      quarantine_file: Path | None = None) -> str | None:
+    """Reason if `target` lies inside a quarantined folder. Compares resolved path parts, so
+    it is independent of separators and of similar-looking folder names."""
+    parts = Path(target).resolve().parts
+    for entry in load_quarantine(repo, quarantine_file):
+        q_parts = (Path(repo) / entry["path"]).resolve().parts
+        if parts[:len(q_parts)] == q_parts:
+            return f"{entry['path']} is quarantined: {entry['reason']}"
+    return None
+
+
 def check_run_dir(run_dir: Path, repo: Path = REPO, remote_ref: str = REMOTE_REF,
                   registry: dict | None = None) -> Report:
-    """A model output folder must carry the meta.json written by the code that produced it."""
+    """A model output folder must carry the meta.json written by the code that produced it,
+    and must not lie in a quarantined folder."""
     run_dir = Path(run_dir)
     meta_path = run_dir / "meta.json"
+    quarantined = quarantine_reason(run_dir, repo)
     if not meta_path.exists():
         report = Report()
         report.problems.append(f"{_label(run_dir, repo)}: no meta.json, so the registry version "
                                f"and code commit that produced these predictions are unknown")
-        return report
-    meta = json.loads(meta_path.read_text(encoding="utf-8"))
-    return check_meta(meta, _label(run_dir, repo), repo, remote_ref, registry)
+    else:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        report = check_meta(meta, _label(run_dir, repo), repo, remote_ref, registry)
+    if quarantined:
+        report.problems.append(f"{_label(run_dir, repo)}: {quarantined}")
+    return report
 
 
 def check_fold_root(folds_root: Path, repo: Path = REPO, remote_ref: str = REMOTE_REF) -> Report:
@@ -179,7 +218,10 @@ def check_fold_root(folds_root: Path, repo: Path = REPO, remote_ref: str = REMOT
     if not folds:
         report.problems.append(f"{folds_root}: no */predictions.parquet found")
     for fold in folds:
-        report.extend(check_run_dir(fold, repo, remote_ref, registry))
+        sub = check_run_dir(fold, repo, remote_ref, registry)
+        report.extend(sub)
+        report.folds.append({"fold": fold.name, "path": _label(fold, repo), "ok": sub.ok,
+                             "problems": list(sub.problems)})
     return report
 
 
@@ -213,7 +255,8 @@ def source_entry(source: Path, meta_path: Path | None) -> dict:
         entry["meta_path"] = str(meta_path)
         meta = json.loads(Path(meta_path).read_text(encoding="utf-8"))
         entry["meta"] = {k: meta.get(k) for k in ("registry_version", "registry_hash",
-                                                  "git_commit", "data_hash")}
+                                                  "git_commit", "data_hash", "git_dirty",
+                                                  "dirty_worktree", "evidence")}
     return entry
 
 
@@ -250,12 +293,21 @@ def check_predictions_file(predictions: Path, repo: Path = REPO,
     if record.get("builder_dirty_files"):
         report.warnings.append(f"{Path(predictions).name}: built from a working tree with "
                                f"uncommitted changes: {record['builder_dirty_files']}")
+    quarantined = quarantine_reason(Path(predictions), repo)
+    if quarantined:
+        report.problems.append(f"{Path(predictions).name}: {quarantined}")
     registry = current_registry(repo / "model_logic" / "feature_registry.py")
     sources = record.get("sources") or []
     if not sources:
         report.problems.append(f"{side.name}: lists no source predictions")
     for src in sources:
         label = f"source {src.get('path')}"
+        if src.get("path"):
+            source_path = Path(src["path"])
+            source_path = source_path if source_path.is_absolute() else Path(repo) / source_path
+            quarantined = quarantine_reason(source_path, repo)
+            if quarantined:
+                report.problems.append(f"{label}: {quarantined}")
         if not src.get("meta"):
             report.problems.append(
                 f"{label}: no meta.json, so the registry version and code commit that "
@@ -263,6 +315,55 @@ def check_predictions_file(predictions: Path, repo: Path = REPO,
             continue
         report.extend(check_meta(src["meta"], label, repo, remote_ref, registry))
     return report
+
+
+# ------------------------------------------------------------------------ run-gate
+def dirty_files(repo: Path = REPO) -> list[str]:
+    """`git status --porcelain` lines: modified, staged and untracked files (ignored files are
+    not listed)."""
+    return [line for line in _git(repo, "status", "--porcelain").stdout.splitlines() if line]
+
+
+def require_evidence_run(repo: Path, data_path: Path, remote_ref: str = REMOTE_REF) -> dict:
+    """Refuse to start an evidence run unless the code and data can be identified: a clean
+    working tree, HEAD contained in `remote_ref`, and an existing data file. Returns the
+    provenance fields the run must record. Raises SystemExit listing every reason otherwise."""
+    repo = Path(repo)
+    reasons = []
+    dirty = dirty_files(repo)
+    if dirty:
+        shown = ", ".join(dirty[:10]) + (" ..." if len(dirty) > 10 else "")
+        reasons.append(f"working tree has uncommitted or untracked files: {shown}; commit, "
+                       f"stash or remove them (or use --smoke for a non-evidence run)")
+    head = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
+    published, why = commit_on_remote(head, repo, remote_ref)
+    if not published:
+        reasons.append(f"{why}; run `git fetch origin`, then push your commit before an "
+                       f"evidence run")
+    data_path = Path(data_path)
+    if not data_path.is_absolute():
+        data_path = repo / data_path
+    if not data_path.exists():
+        reasons.append(f"data file not found: {data_path}")
+    if reasons:
+        raise SystemExit("Refusing evidence run (run-gate):\n  - " + "\n  - ".join(reasons))
+    registry = current_registry(repo / "model_logic" / "feature_registry.py")
+    return {"git_commit": head, "git_dirty": False, "evidence": True, "gate": "passed",
+            "remote_ref": remote_ref, "data_hash": sha256_file(data_path),
+            "registry_version": registry["version"], "registry_hash": registry["hash"]}
+
+
+def smoke_record(repo: Path, out: Path) -> dict:
+    """Provenance for a --smoke run: not evidence, never written to the evidence folder."""
+    repo = Path(repo)
+    out_parts = (Path(out) if Path(out).is_absolute() else repo / out).resolve().parts
+    evidence_parts = (repo / EVIDENCE_OUTPUT).resolve().parts
+    if out_parts[:len(evidence_parts)] == evidence_parts:
+        raise SystemExit(f"Refusing --smoke output inside {EVIDENCE_OUTPUT.as_posix()}: smoke "
+                         f"runs are not evidence; use e.g. --out artifacts/folds-smoke")
+    head = _git(repo, "rev-parse", "HEAD").stdout.strip() or None
+    return {"git_commit": head, "git_dirty": bool(dirty_files(repo)), "evidence": False,
+            "gate": "smoke"}
 
 
 def require(report: Report, context: str) -> None:

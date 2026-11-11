@@ -36,9 +36,13 @@ def _prediction_frame() -> pd.DataFrame:
     )
 
 
+GATE_RECORD = {"git_commit": "commit", "git_dirty": False, "evidence": True, "gate": "passed"}
+
+
 def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, monkeypatch) -> None:
     output = tmp_path / "out"
     captured: dict = {}
+    monkeypatch.setattr(command, "require_evidence_run", lambda repo, data: dict(GATE_RECORD))
 
     def fake_run_baselines(**kwargs):
         for fold_id in ("f1",):
@@ -112,6 +116,7 @@ def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, mon
         "fold_ids": ["f1"],
         "all_configs": True,
         "resume": True,
+        "run_record": GATE_RECORD,
     }
     metrics = pd.read_csv(output / "ablation_metrics.csv")
     assert set(metrics["config"]) == set(CONFIGS)
@@ -120,6 +125,7 @@ def test_run_ablation_forwards_options_and_writes_combined_metrics(tmp_path, mon
 
 
 def test_run_ablation_does_not_aggregate_after_fold_failure(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(command, "require_evidence_run", lambda repo, data: dict(GATE_RECORD))
     monkeypatch.setattr(command, "run_baselines", lambda **kwargs: [])
     monkeypatch.setattr(command, "run_folds", lambda **kwargs: (_ for _ in ()).throw(RuntimeError("failed")))
     aggregate_called = False

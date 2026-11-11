@@ -109,9 +109,29 @@ def test_fold_root_reports_every_bad_fold(repo, tmp_path):
     _fold(root, "k2", _meta("v3.0", "fc759fe"))          # the 6 Nov situation
     _fold(root, "h1", None)                               # no meta.json at all
     report = prov.check_fold_root(root, repo["root"])
-    text = "\n".join(report.problems)
-    assert "k2" in text and "h1" in text and "no meta.json" in text
-    assert "folds/k1:" not in text
+    # Fold identity comes from path parts (report.folds), not from matching message text,
+    # so the check is the same on Windows (backslashes) and when paths contain "k1" elsewhere.
+    assert {f["fold"] for f in report.folds if not f["ok"]} == {"k2", "h1"}
+    assert {f["fold"] for f in report.folds if f["ok"]} == {"k1"}
+    h1 = next(f for f in report.folds if f["fold"] == "h1")
+    assert any("no meta.json" in problem for problem in h1["problems"])
+
+
+def test_fold_identity_ignores_look_alike_parent_folders(repo, tmp_path):
+    root = tmp_path / "k1_parent" / "k2_old" / "folds"
+    _fold(root, "k1", _meta("v3.1", repo["published"]))
+    _fold(root, "k2", _meta("v3.0", "fc759fe"))
+    report = prov.check_fold_root(root, repo["root"])
+    assert {f["fold"] for f in report.folds if not f["ok"]} == {"k2"}
+    assert {f["fold"] for f in report.folds if f["ok"]} == {"k1"}
+
+
+def test_dirty_or_smoke_runs_are_refused(repo):
+    base = _meta("v3.1", repo["published"])
+    assert prov.check_meta(base, "run", repo["root"]).ok
+    for extra in ({"git_dirty": True}, {"dirty_worktree": True}, {"evidence": False}):
+        report = prov.check_meta(base | extra, "run", repo["root"])
+        assert not report.ok, extra
 
 
 def test_load_fold_predictions_refuses_stale_unless_allowed(repo, tmp_path):

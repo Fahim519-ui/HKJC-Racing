@@ -39,7 +39,7 @@ The audit is a warning list, not a rule for dropping features. Features are chos
 
 ## 3. Fahim's "residual edge" claim: not supported
 
-**What the claim is** (`artifacts/market_offset_lightgbm/residual_edge_evidence.md`): a LightGBM that starts from the market odds and learns corrections from the features improves log loss in all 4 Kaggle walk-forward periods (Aug 2018 - Jul 2020), by +0.0013 on average.
+**What the claim is** (`legacy_code/artifacts/market_offset_lightgbm/residual_edge_evidence.md`): a LightGBM that starts from the market odds and learns corrections from the features improves log loss in all 4 Kaggle walk-forward periods (Aug 2018 - Jul 2020), by +0.0013 on average.
 
 **What I checked:** I re-ran it on the same 4 periods (1,563 races, Kaggle only) and reproduced his numbers exactly. Then I changed one thing at a time:
 
@@ -61,8 +61,8 @@ Intervals come from 2,000 bootstrap resamples of races (seed 17). Positive means
 
 ## 4. Two other files in the same batch to fix
 
-1. **`artifacts/market_diagnostics/longshot_bias_evidence.md`** reports market win rates on the **HKJC test window**. These are market numbers, not model scores, but they still look at test results before Week 5. Remove the test rows, or note in the report that they were seen early.
-2. **`artifacts/market_offset_feature_families/report.md`** picks the best of 15 feature sets using the same periods that already choose the number of trees. Its winner (track/distance interactions) is likely luck. Re-check it with the tree count picked on training data only before building on it.
+1. **`legacy_code/artifacts/market_diagnostics/longshot_bias_evidence.md`** reports market win rates on the **HKJC test window**. These are market numbers, not model scores, but they still look at test results before Week 5. Remove the test rows, or note in the report that they were seen early.
+2. **`legacy_code/artifacts/market_offset_feature_families/report.md`** picks the best of 15 feature sets using the same periods that already choose the number of trees. Its winner (track/distance interactions) is likely luck. Re-check it with the tree count picked on training data only before building on it.
 
 ## 5. What to tell the group
 
@@ -80,4 +80,4 @@ python -m pytest "leakage test\test_leakage.py" -v  # section 1
 python analysis\feature_stability_audit.py          # section 2
 ```
 
-Section 3 was a one-off check script. It is not saved in the repo. The method: same folds and settings as `model_logic/market_offset_lightgbm.py`, but the number of trees is chosen by early stopping on the last 25% of each training period's race days, then the model is refit on the whole training period and scored once on the validation period. The corrected market is p ∝ market^β with β fitted on each training period (β came out 1.06 to 1.08).
+Section 3 was a one-off check script. It is not saved in the repo. The method: same folds and settings as `legacy_code/model_logic/market_offset_lightgbm.py`, but the number of trees is chosen by early stopping on the last 25% of each training period's race days, then the model is refit on the whole training period and scored once on the validation period. The corrected market is p ∝ market^β with β fitted on each training period (β came out 1.06 to 1.08).

@@ -338,8 +338,9 @@ def test_no_forbidden_column_is_a_model_feature(feats):
 
 
 @pytest.mark.parametrize("artifact", [
-    "conditional_logit_tuning_v2/selected_features.json",
-    "lightgbm_independent_probability_v2/stage1_features.json",
+    # The frozen no-track-distance evidence models (the v2 runs moved to legacy_code/ on 11 Nov).
+    "conditional_logit_tuning_v2_no_track_distance_evidence/selected_features.json",
+    "lightgbm_independent_probability_v2_no_track_distance_evidence/stage1_features.json",
 ])
 def test_saved_artifact_features_are_clean_and_covered(feats, artifact):
     path = ARTIFACTS / artifact

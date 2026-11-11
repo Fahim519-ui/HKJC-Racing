@@ -162,7 +162,8 @@ longshots (market deciles 1-2) win less often than the odds imply in every non-t
 
 **Orientation only, not a headline:** none of these diagnostics showed a gain over the
 bias-corrected market whose 95% interval excludes zero, and the only pattern that held in every
-split is the longshot bias. The headline waits for the v3.1 primary comparison.
+split is the longshot bias. The v3.1 primary comparison (Status note above) agrees: no gain
+whose interval excludes zero.
 
 ## 4. Limitations (paste-ready)
 

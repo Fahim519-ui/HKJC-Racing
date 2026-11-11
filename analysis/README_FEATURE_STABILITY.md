@@ -13,13 +13,20 @@ The models **learn** from Kaggle races (2017-20) and are **used** on HKJC races 
 
 ## 2. Short answer
 
-| Status | Count | Meaning |
-|---|---|---|
-| **review** | 2 | Real difference between Kaggle and HKJC. Discuss as a group. |
-| **watch** | 8 | Smaller warning, or a shift with a known harmless cause |
-| **keep** | 17 | No warning (includes the 2 new pair features) |
+Counts for registry v3.1 (8 Nov runs). The 38 model inputs come from the status sheet
+[`feature_stability_results/STABILITY_V3_1.md`](feature_stability_results/STABILITY_V3_1.md);
+the default audit adds 4 raw rates that no model reads directly (42 columns,
+[`stability_report.md`](feature_stability_results/stability_report.md)).
 
-- **The main risk is the trainer win rate** (`jt_trainer_win365` and its `_rel` version). HKJC trainers are more evenly matched than in 2017-20, and the trainer rate predicts winners about **3 times less strongly** in HKJC Stage 2 than in Kaggle.
+| Status | 38 model inputs | Default audit (42) | Meaning |
+|---|---:|---:|---|
+| **review** | 1 | 2 | Real difference between Kaggle and HKJC. Discuss as a group. |
+| **watch** | 9 | 10 | Smaller warning, or a shift with a known harmless cause |
+| **keep** | 28 | 30 | No warning (includes the 2 pair features) |
+
+(Earlier, 27-feature run of 6 Nov: 2 review, 8 watch, 17 keep.)
+
+- **The main risk is the trainer win rate** (`jt_trainer_win365_rel`, the model input, and the raw `jt_trainer_win365` it is built from). HKJC trainers are more evenly matched than in 2017-20, and the trainer rate predicts winners about **3 times less strongly** in HKJC Stage 2 than in Kaggle.
 - **Most other "shifts" come from one known cause:** HKJC data only starts in September 2025, so horses have shorter histories. When we compare against a Kaggle window with equally short histories, those shifts disappear.
 - **Form, draw and weight features are stable.** Their values and their effects look the same in both datasets.
 

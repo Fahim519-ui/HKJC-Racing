@@ -1,12 +1,12 @@
 # Report draft: Inns's sections (data, validation, results, limitations)
 
 Draft of 7 Nov 2026, written from `docs/report_data.md`, where every number has a source
-file. Updated 8 Nov: the evidence is now the pre-registered v3.1 fold re-run
+file. Re-checked 11 Nov against `main` at `0594916`. Updated 8 Nov: the evidence is now the pre-registered v3.1 fold re-run
 (`docs/evaluation_protocol.md`); earlier designs are diagnostics (`analysis/quarantine.json`)
 and are not quoted as results. Two kinds of gap are left on purpose:
 
 - `[PROVISIONAL: ...]` marks a number that will change when the models are re-run on
-  registry v3.1 before the freeze (23:59 Wed 12 Nov). The bracket says where the current
+  registry v3.1 before the freeze (23:59 Thu 12 Nov). The bracket says where the current
   value lives and what replaces it.
 - `[FINAL: ...]` marks a number that exists only after the one-shot test scoring in Week 5.
 
@@ -26,7 +26,9 @@ runner rows. No free source covers 2020 to 2025, so there is a five-year gap bet
 two. Merged, the data holds 3,188 races and 39,210 runner rows (`runners_merged.parquet`).
 
 Each row is one runner in one race and carries the pre-race information (draw, carried
-weight, jockey, trainer, class, distance, track, going, final win odds) and the result.
+weight, jockey, trainer, race type and class, distance, track, final win odds) and the result.
+The going, the course rail and the horse's body weight are not in either source
+(`data/clean data/data_dictionary.md`).
 The final win odds give the market's view. The median sum of 1/odds per race is 1.227 for
 HKJC and 1.229 for Kaggle, close to the 1.212 implied by the HKJC's 17.5% deduction, and
 the favourite won 30.7% of HKJC races before the test window (563 races) and 31.3% of
@@ -35,7 +37,7 @@ until 10 March 2019 (1,217 runners), which affects only the longest shots.
 
 ### 2.2 Cleaning
 
-`clean_data.py` turns both sources into one schema, documented in `docs/data_dictionary.md`.
+`clean_data.py` turns both sources into one schema, documented in `data/clean data/data_dictionary.md`.
 Finish status is standardised. In the HKJC data 12,000 runners finished, 170 were withdrawn,
 14 were in a void race, 7 pulled up, 7 unseated, 2 did not finish and 2 were disqualified;
 all Kaggle runners finished. Nine races are marked invalid and excluded from modelling:
@@ -76,8 +78,9 @@ in September 2025, so HKJC form features rest on shorter histories than Kaggle o
 Data and outputs are stored in a private Amazon S3 bucket in the Singapore region
 (ap-southeast-1), with public access blocked and budget alerts on the account. Team members
 work through SageMaker with individual access roles. The combined predictions file used
-for final scoring and its report are kept on S3 next to the repository copy, and the freeze
-record stores the S3 version identifier.
+for final scoring and its report are kept on S3 next to the repository copy. When the freeze
+is run with the S3 location (`--s3-uri`), the freeze record also stores the S3 version
+identifier and whether the uploaded copy's ETag matches the local file's MD5.
 
 ## 3. Validation methods
 
@@ -99,7 +102,8 @@ Eight negative controls run the same checks on deliberately leaky features (for 
 jockey win rate that counts his earlier rides on the same day). Each must be caught, so a
 pass is meaningful. The suite found two real problems before they reached a model: a
 whole-period average in the first version of the track/distance features, and a same-day
-leak in 15 of them in the 6 November builder. Both were fixed, and all 26 tests pass.
+leak in the 6 November version of those features. Both were fixed, and all 26 tests pass,
+as do the 85 tests of the core suite.
 
 ### 3.2 Feature stability across eras
 
@@ -112,11 +116,12 @@ a conditional logit. Because HKJC histories are shorter, every HKJC comparison i
 against an early Kaggle window with equally short histories. A gap that also appears
 against that window is a real change, not a history-length artefact.
 
-Of 42 features, 30 are marked keep, 10 watch and 2 review. The two review features are the
-trainer's 365-day win rate and its race-relative version. Its effect is +0.29 (± 0.03) per
-standard deviation in Kaggle but +0.09 (± 0.07) in HKJC, and the gap holds against the
-history-matched window. The audit is a warning list, not a selection rule: features are
-chosen on k_tune only.
+Of the 38 model inputs, 28 are marked keep, 9 watch and 1 review
+(`analysis/feature_stability_results/STABILITY_V3_1.md`). The review input is the trainer's
+race-relative 365-day win rate. Its effect is +0.29 (± 0.03) per standard deviation in Kaggle
+but +0.09 (± 0.07) in HKJC, and the gap holds against the history-matched window. (The raw
+trainer rate it is built from is flagged too; it is not itself a model input.) The audit is a
+warning list, not a selection rule: features are chosen on k_tune only.
 
 ### 3.3 Scoring
 
@@ -177,7 +182,8 @@ start unless the working tree is clean and its commit is on the shared repositor
 records the data, registry and configuration hashes; those 6 November runs are quarantined.
 
 The test window is scored once. The freeze step records the SHA-256 of the predictions
-file, the git commit, the S3 version and the freeze timestamp. The final run refuses to start without that
+file, the git commit, the freeze timestamp, each split's race dates and, if given, the S3
+version. The final run refuses to start without that
 record, if the file has changed, or if a result already exists, and it refits nothing on
 the test window: the market-refit β and the Stage 2 blend carry their h_s2 fits.
 
@@ -222,8 +228,10 @@ this means for the freeze.]
 
 **Baseline ladder** (exploratory; pooled over the folds): uniform, draw-only, original
 conditional logit, raw market, calibrated market, logit alone, LightGBM alone, market + logit,
-market + LightGBM, market + both. [PROVISIONAL: table from `artifacts/folds/` ladder output;
-rows whose inputs are missing are marked incomplete, not negative.]
+market + LightGBM, market + both. [PROVISIONAL: table from `artifacts/folds/<config>/ladder.csv`.
+The aggregation stops with an error if any rung is missing (`model_logic/aggregate_folds.py`
+`ladder_frame`), so a finished ladder has all ten rows on the same races. If a rung cannot be
+produced, the protocol treats it as incomplete evidence, not a negative result.]
 
 **Feature-group ablations** (exploratory): without the trainer rate, without the
 track/distance group, and without both. [PROVISIONAL: change in the primary gain per
@@ -274,6 +282,8 @@ appear in the Kaggle years. The 4 Nov rows were removed on 7 Nov but remain in t
 repository's history, so the final test result should be read as a lightly exposed
 hold-out rather than an untouched one. The stability audit also reports the distribution
 of each feature in the test window (inputs only, no outcomes).
+[TEAM NOTE, not for the report: the scripts that wrote the 4 Nov rows still compute them if
+re-run (`docs/report_data.md`, section 4). Do not re-run them before the final scoring.]
 [TO CONFIRM with Fahim: whether the choice of the market^β correction was influenced by the
 test-window calibration seen in the Week 2 overview or on 4 November. The same bias appears in Kaggle and HKJC
 Stage 2, so the method stands either way; if it was influenced, say so here.]
@@ -305,7 +315,7 @@ Other limitations:
 
 - Benter, W. (1994). Computer based horse race handicapping and wagering systems: a report.
   In D. B. Hausch, V. S. Y. Lo & W. T. Ziemba (Eds.), *Efficiency of Racetrack Betting
-  Markets*. Academic Press.
+  Markets* (pp. 183-198). Academic Press.
 - Bolton, R. N. & Chapman, R. G. (1986). Searching for positive returns at the track: a
   multinomial logit model for handicapping horse races. *Management Science*, 32(8),
   1040-1060.

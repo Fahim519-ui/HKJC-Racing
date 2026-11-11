@@ -1,0 +1,40 @@
+flowchart TD
+    RAW["data/clean data/runners_merged.parquet (raw runner table, one row per horse per race)"]
+    FB["model_logic/feature_builder.py build_features()<br/>filters race_valid and started, n_runners >= 2, assigns split,<br/>builds rc_, hf_, jt_, w3_ columns"]
+    HELP["helpers called by build_features:<br/>jt_partnership_features (jtp_)<br/>track_distance_features (td_)<br/>trajectory_features (tr_, int_)"]
+    REG["model_logic/feature_registry.py<br/>REGISTRY, FEATURE_SETS, get_features(), registry_hash()"]
+    FOLDS["model_logic/validation/folds.csv<br/>load_folds(): k1, k2, h1 with s1 / s2 / valid"]
+    INNER["inner_split(s1, 4 months)<br/>inner_train / inner_tune"]
+    CL["Stage 1: conditional logit (odds-free)<br/>fit_conditional_logit()<br/>forward selection, penalty grid, refit on s1"]
+    LG["Stage 1: listwise LightGBM (odds-free)<br/>fit_lgbm()<br/>rounds from inner_tune, seed bag 17 and 118"]
+    S2["Stage 2: add_stage2_variants()<br/>fit on s2 only: market_calibrated, cl_only, lgbm_only,<br/>mkt+cl, mkt+lgbm, mkt+cl+lgbm"]
+    BASE["run_baselines.py<br/>uniform, draw_only, original_cl (frozen lists, fitted on s1)"]
+    PRED["artifacts/folds/CONFIG/FOLD/predictions.parquet<br/>artifacts/folds/_baselines/FOLD/baseline_predictions.parquet"]
+    AGG["model_logic/aggregate_folds.py<br/>metric_rows, ladder_rows, ladder_step_rows,<br/>primary_evidence_status"]
+    MET["fold_metrics.csv, ladder.csv, ladder_steps.csv,<br/>evidence_summary.json"]
+    PROV["analysis/provenance.py<br/>registry version + hash, commit on origin/main,<br/>dirty / evidence flags, quarantine.json"]
+    GATE["run-gate: require_evidence_run<br/>clean tree, pushed HEAD, data file"]
+    GATE --> FB
+    COMB["analysis/build_combined_predictions.py<br/>(legacy split pipeline: k_train, k_tune, h_s2, h_test)"]
+    FS["analysis/final_scoring.py<br/>dry run, --freeze, --final (h_test once)"]
+
+    RAW --> FB
+    HELP --> FB
+    REG --> FB
+    REG --> CL
+    REG --> LG
+    FB --> INNER
+    FOLDS --> INNER
+    INNER --> CL
+    INNER --> LG
+    INNER --> BASE
+    CL --> S2
+    LG --> S2
+    S2 --> PRED
+    BASE --> PRED
+    PRED --> AGG
+    AGG --> MET
+    COMB --> PROV
+    PROV --> FS
+    COMB --> FS
+    MET -. "no code link to freeze (see section 4.8)" .-> FS

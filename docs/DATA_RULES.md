@@ -8,6 +8,11 @@ Copied from the project's Kiro rules (31 Oct 2026). Applies to everyone's code.
 > For forward-fold comparisons, ablations, freeze decisions, and final scoring, follow
 > [`evaluation_protocol.md`](evaluation_protocol.md). It is the source of truth for decision
 > criteria; these rules remain the source of truth for data handling.
+>
+> Paths in this repository: the data dictionary is
+> [`data/clean data/data_dictionary.md`](../data/clean%20data/data_dictionary.md) (the rules
+> below use the project-folder path `docs/data_dictionary.md`), and the processed table is
+> `data/clean data/runners_merged.parquet`.
 
 ## Data
 

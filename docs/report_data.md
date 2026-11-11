@@ -1,10 +1,10 @@
 # Report data: Inns's sections (data, validation, results so far, limitations)
 
-Prepared 7 Nov 2026 from `main` at `69ac1d5` plus the 7 Nov provenance and h_test-cleanup
-changes. Every number below names the file it comes from, so it can be re-checked before it
-goes into the report. **No h_test (Apr-Oct 2026) result appears here.** Numbers marked
-*provisional* will change when the models are re-run on registry v3.1 before the freeze
-(23:59 Wed 12 Nov). Final report due 23:59 Tue 17 Nov.
+Prepared 7 Nov 2026 from `main` at `69ac1d5`; updated 8 Nov (quarantine, run-gate) and
+re-checked 11 Nov against `main` at `0594916`. Every number below names the file it comes from,
+so it can be re-checked before it goes into the report. **No h_test (Apr-Oct 2026) result
+appears here.** Numbers marked *provisional* will change when the models are re-run on
+registry v3.1 before the freeze (23:59 Thu 12 Nov). Final report due 23:59 Tue 17 Nov.
 
 ---
 
@@ -54,7 +54,8 @@ and runbooks for the team. The combined predictions file and its report are on S
 
 **Leakage tests** (`leakage test/test_leakage.py`, `leakage test/result.md`)
 - 26 tests over **55 features**, including the 18 v3.1 track/distance (`td_`), trajectory
-  (`tr_`) and interaction (`int_`) features. All pass (team tests in `tests/` also pass).
+  (`tr_`) and interaction (`int_`) features. All pass; the core suite in `tests/` (85 tests on
+  `main` at `0594916`, 11 Nov) also passes (`analysis/v3_build_results/verification_2026-11-11.md`).
 - Method: change the data and watch what moves. (1) Shuffle one race day's results: no
   feature on that day or earlier may change. (2) Shuffle one source: the other source must
   not change. (3) Scale the odds: no Stage 1 feature may change. (4) Cut-off: delete every
@@ -62,15 +63,22 @@ and runbooks for the team. The combined predictions file and its report are on S
 - 8 negative controls: each check is also run on a deliberately leaky feature and must catch
   it, so a pass is meaningful.
 - Found and fixed before reaching a model: a whole-period average in the first version of
-  the track/distance features, and a same-day leak in 15 `td_` features in the 6 Nov builder.
+  the track/distance features, and a same-day leak in the 6 Nov version of the v3.1
+  track/distance features (`leakage test/result.md`, update of 6 Nov: the same-day and cut-off
+  tests now pass on every `td_`/`tr_`/`int_` feature).
 
 **Feature stability audit** (`analysis/feature_stability_audit.py`,
 `analysis/feature_stability_results/stability_report.md`)
 - Compares each feature's distribution (SMD, PSI, blank rate) and its effect on winning
   across Kaggle train, Kaggle tune and HKJC Stage 2.
-- 42 features: **30 keep, 10 watch, 2 review**. The two "review" features are the trainer
-  win rate and its race-relative version: effect +0.29 ± 0.03 in Kaggle vs +0.09 ± 0.07 in
+- The **38 model inputs** of registry v3.1 (LightGBM uses all 38, the logit 32):
+  **28 keep, 9 watch, 1 review** (`analysis/feature_stability_results/STABILITY_V3_1.md`, 8 Nov;
+  registry and audit agree on every input). The one "review" input is the race-relative
+  trainer win rate `jt_trainer_win365_rel`: effect +0.29 ± 0.03 in Kaggle vs +0.09 ± 0.07 in
   HKJC, and the gap holds against a Kaggle window with equally short histories.
+- The default audit run covers 42 columns, the 38 inputs plus 4 raw rates no model reads
+  directly: 30 keep, 10 watch, 2 review (`stability_report.md`). Its second "review" is the raw
+  trainer rate `jt_trainer_win365`, the building block of the input above.
 
 **Scoring** (`analysis/eval_utils.py`, `analysis/README_EVALUATION.md`)
 - Per-race log loss (primary), Brier score, top-1 accuracy, pseudo-R², calibration by decile.
@@ -123,15 +131,20 @@ against the bias-corrected market.
 | market + both | 1.9533 | −0.0010 | −0.0040 to +0.0021 |
 
 Removing the trainer features changes nothing measurable (market + logit −0.0000,
-−0.0025 to +0.0024).
+−0.0025 to +0.0024). This ablation drops the columns whose names start with `jt_trainer` and
+keeps `int_jt_strength_x_field_size`, which also uses the trainer rate
+(`analysis/rolling_validation.py` `main`), so it is not the same ablation as the fold runner's
+`no_trainer_rate` (`model_logic/ablation_configs.py`, `TRAINER_RATE_FEATURES`).
 
 **Fahim's fold runner** (stale v3.0 runs, now `artifacts/quarantine/folds_v3.0_fc759fe/`), pooled k1+k2+h1, 927 races, gain vs calibrated
 market: market + logit +0.0016 (−0.0005 to +0.0037); market + both +0.0015 (−0.0007 to
 +0.0038). *Stale: registry v3.0, unpushed code. Re-run on v3.1 before quoting.*
 
 **Stage 2 weights** (`analysis/stage2_results/report.md`, in-sample) *diagnostic, not evidence
-(quarantined); the report uses the out-of-sample weights from each fold's `blend.json` in the
-v3.1 re-run instead*. The whole
+(quarantined); the report uses the weights in each fold's `blend.json` from the v3.1 re-run
+instead. Those are also fitted on the fold's Stage 2 window (`model_logic/run_folds.py`
+`add_stage2_variants`), but they are scored on the later validation window, so the blend's
+validation loss is out of sample even though the weights themselves are not*. The whole
 table is stamped UNVERIFIED: no window passes the provenance check yet. The fold windows come
 from the stale v3.0 runs, and the h_s2 window comes from the 5 Nov LightGBM v2 predictions in
 the combined file, which have no `meta.json`. Re-run on v3.1 before quoting. As it stands: on
@@ -168,6 +181,12 @@ split is the longshot bias. The headline waits for the v3.1 primary comparison.
 > hold-out rather than an untouched one. The stability audit also reports the distribution
 > of each feature in the test window (inputs only, no outcomes).
 
+Not for the report, but for the team: the scripts that wrote the 4 Nov test-window rows still
+compute them when re-run. `model_logic/lightgbm_independent_probability.py` and
+`lightgbm_independent_probability_v2.py` write h_test log losses to `metrics.csv` and
+`report.md`, and `model_logic/market_diagnostics.py` computes market calibration for every
+split including h_test (`calibration_tables`). Do not re-run them before the final scoring.
+
 Points still to confirm before submitting: whether the decision to use the favourite-longshot
 (market^β) correction was influenced by the test-window calibration seen in the Week 2 EDA or on 4 Nov. The same
 bias appears in Kaggle and HKJC Stage 2, so the method stands either way, but if it was,
@@ -197,7 +216,8 @@ Other limitations:
 ## 5. References
 
 - Benter, W. (1994). Computer based horse race handicapping and wagering systems: a report.
-  In *Efficiency of Racetrack Betting Markets*, Academic Press.
+  In D. B. Hausch, V. S. Y. Lo & W. T. Ziemba (Eds.), *Efficiency of Racetrack Betting
+  Markets* (pp. 183-198). Academic Press.
 - Bolton, R. N. & Chapman, R. G. (1986). Searching for positive returns at the track: a
   multinomial logit model for handicapping horse races. *Management Science* 32(8).
 - Shin, H. S. (1993). Measuring the incidence of insider trading in a market for

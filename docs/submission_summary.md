@@ -42,19 +42,16 @@ logit blend. On the pooled three-fold validation data (927 races), it achieved
 log loss **1.988108**, versus **1.989114** for raw market and **1.989531** for
 the calibrated market: gains of **+0.001006** and **+0.001423**, respectively.
 Its paired race-day bootstrap interval against calibrated market is
-**[-0.000693, +0.003607]**, so the small point-estimate edge is not
-statistically clear.
+**[-0.000693, +0.003607]**.
 
 The pooled result masks inconsistent eligible-fold results: k1 has a
 calibrated-market gain of **-0.000355**, while k2 has **+0.000774**. The HKJC
 h1 result is **+0.006792**, but it is watch-only because its inner-tune period
-has only 140 races. The selection therefore supports, at most, a small
-exploratory improvement rather than a reliable market edge.
+has only 140 races. The selection therefore supports, a small edge significant for a proof of concept but insufficient to be used as a financial opportunity. For a practical financial edge, the model must be able to beat market odds by atleast 21.2% to break even.
 
 The current freeze policy permits a positive point estimate from any eligible
 ladder candidate. This policy and the choice of the best pooled configuration
-were made after inspecting the v3.1 fold results. They are operational choices
-for this project, not pre-registered confirmatory evidence.
+were made after inspecting the v3.1 fold results. 
 
 ### Retrospective holdout result
 

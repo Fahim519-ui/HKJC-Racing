@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">Technical refinements improved evidence quality, not proven predictive edge</title>
+  <desc id="description">Presentation graphic summarizing data quality, leakage controls, provenance safeguards, and log-loss gain estimates with confidence intervals.</desc>
+  <defs>
+    <style>
+      .sans { font-family: Arial, Helvetica, sans-serif; }
+      .navy { fill: #10243a; }
+      .muted { fill: #536579; }
+      .teal { fill: #087e83; }
+      .panel { fill: #ffffff; stroke: #d9e2ec; stroke-width: 1.5; }
+      .small { font-size: 15px; }
+      .body { font-size: 18px; }
+      .label { font-size: 17px; font-weight: 700; }
+      .grid { stroke: #e4eaf0; stroke-width: 1; }
+      .ci { stroke: #286879; stroke-width: 4; stroke-linecap: round; }
+      .cap { stroke: #286879; stroke-width: 2; }
+      .point { fill: #087e83; stroke: #ffffff; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="#f3f6f9"/>
+  <rect width="1600" height="124" fill="#10243a"/>
+  <text class="sans" x="58" y="52" fill="#ffffff" font-size="33" font-weight="700">Technical refinements improved evidence quality</text>
+  <text class="sans" x="60" y="88" fill="#d8e6ef" font-size="19">Data quality and leakage controls improved; a market-beating result remains unproven.</text>
+
+  <rect class="panel" x="48" y="152" width="446" height="174" rx="14"/>
+  <rect x="48" y="152" width="8" height="174" rx="4" fill="#087e83"/>
+  <text class="sans teal" x="76" y="188" font-size="15" font-weight="700" letter-spacing="1.2">DATA QUALITY</text>
+  <text class="sans navy" x="76" y="224" font-size="22" font-weight="700">3,188 races / 39,210 runner rows</text>
+  <text class="sans muted body" x="76" y="256">Merged across two eras; 9 invalid races excluded</text>
+  <text class="sans navy body" x="76" y="292" font-weight="700">3,179 valid races / 38,942 starter rows</text>
+
+  <rect class="panel" x="48" y="346" width="446" height="198" rx="14"/>
+  <rect x="48" y="346" width="8" height="198" rx="4" fill="#d98c21"/>
+  <text class="sans" x="76" y="382" fill="#a9620b" font-size="15" font-weight="700" letter-spacing="1.2">LEAKAGE PREVENTION</text>
+  <text class="sans navy" x="76" y="420" font-size="22" font-weight="700">26 tests across 55 features</text>
+  <text class="sans muted body" x="76" y="454">8 deliberately leaky negative controls</text>
+  <text class="sans navy body" x="76" y="489" font-weight="700">2 real leakage issues found and fixed</text>
+  <text class="sans muted small" x="76" y="518">Whole-period average and same-day feature leakage</text>
+
+  <rect class="panel" x="48" y="564" width="446" height="194" rx="14"/>
+  <rect x="48" y="564" width="8" height="194" rx="4" fill="#586b9b"/>
+  <text class="sans" x="76" y="600" fill="#435884" font-size="15" font-weight="700" letter-spacing="1.2">EVIDENCE CONTROL</text>
+  <text class="sans navy body" x="76" y="638" font-weight="700">Stale v3.0 / unpublished runs quarantined</text>
+  <text class="sans muted body" x="76" y="672">v3.1 runs require a clean, published commit</text>
+  <text class="sans muted body" x="76" y="706">Data, registry, and config hashes recorded</text>
+  <text class="sans muted small" x="76" y="738">Chronological folds; same races; race-day bootstrap</text>
+
+  <rect class="panel" x="524" y="152" width="1028" height="606" rx="14"/>
+  <text class="sans navy" x="558" y="191" font-size="22" font-weight="700">Predictive gain estimates are small and uncertain</text>
+  <text class="sans muted small" x="558" y="220">Gain vs stated baseline; positive means lower log loss. Different runs/windows, not a single matched series.</text>
+  <text class="sans muted small" x="1120" y="253">95% race-day CI</text>
+
+  <line class="grid" x1="850" y1="275" x2="850" y2="700"/>
+  <line class="grid" x1="1029" y1="275" x2="1029" y2="700"/>
+  <line x1="1209" y1="275" x2="1209" y2="700" stroke="#687b8f" stroke-width="2" stroke-dasharray="7 7"/>
+  <line class="grid" x1="1388" y1="275" x2="1388" y2="700"/>
+  <text class="sans muted small" x="850" y="278" text-anchor="middle">−10</text>
+  <text class="sans muted small" x="1029" y="278" text-anchor="middle">−5</text>
+  <text class="sans muted small" x="1209" y="278" text-anchor="middle">0</text>
+  <text class="sans muted small" x="1388" y="278" text-anchor="middle">+5</text>
+
+  <text class="sans navy label" x="558" y="330">Legacy residual diagnostic</text>
+  <text class="sans muted small" x="558" y="352">same-fold tree selection; vs raw market</text>
+  <circle class="point" cx="1256" cy="340" r="8"/>
+  <text class="sans teal small" x="1271" y="346" font-weight="700">+1.32</text>
+  <text class="sans muted small" x="1350" y="346">CI not reported</text>
+
+  <text class="sans navy label" x="558" y="415">Legacy residual diagnostic</text>
+  <text class="sans muted small" x="558" y="437">tree count chosen on training data; vs raw market</text>
+  <line class="ci" x1="1180" y1="425" x2="1241" y2="425"/>
+  <line class="cap" x1="1180" y1="416" x2="1180" y2="434"/>
+  <line class="cap" x1="1241" y1="416" x2="1241" y2="434"/>
+  <circle class="point" cx="1211" cy="425" r="8"/>
+  <text class="sans muted small" x="1260" y="431">+0.05 [−0.80, +0.90]</text>
+
+  <text class="sans navy label" x="558" y="500">Legacy residual diagnostic</text>
+  <text class="sans muted small" x="558" y="522">vs calibrated market</text>
+  <line class="ci" x1="1080" y1="510" x2="1273" y2="510"/>
+  <line class="cap" x1="1080" y1="501" x2="1080" y2="519"/>
+  <line class="cap" x1="1273" y1="501" x2="1273" y2="519"/>
+  <circle class="point" cx="1177" cy="510" r="8"/>
+  <text class="sans muted small" x="1290" y="516">−0.90 [−3.60, +1.80]</text>
+
+  <line x1="558" y1="548" x2="1518" y2="548" stroke="#d9e2ec" stroke-width="1.5"/>
+  <text class="sans navy label" x="558" y="585">v3.1 no-track market + logit</text>
+  <text class="sans muted small" x="558" y="607">pooled folds; vs calibrated market</text>
+  <line class="ci" x1="1184" y1="597" x2="1338" y2="597"/>
+  <line class="cap" x1="1184" y1="588" x2="1184" y2="606"/>
+  <line class="cap" x1="1338" y1="588" x2="1338" y2="606"/>
+  <circle class="point" cx="1260" cy="597" r="8"/>
+  <text class="sans muted small" x="1350" y="603">+1.42 [−0.69, +3.61]</text>
+
+  <text class="sans navy label" x="558" y="675">Retrospective h_test joint model</text>
+  <text class="sans muted small" x="558" y="697">vs calibrated market; not prospective validation</text>
+  <line class="ci" x1="843" y1="687" x2="1392" y2="687"/>
+  <line class="cap" x1="843" y1="678" x2="843" y2="696"/>
+  <line class="cap" x1="1392" y1="678" x2="1392" y2="696"/>
+  <circle class="point" cx="1112" cy="687" r="8"/>
+  <text class="sans muted small" x="1324" y="667">−2.70 [−10.20, +5.10]</text>
+
+  <text class="sans muted small" x="1110" y="731" text-anchor="middle">Log-loss gain per race (× 10⁻³)</text>
+  <rect x="48" y="786" width="1504" height="74" rx="12" fill="#e8eef3"/>
+  <text class="sans navy" x="76" y="818" font-size="17" font-weight="700">Takeaway</text>
+  <text class="sans navy" x="180" y="818" font-size="17">Refinements strengthened data quality, leakage prevention, and reproducibility;</text>
+  <text class="sans navy" x="180" y="844" font-size="17">the final fold and retrospective holdout intervals still include zero.</text>
+  <text class="sans muted" x="56" y="886" font-size="13">Sources: docs/report_inns_sections.md; analysis/overfitting_results/report.md; legacy_code/artifacts/market_offset_lightgbm/residual_edge_evidence.md</text>
+</svg>
